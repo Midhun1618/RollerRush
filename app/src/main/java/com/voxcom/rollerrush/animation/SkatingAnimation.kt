@@ -124,13 +124,13 @@ class SkatingAnimation {
         /** Jump / airborne pose: legs tucked (compressed), arms counterbalancing, body tilting with vertical speed. */
         fun airPose(vy: Float, out: Pose) {
             // Left leg forward, right leg trailing.
-            out.leftThigh = -35f; out.leftKnee = 70f
-            out.leftSkate = 8f - (-35f + 70f)          // keep skate roughly level (absolute +8)
+            out.leftThigh = -55f; out.leftKnee = 85f
+            out.leftSkate = 8f - (-55f + 85f)          // keep skate roughly level (absolute +8)
             out.rightThigh = 8f; out.rightKnee = 55f
-            out.rightSkate = 10f - (8f + 55f)
+            out.rightSkate = 50f - (8f + 55f)
             // vy > 0 means falling: lean forward when falling, back when rising.
             out.torsoRotation = 6f + (vy * 0.015f).coerceIn(-9f, 9f)
-            out.headRotation = -out.torsoRotation * 0.55f
+            out.headRotation = -out.torsoRotation * 0.75f
             out.hipOffsetX = 0f
             out.bodyOffsetY = 0f
             // Right arm forward against the forward left leg (counterbalance).

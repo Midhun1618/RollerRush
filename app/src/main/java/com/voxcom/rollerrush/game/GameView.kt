@@ -7,6 +7,7 @@ import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.voxcom.rollerrush.RollerRushApp
+import com.voxcom.rollerrush.utils.Constants
 
 /**
  * The only View used for gameplay. It owns the surface lifecycle, the loop thread and touch
@@ -30,6 +31,9 @@ class GameView(context: Context) : SurfaceView(context), SurfaceHolder.Callback,
     private val sprites = app.gameAssets.createPlayerSprites(app.playerData.character)
     private val world = GameWorld(camera, sprites, app.playerData.skateStats)
     private var loop: GameLoop? = null
+    private var touchDownY = 0f
+    private var touchMoved = false
+    private var lastTapTime = 0L
 
     val state: GameState get() = world.state
 
@@ -88,12 +92,55 @@ class GameView(context: Context) : SurfaceView(context), SurfaceHolder.Callback,
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent): Boolean {
         val action = e.actionMasked
-        if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
-            val i = e.actionIndex
-            if (renderer.pauseRect.contains(e.getX(i), e.getY(i))) {
-                listener?.onPauseRequested()
-            } else if (world.state == GameState.PLAYING) {
-                world.requestJump()            // tap anywhere else = jump (ignored in the air by PlayerController)
+        when (action) {
+            MotionEvent.ACTION_DOWN -> {
+                touchDownY = e.getY()
+                touchMoved = false
+
+                if (renderer.pauseRect.contains(e.getX(), e.getY())) {
+                    listener?.onPauseRequested()
+                }
+                return true
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                if (kotlin.math.abs(e.getY() - touchDownY) > Constants.SLIDE_SWIPE_DISTANCE * 0.35f) {
+                    touchMoved = true
+                }
+                return true
+            }
+
+            MotionEvent.ACTION_UP -> {
+                if (renderer.pauseRect.contains(e.getX(), e.getY())) return true
+                if (world.state == GameState.PLAYING) {
+                    val dy = e.getY() - touchDownY
+                    val now = android.os.SystemClock.uptimeMillis()
+
+                    if (dy < -Constants.JUMP_SWIPE_DISTANCE) {
+                        // Swipe UP = jump.
+                        world.requestJump()
+                        lastTapTime = 0L
+                    } else if (dy > Constants.SLIDE_SWIPE_DISTANCE) {
+                        // Swipe DOWN = aggressive slide.
+                        world.requestSlide()
+                        lastTapTime = 0L
+                    } else if (!touchMoved) {
+                        // Double tap = activate a collected speed boost.
+                        if (now - lastTapTime <= (Constants.DOUBLE_TAP_WINDOW * 1000f).toLong()) {
+                            world.requestSpeedBoost()
+                            lastTapTime = 0L
+                        } else {
+                            lastTapTime = now
+                        }
+                    }
+                }
+                performClick()
+                return true
+            }
+
+            MotionEvent.ACTION_CANCEL -> {
+                touchMoved = false
+                return true
             }
         }
         return true

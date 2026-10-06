@@ -15,30 +15,39 @@ class PlayerController(private val player: Player, var stats: SkateStats) {
 
     // Touch events arrive on the UI thread, the game loop runs on its own thread.
     private val jumpRequested = AtomicBoolean(false)
+    private val slideRequested = AtomicBoolean(false)
     private var jumpBuffer = 0f
 
     fun requestJump() = jumpRequested.set(true)
+    fun requestSlide() = slideRequested.set(true)
 
     fun reset() {
         jumpRequested.set(false)
+        slideRequested.set(false)
         jumpBuffer = 0f
     }
 
     fun update(dt: Float) {
         if (player.crashed) { updateCrash(dt); return }
 
+        if (slideRequested.getAndSet(false) && player.grounded && !player.sliding) {
+            player.startSlide(Constants.SLIDE_DURATION)
+        }
+
         // A tap is remembered for a short time, so tapping slightly BEFORE landing still jumps.
         if (jumpRequested.getAndSet(false)) jumpBuffer = stats.jumpBufferTime
         jumpBuffer = max(0f, jumpBuffer - dt)
 
         // Only grounded players can jump -> no infinite air jumping.
-        if (jumpBuffer > 0f && player.grounded) {
-            player.vy = -sqrt(2f * Constants.GRAVITY * stats.jumpHeight)   // v0 for the desired peak height
+        // A slide has priority over a buffered jump.
+        if (jumpBuffer > 0f && player.grounded && !player.sliding) {
+            player.vy = -sqrt(2f * Constants.GRAVITY * stats.jumpHeight)
             player.grounded = false
             jumpBuffer = 0f
         }
 
         integrate(dt)
+        player.updateSlide(dt)
     }
 
     private fun integrate(dt: Float) {

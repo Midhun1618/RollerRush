@@ -1,6 +1,6 @@
 package com.voxcom.rollerrush.animation
 
-enum class AnimationState { SKATING, JUMPING, FALLING, LANDING, CRASHED }
+enum class AnimationState { SKATING, JUMPING, FALLING, LANDING, SLIDING, CRASHED }
 
 /**
  * One complete pose of the rig. Angles are in degrees, positive = clockwise on screen.

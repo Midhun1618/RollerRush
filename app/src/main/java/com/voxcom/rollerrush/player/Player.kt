@@ -43,7 +43,10 @@ class Player(private val sprites: PlayerSprites) {
     var grounded = true
     var crashed = false
     var crashVx = 0f
+    var sliding = false
+        private set
 
+    private var slideTime = 0f
     private var landedEvent = false
 
     // Gameplay hitboxes (world units). Updated by updateHitboxes().
@@ -100,14 +103,38 @@ class Player(private val sprites: PlayerSprites) {
      *  - feet box: the skates, used for obstacles that are low to the ground
      */
     fun updateHitboxes() {
-        bodyHitbox.set(x - Rig.BODY_BOX_HALF_W, bottomY - Rig.BODY_BOX_TOP,
-            x + Rig.BODY_BOX_HALF_W, bottomY - Rig.BODY_BOX_BOTTOM)
+        val bodyTop = if (sliding) Rig.SLIDE_BODY_BOX_TOP else Rig.BODY_BOX_TOP
+        val bodyBottom = if (sliding) Rig.SLIDE_BODY_BOX_BOTTOM else Rig.BODY_BOX_BOTTOM
+        bodyHitbox.set(x - Rig.BODY_BOX_HALF_W, bottomY - bodyTop,
+            x + Rig.BODY_BOX_HALF_W, bottomY - bodyBottom)
         feetHitbox.set(x - Rig.FEET_BOX_LEFT, bottomY - Rig.FEET_BOX_TOP,
             x + Rig.FEET_BOX_RIGHT, bottomY - Rig.FEET_BOX_BOTTOM)
     }
 
     fun markLanded() { landedEvent = true }
     fun consumeLanded(): Boolean { val v = landedEvent; landedEvent = false; return v }
+    fun hasLandedEvent(): Boolean = landedEvent
+
+    fun startSlide(duration: Float) {
+        if (!crashed && grounded) {
+            sliding = true
+            slideTime = duration
+        }
+    }
+
+    fun updateSlide(dt: Float) {
+        if (!sliding) return
+        slideTime -= dt
+        if (slideTime <= 0f) {
+            slideTime = 0f
+            sliding = false
+        }
+    }
+
+    fun stopSlide() {
+        sliding = false
+        slideTime = 0f
+    }
 
     fun crash() {
         if (crashed) return
@@ -124,6 +151,8 @@ class Player(private val sprites: PlayerSprites) {
         grounded = true
         crashed = false
         crashVx = 0f
+        sliding = false
+        slideTime = 0f
         landedEvent = false
         updateHitboxes()
     }

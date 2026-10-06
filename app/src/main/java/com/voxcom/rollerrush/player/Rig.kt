@@ -39,4 +39,8 @@ object Rig {
     const val FEET_BOX_RIGHT = 11f
     const val FEET_BOX_TOP = 26f
     const val FEET_BOX_BOTTOM = 1f
+
+    // While sliding, the head/torso are much lower and the upper body is tucked away.
+    const val SLIDE_BODY_BOX_TOP = 50f
+    const val SLIDE_BODY_BOX_BOTTOM = 12f
 }

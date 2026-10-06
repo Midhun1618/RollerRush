@@ -50,7 +50,8 @@ class AssetManager(private val context: Context) {
         obstacleBitmaps = arrayOf(
             obstacle("obstacles/ground.png", 22f, 26f) { c, w, h -> drawCrate(c, w, h) },
             obstacle("obstacles/tall.png", 20f, 58f) { c, w, h -> drawPillar(c, w, h) },
-            obstacle("obstacles/moving.png", 24f, 24f) { c, w, h -> drawSpiky(c, w, h) }
+            obstacle("obstacles/moving.png", 24f, 24f) { c, w, h -> drawSpiky(c, w, h) },
+            obstacle("obstacles/overhead.png", 38f, 24f) { c, w, h -> drawOverhead(c, w, h) }
         )
         coinBitmap = make("coins/coin.png", (Constants.COIN_RADIUS * 2 * s).toInt(), (Constants.COIN_RADIUS * 2 * s).toInt()) { c, w, h ->
             val p = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -76,7 +77,7 @@ class AssetManager(private val context: Context) {
         val skate = SkinCatalog.colorFor(ch.skateSkin)
 
         fun part(id: String, part: String, wU: Float, hU: Float, draw: (Canvas, Float, Float) -> Unit): Bitmap =
-            make("player/${id}_$part.png", (wU * Constants.BITMAP_SCALE).toInt(), (hU * Constants.BITMAP_SCALE).toInt(), draw)
+            make("player/$part.png", (wU * Constants.BITMAP_SCALE).toInt(), (hU * Constants.BITMAP_SCALE).toInt(), draw)
 
         fun limb(id: String, name: String, len: Float, thick: Float, color: Int) =
             part(id, name, thick, len + thick) { c, w, h -> roundRect(c, 0f, 0f, w, h, w / 2f, color) }
@@ -168,6 +169,20 @@ class AssetManager(private val context: Context) {
         val stripe = paint(Color.rgb(255, 214, 10))
         var y = h * 0.1f
         while (y < h) { c.drawRect(0f, y, w, y + h * 0.06f, stripe); y += h * 0.16f }
+    }
+
+    private fun drawOverhead(c: Canvas, w: Float, h: Float) {
+        c.drawRoundRect(RectF(0f, h * 0.20f, w, h * 0.80f), h * 0.20f, h * 0.20f,
+            paint(Color.rgb(220, 55, 55)))
+        val stripe = paint(Color.rgb(255, 214, 10))
+        var x = -h
+        while (x < w) {
+            c.save()
+            c.rotate(-28f, x + h * 0.5f, h * 0.5f)
+            c.drawRect(x, h * 0.38f, x + h * 0.30f, h * 0.62f, stripe)
+            c.restore()
+            x += h * 0.75f
+        }
     }
 
     private fun drawSpiky(c: Canvas, w: Float, h: Float) {

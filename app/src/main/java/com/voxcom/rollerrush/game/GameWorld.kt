@@ -51,10 +51,15 @@ class GameWorld(val camera: Camera, sprites: PlayerSprites, stats: SkateStats) {
 
     private var gameOverTimer = 0f
     private var gameOverEventPending = false
+    private var slowMotionTimer = 0f
+    private var timeScale = 1f
     private var eventFired = false      // game-over event is raised only once per run
+    private var speedBoostReady = false
+    private var speedBoostTimer = 0f
 
     // ---- State control -----------------------------------------------------
     @Synchronized fun start() {
+        camera.resetEffects()
         player.reset(); controller.reset(); animator.reset()
         difficulty.reset(); scoreSystem.reset(); coinSystem.reset(); spawner.reset()
         for (i in 0 until obstacles.size) obstacles[i].active = false
@@ -64,7 +69,12 @@ class GameWorld(val camera: Camera, sprites: PlayerSprites, stats: SkateStats) {
         worldSpeed = Constants.BASE_SPEED * speedMultiplier
         gameOverTimer = 0f
         gameOverEventPending = false
+        slowMotionTimer = 0f
+        timeScale = 1f
         eventFired = false
+        speedBoostReady = false
+        speedBoostTimer = 0f
+        camera.setSpeedBoost(false)
         state = GameState.PLAYING
     }
 
@@ -72,6 +82,19 @@ class GameWorld(val camera: Camera, sprites: PlayerSprites, stats: SkateStats) {
     @Synchronized fun resume() { if (state == GameState.PAUSED) state = GameState.PLAYING }
 
     fun requestJump() = controller.requestJump()
+    fun requestSlide() = controller.requestSlide()
+
+    /** Double-tap activates a collected speed boost. */
+    fun requestSpeedBoost() {
+        if (state == GameState.PLAYING && speedBoostReady && speedBoostTimer <= 0f) {
+            speedBoostReady = false
+            speedBoostTimer = Constants.SPEED_BOOST_DURATION
+            camera.setSpeedBoost(true)
+        }
+    }
+
+    val speedBoostAvailable: Boolean get() = speedBoostReady
+    val speedBoostActive: Boolean get() = speedBoostTimer > 0f
 
     /** Returns true exactly once after the crash animation has finished. */
     @Synchronized fun consumeGameOverEvent(): Boolean {
@@ -84,6 +107,7 @@ class GameWorld(val camera: Camera, sprites: PlayerSprites, stats: SkateStats) {
     // Indexed loops (not for-in) so no Iterator is allocated.
     fun acquireObstacle(): Obstacle? { for (i in 0 until obstacles.size) if (!obstacles[i].active) return obstacles[i]; return null }
     fun acquireCoin(): Coin? { for (i in 0 until coins.size) if (!coins[i].active) return coins[i]; return null }
+    fun acquirePowerUp(): PowerUp? { for (i in 0 until powerUps.size) if (!powerUps[i].active) return powerUps[i]; return null }
 
     // ---- Update --------------------------------------------------------------
     /** One simulation step. [dt] is already clamped to a small fixed maximum by GameLoop. */
@@ -96,37 +120,114 @@ class GameWorld(val camera: Camera, sprites: PlayerSprites, stats: SkateStats) {
     }
 
     private fun updatePlaying(dt: Float) {
+        // Camera effects run in real time, while the simulation can briefly slow down
+        // after a major collision.
+        camera.update(dt)
+
+        if (speedBoostTimer > 0f) {
+            speedBoostTimer = (speedBoostTimer - dt).coerceAtLeast(0f)
+            if (speedBoostTimer == 0f) camera.setSpeedBoost(false)
+        }
+
+        if (slowMotionTimer > 0f) {
+            slowMotionTimer = (slowMotionTimer - dt).coerceAtLeast(0f)
+            timeScale = 0.28f + 0.72f * (1f - slowMotionTimer / Constants.HIT_SLOW_MOTION_DURATION)
+        } else {
+            timeScale = 1f
+        }
+
+        val simDt = dt * timeScale
+
         // 1. difficulty -> world speed (skate speed level scales it)
-        difficulty.update(dt)
-        worldSpeed = difficulty.speed * speedMultiplier
-        scrollX += worldSpeed * dt
+        difficulty.update(simDt)
+        val boostMultiplier = if (speedBoostTimer > 0f) Constants.SPEED_BOOST_MULTIPLIER else 1f
+        worldSpeed = difficulty.speed * speedMultiplier * boostMultiplier
+        scrollX += worldSpeed * simDt
 
         // 2. player physics, 3. skating animation, hitboxes follow the new position
-        controller.update(dt)
-        animator.update(dt, worldSpeed)
+        val wasGrounded = player.grounded
+        val wasSliding = player.sliding
+        controller.update(simDt)
+
+        if (wasGrounded && !player.grounded && !player.sliding) {
+            camera.triggerJump()
+        }
+        if (!wasSliding && player.sliding) {
+            camera.triggerSlide()
+        }
+        if (wasSliding && !player.sliding) {
+            camera.endSlide()
+        }
+        if (player.hasLandedEvent()) {
+            camera.triggerLanding(1f)
+        }
+        animator.update(
+            simDt,
+            worldSpeed,
+            speedBoostTimer > 0f
+        )
         player.updateHitboxes()
 
         // 4. spawn + move + cull obstacles / coins / power-ups
-        spawner.update(dt, this)
-        for (i in 0 until obstacles.size) { val o = obstacles[i]; if (o.active) { o.update(dt, worldSpeed); if (o.isOffScreenLeft()) o.active = false } }
-        for (i in 0 until coins.size) { val c = coins[i]; if (c.active) { c.update(dt, worldSpeed); if (c.isOffScreenLeft()) c.active = false } }
-        for (i in 0 until powerUps.size) { val p = powerUps[i]; if (p.active) { p.update(dt, worldSpeed); if (p.isOffScreenLeft()) p.active = false } }
+        spawner.update(simDt, this)
+        for (i in 0 until obstacles.size) {
+            val o = obstacles[i]
+            if (o.active) {
+                o.update(simDt, worldSpeed)
+                if (o.isOffScreenLeft()) o.active = false
+            }
+        }
+        for (i in 0 until coins.size) {
+            val c = coins[i]
+            if (c.active) {
+                c.update(simDt, worldSpeed)
+                if (c.isOffScreenLeft()) c.active = false
+            }
+        }
+        for (i in 0 until powerUps.size) {
+            val p = powerUps[i]
+            if (p.active) {
+                p.update(simDt, worldSpeed)
+                if (p.isOffScreenLeft()) p.active = false
+            }
+        }
 
-        // 5. collisions: coins first so a coin and an obstacle in the same frame still pays out
+        // 5. collisions / pickups
         coinSystem.update(coins, player)
-        scoreSystem.update(dt, worldSpeed, coinSystem.runCoins)
+        for (i in 0 until powerUps.size) {
+            val p = powerUps[i]
+            if (!p.active) continue
+            if (p.type == com.voxcom.rollerrush.entities.PowerUpType.SPEED &&
+                CollisionSystem.playerTouchesCircle(player, p.x + p.width * 0.5f, p.y + p.height * 0.5f, 12f)) {
+                p.active = false
+                speedBoostReady = true
+            }
+        }
+        scoreSystem.update(simDt, worldSpeed, coinSystem.runCoins)
         if (CollisionSystem.playerHitsObstacle(player, obstacles)) {
             player.crash()
+            camera.triggerCrash()
+            slowMotionTimer = Constants.HIT_SLOW_MOTION_DURATION
+            timeScale = Constants.HIT_SLOW_MOTION_SCALE
             state = GameState.GAME_OVER
             gameOverTimer = 0f
         }
     }
 
     private fun updateGameOver(dt: Float) {
-        // Gameplay is stopped; only the crash tumble keeps animating.
-        controller.update(dt)
-        animator.update(dt, 0f)
+        camera.update(dt)
+
+        // Crash tumble also receives the short hit slow-motion treatment.
+        val crashScale = if (slowMotionTimer > 0f) {
+            slowMotionTimer = (slowMotionTimer - dt).coerceAtLeast(0f)
+            Constants.HIT_SLOW_MOTION_SCALE
+        } else 1f
+
+        controller.update(dt * crashScale)
+        animator.update(dt * crashScale, 0f)
         player.updateHitboxes()
+
+        // Timer uses real time so the game-over screen is not delayed by slow motion.
         gameOverTimer += dt
         if (gameOverTimer >= Constants.GAME_OVER_DELAY && !gameOverEventPending && !eventFired) {
             gameOverEventPending = true

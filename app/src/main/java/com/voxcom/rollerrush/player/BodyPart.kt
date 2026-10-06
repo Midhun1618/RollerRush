@@ -5,16 +5,6 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
 
-/**
- * One node of the skeleton / scene graph.
- *
- * Transform model: a part's (x, y) is the position of ITS pivot expressed in its PARENT's
- * local space (whose origin is the parent's pivot). rotation (degrees, clockwise) and
- * scale are applied around that pivot. Because draw() nests Canvas transforms, rotating a
- * parent automatically carries all children with it - this is the hierarchy.
- *
- * The bitmap is never modified; it is only drawn through the canvas matrix.
- */
 class BodyPart(
     val name: String,
     var bitmap: Bitmap?,

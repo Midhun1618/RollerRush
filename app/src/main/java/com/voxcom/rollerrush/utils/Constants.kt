@@ -38,6 +38,18 @@ object Constants {
     const val MOVING_UNLOCK_METERS = 300
     const val MOVING_EXTRA_SPEED = 70f     // moving obstacles approach faster than the world
     const val MOVING_HOP_HEIGHT = 18f
+    const val SLIDE_DURATION = 0.78f
+    const val SLIDE_SWIPE_DISTANCE = 70f
+    const val JUMP_SWIPE_DISTANCE = 70f
+    const val DOUBLE_TAP_WINDOW = 0.28f
+    const val OVERHEAD_UNLOCK_METERS = 180
+    const val SPEED_BOOST_DURATION = 2.0f
+    const val SPEED_BOOST_MULTIPLIER = 1.65f
+    const val SPEED_BOOST_UNLOCK_METERS = 80
+    const val SPEED_BOOST_SPAWN_MIN = 8.0f
+    const val SPEED_BOOST_SPAWN_MAX = 14.0f
+    const val SPEED_BOOST_CAMERA_ZOOM = 1.12f
+    const val SPEED_BOOST_CAMERA_PAN = 42f
 
     // ---------------------------------------------------------------- Score
     const val UNITS_PER_METER = 10f
@@ -55,6 +67,8 @@ object Constants {
 
     // ----------------------------------------------------------- Game over
     const val GAME_OVER_DELAY = 0.9f       // seconds of crash animation before the screen switches
+    const val HIT_SLOW_MOTION_DURATION = 0.38f
+    const val HIT_SLOW_MOTION_SCALE = 0.28f
 
     // ------------------------------------------------------- Intent extras
     const val EXTRA_SCORE = "extra_score"

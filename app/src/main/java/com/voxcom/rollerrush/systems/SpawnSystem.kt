@@ -22,13 +22,25 @@ import kotlin.random.Random
  */
 class SpawnSystem {
     private val rng = Random(System.nanoTime())
-    private val types = ObstacleType.values()
+    private val normalTypes = arrayOf(ObstacleType.GROUND, ObstacleType.TALL, ObstacleType.MOVING)
     private var timer = Constants.FIRST_SPAWN_DELAY
+    private var powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN
 
-    fun reset() { timer = Constants.FIRST_SPAWN_DELAY }
+    fun reset() { timer = Constants.FIRST_SPAWN_DELAY; powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN }
 
     fun update(dt: Float, world: GameWorld) {
         timer -= dt
+        powerUpTimer -= dt
+        if (powerUpTimer <= 0f) {
+            if (world.scoreSystem.distanceMeters >= Constants.SPEED_BOOST_UNLOCK_METERS) {
+                val pu = world.acquirePowerUp()
+                if (pu != null) pu.init(com.voxcom.rollerrush.entities.PowerUpType.SPEED,
+                    world.camera.viewWidth + Constants.SPAWN_MARGIN + 80f, Constants.GROUND_Y - 72f)
+            }
+            powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN +
+                rng.nextFloat() * (Constants.SPEED_BOOST_SPAWN_MAX - Constants.SPEED_BOOST_SPAWN_MIN)
+        }
+
         if (timer > 0f) return
 
         val interval = world.difficulty.nextSpawnInterval(rng)
@@ -41,7 +53,15 @@ class SpawnSystem {
             meters >= Constants.TALL_UNLOCK_METERS -> 1
             else -> 0
         }
-        val type = types[rng.nextInt(maxIndex + 1)]
+
+        // Overhead hazards are deliberately uncommon: they teach the player to
+        // use the new swipe-down slide without making the run feel random.
+        val type = if (meters >= Constants.OVERHEAD_UNLOCK_METERS && rng.nextFloat() < 0.20f) {
+            ObstacleType.OVERHEAD
+        } else {
+            normalTypes[rng.nextInt(maxIndex + 1)]
+        }
+
         val obstacle = world.acquireObstacle() ?: return
         obstacle.init(type, spawnX)
 

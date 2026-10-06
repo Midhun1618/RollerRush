@@ -8,7 +8,7 @@ import com.voxcom.rollerrush.utils.Constants
 import kotlin.math.abs
 import kotlin.math.sin
 
-enum class ObstacleType { GROUND, TALL, MOVING }
+enum class ObstacleType { GROUND, TALL, MOVING, OVERHEAD }
 
 class Obstacle : GameEntity() {
     var type = ObstacleType.GROUND
@@ -23,9 +23,14 @@ class Obstacle : GameEntity() {
             ObstacleType.GROUND -> { width = 22f; height = 26f }
             ObstacleType.TALL -> { width = 20f; height = 58f }
             ObstacleType.MOVING -> { width = 24f; height = 24f }
+            ObstacleType.OVERHEAD -> { width = 38f; height = 24f }
         }
         x = spawnX
-        y = Constants.GROUND_Y - height
+        y = if (type == ObstacleType.OVERHEAD) {
+            Constants.GROUND_Y - 90f
+        } else {
+            Constants.GROUND_Y - height
+        }
         t = 0f
         active = true
         refreshBoxes()
