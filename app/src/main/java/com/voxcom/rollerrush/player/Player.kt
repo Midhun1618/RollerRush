@@ -49,6 +49,13 @@ class Player(private val sprites: PlayerSprites) {
     private var slideTime = 0f
     private var landedEvent = false
 
+    // Cinematic intro root rotation.
+    // This is separate from torso.rotation so the intro flip
+    // never interferes with normal skating poses.
+    var introRotation = 0f
+        private set
+
+
     // Gameplay hitboxes (world units). Updated by updateHitboxes().
     val bodyHitbox = RectF()   // torso/head
     val feetHitbox = RectF()   // skates + lower legs (ground detection of obstacles)
@@ -80,9 +87,6 @@ class Player(private val sprites: PlayerSprites) {
         leftUpperArm.addChild(leftForearm, 0f, Rig.UPPER_ARM_LEN)
         leftForearm.addChild(leftHand, 0f, Rig.FOREARM_LEN)
 
-        torso.addChild(rightUpperArm, 0f, Rig.SHOULDER_Y)
-        rightUpperArm.addChild(rightForearm, 0f, Rig.UPPER_ARM_LEN)
-        rightForearm.addChild(rightHand, 0f, Rig.FOREARM_LEN)
 
         torso.addChild(leftThigh, 0f, 0f, behind = true)
         leftThigh.addChild(leftShin, 0f, Rig.THIGH_LEN)
@@ -92,10 +96,34 @@ class Player(private val sprites: PlayerSprites) {
         rightThigh.addChild(rightShin, 0f, Rig.THIGH_LEN)
         rightShin.addChild(rightSkate, 0f, Rig.SHIN_LEN)
 
+        torso.addChild(rightUpperArm, 0f, Rig.SHOULDER_Y)
+        rightUpperArm.addChild(rightForearm, 0f, Rig.UPPER_ARM_LEN)
+        rightForearm.addChild(rightHand, 0f, Rig.FOREARM_LEN)
+
         updateHitboxes()
     }
 
-    fun draw(canvas: Canvas, paint: Paint) = torso.draw(canvas, paint)
+    fun setIntroRotation(rotation: Float) {
+        introRotation = rotation
+    }
+
+    fun draw(canvas: Canvas, paint: Paint) {
+        if (introRotation == 0f) {
+            torso.draw(canvas, paint)
+            return
+        }
+
+        canvas.save()
+
+        // Rotate around the torso/root position.
+        canvas.translate(torso.x, torso.y)
+        canvas.rotate(introRotation)
+        canvas.translate(-torso.x, -torso.y)
+
+        torso.draw(canvas, paint)
+
+        canvas.restore()
+    }
 
     /**
      * Gameplay hitboxes. Intentionally smaller than the art:
@@ -154,6 +182,7 @@ class Player(private val sprites: PlayerSprites) {
         sliding = false
         slideTime = 0f
         landedEvent = false
+        introRotation = 0f
         updateHitboxes()
     }
 

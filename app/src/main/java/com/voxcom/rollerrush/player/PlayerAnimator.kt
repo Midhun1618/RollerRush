@@ -13,11 +13,15 @@ class PlayerAnimator(private val player: Player) {
         private set
 
     private val skating = SkatingAnimation()
+
     private val skatePose = Pose()
     private val airPose = Pose()
     private val crashPose = Pose()
     private val slidePose = Pose()
     private val boostPose = Pose()
+
+    private val introPose = Pose()
+
     private val out = Pose()
 
     private var airBlend = 0f
@@ -26,55 +30,259 @@ class PlayerAnimator(private val player: Player) {
 
     fun reset() {
         skating.reset()
+
         airBlend = 0f
         landDip = 0f
         crashTime = 0f
+
+        player.setIntroRotation(0f)
+
         state = AnimationState.SKATING
     }
 
     /**
-     * Updates the player's animation.
+     * Cinematic entrance.
      *
-     * [speedBoostActive] is passed explicitly so the boost pose does not depend
-     * on world speed. This keeps the animation correct even as normal game
-     * difficulty increases.
+     * The player starts above the world at -180 degrees and smoothly
+     * rotates to exactly 0 degrees while falling. There is no 360-degree
+     * root flip, so the landing cannot snap back to zero.
+     */
+    fun updateIntro(
+        time: Float,
+        dt: Float
+    ) {
+        val t = time.coerceIn(0f, Constants.INTRO_DURATION)
+
+        when {
+            // =========================================================
+            // FALL
+            // =========================================================
+            t < Constants.INTRO_FALL_DURATION -> {
+                val raw =
+                    (t / Constants.INTRO_FALL_DURATION)
+                        .coerceIn(0f, 1f)
+
+                val fall = smooth(raw)
+
+                // Keep the player away from the very beginning of the
+                // background. Horizontal movement toward normal gameplay
+                // position happens only after the landing.
+                player.x = Constants.INTRO_START_X
+
+                player.bottomY = lerp(
+                    Constants.INTRO_START_Y,
+                    Constants.GROUND_Y - 18f,
+                    fall
+                )
+
+                player.grounded = false
+                player.crashed = false
+
+                // -180 -> 0 smoothly. Never use 360 here.
+                player.setIntroRotation(
+                    lerp(
+                        Constants.INTRO_START_ROTATION,
+                        Constants.INTRO_LANDING_ROTATION,
+                        fall
+                    )
+                )
+
+                introPose.lerp(skatePose, skatePose, 0f)
+
+                introPose.torsoRotation = 38f
+                introPose.headRotation = -12f
+                introPose.hipOffsetX = 0f
+                introPose.bodyOffsetY = 0f
+
+                // Tucked legs.
+                introPose.leftThigh = -52f
+                introPose.leftKnee = 82f
+                introPose.leftSkate = 8f - (-52f + 82f)
+
+                introPose.rightThigh = 8f
+                introPose.rightKnee = 52f
+                introPose.rightSkate = 48f - (8f + 52f)
+
+                // Small arm movement during the fall.
+                val armSwing =
+                    kotlin.math.sin(raw * Math.PI.toFloat() * 1.5f) * 12f
+
+                introPose.leftArm = -28f - armSwing
+                introPose.leftForearm = -25f
+                introPose.rightArm = -62f + armSwing
+                introPose.rightForearm = -25f
+
+                apply(introPose)
+                state = AnimationState.JUMPING
+            }
+
+            // =========================================================
+            // LANDING
+            // =========================================================
+            t < Constants.INTRO_SKATE_START -> {
+                val landingTime =
+                    (t - Constants.INTRO_FALL_DURATION)
+                        .coerceAtLeast(0f)
+
+                val raw =
+                    (landingTime / Constants.INTRO_LANDING_DURATION)
+                        .coerceIn(0f, 1f)
+
+                player.x = Constants.INTRO_START_X
+                player.bottomY = Constants.GROUND_Y
+                player.grounded = true
+                player.crashed = false
+
+                // Rotation is already complete.
+                player.setIntroRotation(Constants.INTRO_LANDING_ROTATION)
+
+                introPose.lerp(skatePose, skatePose, 0f)
+
+                // Strong compression, then recovery.
+                val compression =
+                    if (raw < 0.35f) {
+                        smooth(raw / 0.35f)
+                    } else {
+                        1f - smooth((raw - 0.35f) / 0.65f)
+                    }
+
+                introPose.torsoRotation = 38f + 12f * compression
+                introPose.headRotation = -18f + 9f * compression
+                introPose.bodyOffsetY = 9f * compression
+                introPose.hipOffsetX = -2f * compression
+
+                introPose.leftThigh = -16f - 18f * compression
+                introPose.leftKnee = 50f + 36f * compression
+                introPose.leftSkate = -7f * compression
+
+                introPose.rightThigh = -16f - 14f * compression
+                introPose.rightKnee = 50f + 32f * compression
+                introPose.rightSkate = 7f * compression
+
+                introPose.leftArm = 22f - 28f * compression
+                introPose.leftForearm = -18f - 22f * compression
+                introPose.rightArm = 38f + 22f * compression
+                introPose.rightForearm = -18f + 28f * compression
+
+                apply(introPose)
+                state = if (raw < 0.65f) {
+                    AnimationState.LANDING
+                } else {
+                    AnimationState.SKATING
+                }
+            }
+
+            // =========================================================
+            // FIRST SKATING PUSH / SMOOTH EXIT
+            // =========================================================
+            else -> {
+                player.bottomY = Constants.GROUND_Y
+                player.grounded = true
+                player.crashed = false
+
+                val skateRaw =
+                    (
+                            (t - Constants.INTRO_SKATE_START) /
+                                    (Constants.INTRO_DURATION - Constants.INTRO_SKATE_START)
+                            ).coerceIn(0f, 1f)
+
+                val skateBlend = smooth(skateRaw)
+
+                // Smoothly move from the cinematic position to the normal
+                // gameplay position. No horizontal teleport at the end.
+                player.x = lerp(
+                    Constants.INTRO_START_X,
+                    Constants.PLAYER_X,
+                    skateBlend
+                )
+
+                player.setIntroRotation(0f)
+
+                // Start the normal skating cycle underneath the cinematic
+                // landing pose, then blend into it. This prevents the pose
+                // from snapping to the first skating frame after the flip.
+                skating.update(dt, 1f, skatePose)
+                out.lerp(
+                    introPose,
+                    skatePose,
+                    skateBlend
+                )
+                apply(out)
+                state = AnimationState.SKATING
+            }
+        }
+    }
+
+    /**
+     * Normal gameplay animation.
      */
     fun update(
         dt: Float,
         worldSpeed: Float,
         speedBoostActive: Boolean = false
     ) {
+
         skating.update(
             dt,
-            (worldSpeed / Constants.BASE_SPEED).coerceIn(0.8f, 1.6f),
+            (worldSpeed / Constants.BASE_SPEED)
+                .coerceIn(0.8f, 1.6f),
             skatePose
         )
 
-        if (player.consumeLanded()) landDip = 1f
-        landDip = max(0f, landDip - dt * LAND_RECOVER_RATE)
-
-        state = when {
-            player.crashed -> AnimationState.CRASHED
-            player.sliding -> AnimationState.SLIDING
-            !player.grounded -> {
-                if (player.vy < 0f) AnimationState.JUMPING
-                else AnimationState.FALLING
-            }
-            landDip > 0.02f -> AnimationState.LANDING
-            else -> AnimationState.SKATING
+        if (player.consumeLanded()) {
+            landDip = 1f
         }
 
-        // Blend skating <-> airborne.
-        val target = if (!player.grounded && !player.crashed) 1f else 0f
+        landDip =
+            max(
+                0f,
+                landDip - dt * LAND_RECOVER_RATE
+            )
+
+        state = when {
+            player.crashed ->
+                AnimationState.CRASHED
+
+            player.sliding ->
+                AnimationState.SLIDING
+
+            !player.grounded -> {
+                if (player.vy < 0f)
+                    AnimationState.JUMPING
+                else
+                    AnimationState.FALLING
+            }
+
+            landDip > 0.02f ->
+                AnimationState.LANDING
+
+            else ->
+                AnimationState.SKATING
+        }
+
+        val target =
+            if (!player.grounded && !player.crashed)
+                1f
+            else
+                0f
 
         airBlend =
             if (airBlend < target) {
-                min(target, airBlend + dt * AIR_BLEND_RATE)
+                min(
+                    target,
+                    airBlend + dt * AIR_BLEND_RATE
+                )
             } else {
-                max(target, airBlend - dt * AIR_BLEND_RATE)
+                max(
+                    target,
+                    airBlend - dt * AIR_BLEND_RATE
+                )
             }
 
-        SkatingAnimation.airPose(player.vy, airPose)
+        SkatingAnimation.airPose(
+            player.vy,
+            airPose
+        )
 
         out.lerp(
             skatePose,
@@ -85,12 +293,19 @@ class PlayerAnimator(private val player: Player) {
         // -------------------------------------------------------------
         // AGGRESSIVE SLIDE
         // -------------------------------------------------------------
-        if (player.sliding && player.grounded && !player.crashed) {
 
-            slidePose.lerp(skatePose, skatePose, 0f)
+        if (
+            player.sliding &&
+            player.grounded &&
+            !player.crashed
+        ) {
 
-            // Full-body aggressive slide.
-            // Torso is almost horizontal with the legs thrown apart.
+            slidePose.lerp(
+                skatePose,
+                skatePose,
+                0f
+            )
+
             slidePose.torsoRotation = 82f
             slidePose.headRotation = -24f
 
@@ -111,81 +326,73 @@ class PlayerAnimator(private val player: Player) {
             slidePose.rightArm = 26f
             slidePose.rightForearm = -34f
 
-            out.lerp(out, slidePose, 0.95f)
+            out.lerp(
+                out,
+                slidePose,
+                0.95f
+            )
         }
 
         // -------------------------------------------------------------
-        // SPEED BOOST POSE
+        // SPEED BOOST
         // -------------------------------------------------------------
-        //
-        // During boost the skater becomes much more aerodynamic:
-        //
-        //       normal
-        //          O
-        //         /|
-        //        / |
-        //
-        //       BOOST
-        //             O
-        //          __/|
-        //       __/  |
-        //
-        // Lower torso angle = stronger forward lean.
-        //
+
         if (
             speedBoostActive &&
             player.grounded &&
             !player.sliding &&
             !player.crashed
         ) {
-            boostPose.lerp(skatePose, skatePose, 0f)
 
-            // More aggressive forward lean.
-            // 82 -> 68 makes the torso visibly flatter/more aerodynamic.
+            boostPose.lerp(
+                skatePose,
+                skatePose,
+                0f
+            )
+
             boostPose.torsoRotation = 75f
-
-            // Head follows the forward lean.
             boostPose.headRotation = -35f
 
-            // Shift the body slightly forward.
             boostPose.hipOffsetX = 7f
             boostPose.bodyOffsetY = 5f
 
-            // Front leg reaches farther forward.
             boostPose.leftThigh = -60f
             boostPose.leftKnee = 65f
             boostPose.leftSkate = 5f
 
-            // Rear leg extends backward for a stronger speed silhouette.
             boostPose.rightThigh = 48f
             boostPose.rightKnee = 10f
             boostPose.rightSkate = 20f
 
-            // Arms sweep backward to sell the acceleration.
             boostPose.leftArm = -48f
             boostPose.leftForearm = -24f
 
             boostPose.rightArm = 20f
             boostPose.rightForearm = -42f
 
-            // Blend instead of snapping into the boost pose.
-            out.lerp(out, boostPose, 0.9f)
+            out.lerp(
+                out,
+                boostPose,
+                0.9f
+            )
         }
 
         // -------------------------------------------------------------
         // LANDING
         // -------------------------------------------------------------
+
         if (landDip > 0f) {
+
             val dKnee = 28f * landDip
             val dThigh = -8f * landDip
 
             out.leftKnee += dKnee
             out.leftThigh += dThigh
-            out.leftSkate -= (dKnee + dThigh)
+            out.leftSkate -= dKnee + dThigh
 
             out.rightKnee += dKnee
             out.rightThigh += dThigh
-            out.rightSkate -= (dKnee + dThigh)
+            out.rightSkate -= dKnee + dThigh
 
             out.torsoRotation += 6f * landDip
             out.headRotation -= 5f * landDip
@@ -194,7 +401,9 @@ class PlayerAnimator(private val player: Player) {
         // -------------------------------------------------------------
         // CRASH
         // -------------------------------------------------------------
+
         if (player.crashed) {
+
             crashTime += dt
 
             SkatingAnimation.crashPose(
@@ -205,22 +414,25 @@ class PlayerAnimator(private val player: Player) {
             out.lerp(
                 out,
                 crashPose,
-                min(1f, crashTime * 5f)
+                min(
+                    1f,
+                    crashTime * 5f
+                )
             )
         }
 
         apply(out)
     }
 
-    /**
-     * Writes [pose] into the rig and places the torso (root) so the lowest skate
-     * touches the player's ground-contact point.
-     */
     private fun apply(p: Pose) {
+
         val p0 = player
 
-        p0.torso.rotation = p.torsoRotation
-        p0.head.rotation = p.headRotation
+        p0.torso.rotation =
+            p.torsoRotation
+
+        p0.head.rotation =
+            p.headRotation
 
         p0.leftThigh.rotation =
             p.leftThigh - p.torsoRotation
@@ -252,25 +464,27 @@ class PlayerAnimator(private val player: Player) {
         p0.rightForearm.rotation =
             p.rightForearm
 
-        val dropL = SkatingAnimation.footDrop(
-            p.leftThigh,
-            p.leftKnee,
-            p.leftSkate,
-            Rig.THIGH_LEN,
-            Rig.SHIN_LEN,
-            Rig.SKATE_DROP,
-            Rig.SKATE_REACH
-        )
+        val dropL =
+            SkatingAnimation.footDrop(
+                p.leftThigh,
+                p.leftKnee,
+                p.leftSkate,
+                Rig.THIGH_LEN,
+                Rig.SHIN_LEN,
+                Rig.SKATE_DROP,
+                Rig.SKATE_REACH
+            )
 
-        val dropR = SkatingAnimation.footDrop(
-            p.rightThigh,
-            p.rightKnee,
-            p.rightSkate,
-            Rig.THIGH_LEN,
-            Rig.SHIN_LEN,
-            Rig.SKATE_DROP,
-            Rig.SKATE_REACH
-        )
+        val dropR =
+            SkatingAnimation.footDrop(
+                p.rightThigh,
+                p.rightKnee,
+                p.rightSkate,
+                Rig.THIGH_LEN,
+                Rig.SHIN_LEN,
+                Rig.SKATE_DROP,
+                Rig.SKATE_REACH
+            )
 
         p0.torso.x =
             p0.x + p.hipOffsetX
@@ -281,10 +495,21 @@ class PlayerAnimator(private val player: Player) {
                     p.bodyOffsetY
     }
 
-    private fun smooth(x: Float): Float =
-        x * x * (3f - 2f * x)
+    private fun smooth(x: Float): Float {
+        val v = x.coerceIn(0f, 1f)
+        return v * v * (3f - 2f * v)
+    }
+
+    private fun lerp(
+        a: Float,
+        b: Float,
+        t: Float
+    ): Float {
+        return a + (b - a) * t
+    }
 
     private companion object {
+
         const val AIR_BLEND_RATE = 9f
         const val LAND_RECOVER_RATE = 6f
     }

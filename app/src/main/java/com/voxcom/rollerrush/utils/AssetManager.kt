@@ -38,6 +38,8 @@ class AssetManager(private val context: Context) {
         private set
     lateinit var groundTile: Bitmap
         private set
+    lateinit var introBackground: Bitmap
+        private set
 
     fun obstacleBitmap(type: ObstacleType): Bitmap = obstacleBitmaps[type.ordinal]
 
@@ -65,6 +67,16 @@ class AssetManager(private val context: Context) {
         farBackground = make("background/far.png", TILE_W * bg, 200 * bg) { c, w, h -> drawHills(c, w, h) }
         midBackground = make("background/mid.png", TILE_W * bg, 140 * bg) { c, w, h -> drawBuildings(c, w, h) }
         groundTile = make("background/ground.png", 120 * 3, Constants.GROUND_THICKNESS.toInt() * 3) { c, w, h -> drawGround(c, w, h) }
+
+        // This is the first section of the actual world, not a temporary
+        // cinematic background. It remains visible after the intro and is
+        // naturally scrolled away during gameplay.
+        introBackground = make(
+            "background/intro.png",
+            Constants.INTRO_BACKGROUND_WORLD_WIDTH.toInt(),
+            Constants.INTRO_BACKGROUND_WORLD_HEIGHT.toInt()
+        ) { c, w, h -> drawIntroFallback(c, w, h) }
+
         loaded = true
     }
 
@@ -111,7 +123,7 @@ class AssetManager(private val context: Context) {
     fun release() {
         if (!loaded) return
         obstacleBitmaps.forEach { it.recycle() }
-        listOf(coinBitmap, farBackground, midBackground, groundTile).forEach { it.recycle() }
+        listOf(coinBitmap, farBackground, midBackground, groundTile, introBackground).forEach { it.recycle() }
         loaded = false
     }
 
@@ -143,6 +155,12 @@ class AssetManager(private val context: Context) {
 
     private fun darken(color: Int, f: Float) =
         Color.rgb((Color.red(color) * f).toInt(), (Color.green(color) * f).toInt(), (Color.blue(color) * f).toInt())
+
+    private fun drawIntroFallback(c: Canvas, w: Float, h: Float) {
+        c.drawRect(0f, 0f, w, h, paint(Color.rgb(110, 198, 255)))
+        c.drawRect(0f, h * 0.62f, w, h, paint(Color.rgb(74, 78, 105)))
+        c.drawRect(0f, h * 0.60f, w, h * 0.63f, paint(Color.rgb(154, 140, 152)))
+    }
 
     // ------------------------------------------------------- placeholder drawing
     private fun drawHead(c: Canvas, w: Float, h: Float, skin: Int) {

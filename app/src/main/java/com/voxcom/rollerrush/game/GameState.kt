@@ -1,3 +1,3 @@
 package com.voxcom.rollerrush.game
 
-enum class GameState { MENU, PLAYING, PAUSED, GAME_OVER }
+enum class GameState { INTRO, MENU, PLAYING, PAUSED, GAME_OVER }

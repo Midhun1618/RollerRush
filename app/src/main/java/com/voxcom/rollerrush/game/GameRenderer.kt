@@ -46,7 +46,7 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         canvas.drawRect(0f, 0f, camera.screenWidth, camera.screenHeight, skyPaint)
 
         canvas.save()
-        camera.applyTo(canvas, Constants.PLAYER_X, Constants.GROUND_Y - 65f) // from here on: world units
+        camera.applyTo(canvas, world.player.x, Constants.GROUND_Y - 65f) // from here on: world units
         val view = camera.viewWidth
         val scroll = world.scrollX
 
@@ -58,6 +58,30 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         fill.color = Color.rgb(74, 78, 105)
         canvas.drawRect(-200f, Constants.GROUND_Y, view + 200f, Constants.GROUND_Y + 600f, fill) // below-tile fill
         drawTiled(canvas, assets.groundTile, 120f, Constants.GROUND_Y, Constants.GROUND_THICKNESS, scroll, view)
+
+        // --------------------------------------------------------
+        // INTRO BACKGROUND WORLD SECTION
+        // --------------------------------------------------------
+        // intro.png is part of the world beginning. It is NOT tied to
+        // GameState.INTRO, so it cannot suddenly disappear when the
+        // cinematic ends. Normal gameplay scrolls it naturally left.
+        val introX = -scroll
+        val introRight = introX + Constants.INTRO_BACKGROUND_WORLD_WIDTH
+
+        if (introX < view && introRight > -100f) {
+            dst.set(
+                introX,
+                0f,
+                introRight,
+                Constants.INTRO_BACKGROUND_WORLD_HEIGHT
+            )
+            canvas.drawBitmap(
+                assets.introBackground,
+                null,
+                dst,
+                bmpPaint
+            )
+        }
 
         // Entities
         val coins = world.coins
@@ -119,15 +143,6 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         textPaint.textSize = h * 0.045f
         sb.setLength(0); sb.append("Distance: ").append(world.distanceMeters).append(" m")
         canvas.drawText(sb, 0, sb.length, leftX, margin + h * 0.07f + textPaint.textSize * 1.3f, textPaint)
-
-        // Speed boost state. It is deliberately compact so it never dominates the game view.
-        if (world.speedBoostActive || world.speedBoostAvailable) {
-            textPaint.textSize = h * 0.038f
-            textPaint.textAlign = Paint.Align.LEFT
-            sb.setLength(0)
-            if (world.speedBoostActive) sb.append("BOOST!") else sb.append("BOOST READY • DOUBLE TAP")
-            canvas.drawText(sb, 0, sb.length, leftX, margin + h * 0.07f + textPaint.textSize * 2.8f, textPaint)
-        }
 
         // Coins: gold dot + number, right-aligned just left of the pause button.
         textPaint.textSize = h * 0.07f

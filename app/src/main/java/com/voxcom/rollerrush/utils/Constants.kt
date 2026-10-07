@@ -1,42 +1,47 @@
 package com.voxcom.rollerrush.utils
 
-/**
- * Central place for every tunable number.
- *
- * All gameplay distances are in WORLD UNITS (not pixels). The world is always
- * WORLD_HEIGHT units tall; the Camera scales that to the real screen.
- */
+/** Central place for every tunable number. */
 object Constants {
-    // ---------------------------------------------------------------- World
-    const val WORLD_HEIGHT = 360f          // logical height, always fully visible
-    const val MIN_VIEW_WIDTH = 560f        // narrowest visible world width (4:3 tablets)
-    const val GROUND_Y = 300f              // y of the ground surface (y grows downward)
+    const val WORLD_HEIGHT = 360f
+    const val MIN_VIEW_WIDTH = 560f
+    const val GROUND_Y = 300f
     const val GROUND_THICKNESS = 60f
-    const val PLAYER_X = 100f              // fixed horizontal position of the skater
-    const val SPAWN_MARGIN = 40f           // spawn this far beyond the right screen edge
-    const val BITMAP_SCALE = 4f            // generated sprite pixels per world unit
+    const val PLAYER_X = 100f
+    const val SPAWN_MARGIN = 40f
+    const val BITMAP_SCALE = 4f
 
-    // -------------------------------------------------------------- Physics
-    const val GRAVITY = 1700f              // units / s^2
-    const val JUMP_HEIGHT_BASE = 95f       // units (modified by SkateStats.jumpLevel)
+    const val GRAVITY = 1700f
+    const val JUMP_HEIGHT_BASE = 95f
 
-    // ------------------------------------------------------------ Game loop
+    // Intro / cinematic entrance
+    const val INTRO_DURATION = 1.2f
+    const val INTRO_FALL_DURATION = 0.45f
+    const val INTRO_LANDING_DURATION = 0.20f
+    const val INTRO_SKATE_START = 0.65f
+    const val INTRO_START_X = 250f
+    const val INTRO_START_Y = 125f
+    const val INTRO_CAMERA_ZOOM = 1.35f
+    const val INTRO_CAMERA_PAN_X = 0f
+    const val INTRO_START_ROTATION = -180f
+    const val INTRO_LANDING_ROTATION = 0f
+    const val INTRO_BACKGROUND_WORLD_WIDTH = 1100f
+    const val INTRO_BACKGROUND_WORLD_HEIGHT = 360f
+
     const val TARGET_FPS = 60
-    const val MAX_FRAME_DT = 0.05f         // clamp huge frame gaps (e.g. after a hiccup)
-    const val MAX_FIXED_STEP = 0.02f       // update() is called with steps <= this
-    const val PAUSED_FRAME_MS = 50L        // idle redraw rate while paused
+    const val MAX_FRAME_DT = 0.05f
+    const val MAX_FIXED_STEP = 0.02f
+    const val PAUSED_FRAME_MS = 50L
 
-    // ----------------------------------------------------------- Difficulty
-    const val BASE_SPEED = 200f            // world units / s at start
+    const val BASE_SPEED = 200f
     const val MAX_SPEED = 420f
-    const val SPEED_INCREASE = 3.2f        // units / s gained per second played
-    const val SPAWN_INTERVAL_START = 2.1f  // seconds between obstacles at BASE_SPEED
-    const val SPAWN_INTERVAL_MIN = 0.95f   // seconds between obstacles at MAX_SPEED
-    const val SPAWN_JITTER = 0.15f         // +/- random fraction applied to the interval
+    const val SPEED_INCREASE = 3.2f
+    const val SPAWN_INTERVAL_START = 2.1f
+    const val SPAWN_INTERVAL_MIN = 0.95f
+    const val SPAWN_JITTER = 0.15f
     const val FIRST_SPAWN_DELAY = 1.5f
-    const val TALL_UNLOCK_METERS = 120     // obstacle variety unlocks by distance
+    const val TALL_UNLOCK_METERS = 120
     const val MOVING_UNLOCK_METERS = 300
-    const val MOVING_EXTRA_SPEED = 70f     // moving obstacles approach faster than the world
+    const val MOVING_EXTRA_SPEED = 70f
     const val MOVING_HOP_HEIGHT = 18f
     const val SLIDE_DURATION = 0.78f
     const val SLIDE_SWIPE_DISTANCE = 70f
@@ -51,26 +56,21 @@ object Constants {
     const val SPEED_BOOST_CAMERA_ZOOM = 1.12f
     const val SPEED_BOOST_CAMERA_PAN = 42f
 
-    // ---------------------------------------------------------------- Score
     const val UNITS_PER_METER = 10f
     const val SCORE_PER_METER = 2
     const val SCORE_PER_COIN = 30
 
-    // ------------------------------------------------------- Entity pooling
     const val MAX_OBSTACLES = 16
     const val MAX_COINS = 48
     const val MAX_POWERUPS = 4
 
-    // ---------------------------------------------------------------- Coins
     const val COIN_RADIUS = 9f
-    const val COIN_PICKUP_RADIUS = 7.5f    // smaller than the visual radius on purpose
+    const val COIN_PICKUP_RADIUS = 7.5f
 
-    // ----------------------------------------------------------- Game over
-    const val GAME_OVER_DELAY = 0.9f       // seconds of crash animation before the screen switches
+    const val GAME_OVER_DELAY = 0.9f
     const val HIT_SLOW_MOTION_DURATION = 0.38f
     const val HIT_SLOW_MOTION_SCALE = 0.28f
 
-    // ------------------------------------------------------- Intent extras
     const val EXTRA_SCORE = "extra_score"
     const val EXTRA_DISTANCE = "extra_distance"
     const val EXTRA_COINS = "extra_coins"

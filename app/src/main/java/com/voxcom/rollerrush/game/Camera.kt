@@ -82,6 +82,25 @@ class Camera {
     private var slideSeed = 0f
 
     // ------------------------------------------------------------
+    // INTRO CAMERA
+    // ------------------------------------------------------------
+
+    private var introActive = false
+    private var introExiting = false
+    private var introBlend = 0f
+
+    fun startIntro() {
+        introActive = true
+        introExiting = false
+        introBlend = 1f
+    }
+
+    fun endIntro() {
+        introActive = false
+        introExiting = true
+    }
+
+    // ------------------------------------------------------------
     // SIZE
     // ------------------------------------------------------------
 
@@ -217,12 +236,25 @@ class Camera {
                 -1.75f * slideAmount
 
         } else {
-
             slideShakeX = 0f
             slideShakeY = 0f
             slideZoom = 1f
             slideOffsetY = 0f
             slideTilt = 0f
+        }
+
+        // --------------------------------------------------------
+        // INTRO CAMERA BLEND
+        // --------------------------------------------------------
+
+        if (introActive) {
+            introBlend = 1f
+        } else if (introExiting) {
+            introBlend = max(0f, introBlend - dt * 1.35f)
+            if (introBlend <= 0f) {
+                introBlend = 0f
+                introExiting = false
+            }
         }
     }
 
@@ -260,6 +292,10 @@ class Camera {
         slideTilt = 0f
 
         slideSeed = 0f
+
+        introActive = false
+        introExiting = false
+        introBlend = 0f
     }
 
     // ------------------------------------------------------------
@@ -422,86 +458,72 @@ class Camera {
         focusX: Float = Constants.PLAYER_X,
         focusY: Float = Constants.GROUND_Y - 65f
     ) {
-
-        // General camera shake.
         val progress =
-            if (shakeDuration <= 0f) {
-                0f
-            } else {
-                shakeTime / shakeDuration
-            }
+            if (shakeDuration <= 0f) 0f else shakeTime / shakeDuration
 
-        val envelope =
-            progress * progress
+        val envelope = progress * progress
 
         val shakeX =
-            sin(shakePhase) *
-                    shakeStrength *
-                    envelope
+            sin(shakePhase) * shakeStrength * envelope
 
         val shakeY =
             sin(shakePhase * 1.37f) *
-                    shakeStrength *
-                    0.72f *
-                    envelope
+                    shakeStrength * 0.72f * envelope
 
-        // --------------------------------------------------------
-        // COMBINE GENERAL ZOOM + SLIDE ZOOM
-        // --------------------------------------------------------
+        // Intro zoom is layered on top of normal cinematic zoom.
+        val introZoom =
+            1f +
+                    (Constants.INTRO_CAMERA_ZOOM - 1f) * introBlend
 
         val finalZoom =
-            zoom * slideZoom
+            zoom * slideZoom * introZoom
 
         val zScale =
             scale * finalZoom
-
-        // --------------------------------------------------------
-        // SCREEN POSITION
-        // --------------------------------------------------------
 
         val screenFocusX =
             focusX * scale
 
         val screenFocusY =
-            offsetY +
-                    focusY * scale
+            offsetY + focusY * scale
 
-        // Slide movement needs to be scaled with the world.
-        val finalX =
+        val normalX =
             screenFocusX +
                     panX * scale +
                     slideShakeX +
                     shakeX
 
-        val finalY =
+        val normalY =
             screenFocusY +
                     slideOffsetY * scale +
                     slideShakeY +
                     shakeY
 
-        // --------------------------------------------------------
-        // TRANSFORM
-        // --------------------------------------------------------
+        // During the intro the player is framed in the centre.
+        // Because focusX is world.player.x, the framing follows the player
+        // without changing the world itself.
+        val introX =
+            screenWidth * 0.5f +
+                    Constants.INTRO_CAMERA_PAN_X * scale +
+                    shakeX
 
-        canvas.save()
+        val introY =
+            screenHeight * 0.50f + shakeY
 
-        canvas.translate(
-            finalX,
-            finalY
+        val finalX =
+            normalX + (introX - normalX) * introBlend
+
+        val finalY =
+            normalY + (introY - normalY) * introBlend
+
+        canvas.translate(finalX, finalY)
+
+        canvas.rotate(
+            slideTilt * (1f - introBlend)
         )
 
-        // Slide camera tilt.
-        canvas.rotate(slideTilt)
-
-        canvas.scale(
-            zScale,
-            zScale
-        )
-
-        canvas.translate(
-            -focusX,
-            -focusY
-        )
+        canvas.scale(zScale, zScale)
+        canvas.translate(-focusX, -focusY)
     }
 
     // ------------------------------------------------------------
