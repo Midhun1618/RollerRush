@@ -13,20 +13,23 @@ class PlayerData(private val prefs: GamePreferences) {
 
     var characterPreset: Int
         get() = prefs.getInt(KEY_PRESET, 0).coerceIn(0, SkinCatalog.presets.lastIndex)
-        set(v) = prefs.putInt(KEY_PRESET, v)
+        set(v) = prefs.putInt(KEY_PRESET, v.coerceIn(0, SkinCatalog.presets.lastIndex))
 
     var equippedSkateId: String
         get() = prefs.getString(KEY_SKATE, "skate_basic")
         set(v) = prefs.putString(KEY_SKATE, v)
 
-    val character: CharacterData get() = SkinCatalog.presets[characterPreset]
+    /** Character preset + the currently equipped shop skate. */
+    val character: CharacterData
+        get() = SkinCatalog.presets[characterPreset].copy(skateSkin = equippedSkateId)
+
     val skateStats: SkateStats get() = SkateStats.forSkate(equippedSkateId)
 
     fun addCoins(amount: Int) { if (amount > 0) coins += amount }
 
     /** @return true if the purchase went through. */
     fun spendCoins(amount: Int): Boolean {
-        if (amount > coins) return false
+        if (amount < 0 || amount > coins) return false
         coins -= amount
         return true
     }

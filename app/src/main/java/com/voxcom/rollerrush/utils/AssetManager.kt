@@ -98,7 +98,24 @@ class AssetManager(private val context: Context) {
             paint(color).let { c.drawOval(0f, 0f, w, h, it) }
         }
 
-        fun skateBmp(color: Int) = part(ch.skateSkin, "skate", Rig.SKATE_W, Rig.SKATE_H) { c, w, h -> drawSkate(c, w, h, color) }
+        fun skateBmp(): Bitmap {
+            val file = when (ch.skateSkin) {
+                "skate_basic" -> "skate1.png"
+                "skate_ice" -> "skate2.png"
+                "skate_aero" -> "skate3.png"
+                "skate_inferno" -> "skate4.png"
+                "skate_volt" -> "skate5.png"
+                "skate_default" -> "skate1.png"
+                "skate_2" -> "skate3.png"
+                else -> null
+            }
+            return if (file != null) {
+                loadFromAssets("shop/skates/$file", (Rig.SKATE_W * Constants.BITMAP_SCALE).toInt(), (Rig.SKATE_H * Constants.BITMAP_SCALE).toInt())
+                    ?: part(ch.skateSkin, "skate", Rig.SKATE_W, Rig.SKATE_H) { c, w, h -> drawSkate(c, w, h, skate) }
+            } else {
+                part(ch.skateSkin, "skate", Rig.SKATE_W, Rig.SKATE_H) { c, w, h -> drawSkate(c, w, h, skate) }
+            }
+        }
 
         val far = 0.72f // far-side limbs are darker to suggest depth
         return PlayerSprites(
@@ -110,13 +127,22 @@ class AssetManager(private val context: Context) {
             hand = handBmp(ch.headSkin, skin),
             thigh = limb(ch.legSkin, "thigh", Rig.THIGH_LEN, Rig.THIGH_THICK, pants),
             shin = limb(ch.legSkin, "shin", Rig.SHIN_LEN, Rig.SHIN_THICK, pants),
-            skate = skateBmp(skate),
+            skate = skateBmp(),
             upperArmFar = limb(ch.torsoSkin, "arm_far", Rig.UPPER_ARM_LEN, Rig.UPPER_ARM_THICK, darken(shirt, far)),
             forearmFar = limb(ch.headSkin, "forearm_far", Rig.FOREARM_LEN, Rig.FOREARM_THICK, darken(skin, far)),
             handFar = handBmp(ch.headSkin, darken(skin, far)),
             thighFar = limb(ch.legSkin, "thigh_far", Rig.THIGH_LEN, Rig.THIGH_THICK, darken(pants, far)),
             shinFar = limb(ch.legSkin, "shin_far", Rig.SHIN_LEN, Rig.SHIN_THICK, darken(pants, far)),
-            skateFar = part(ch.skateSkin, "skate_far", Rig.SKATE_W, Rig.SKATE_H) { c, w, h -> drawSkate(c, w, h, darken(skate, far)) }
+            skateFar = run {
+                val base = skateBmp()
+                Bitmap.createBitmap(base.width, base.height, Bitmap.Config.ARGB_8888).also { out ->
+                    val cc = Canvas(out)
+                    cc.drawBitmap(base, 0f, 0f, Paint(Paint.ANTI_ALIAS_FLAG))
+                    val pp = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(72, 0, 0, 0) }
+                    cc.drawRect(0f, 0f, out.width.toFloat(), out.height.toFloat(), pp)
+                    base.recycle()
+                }
+            }
         )
     }
 
