@@ -39,7 +39,7 @@ object ShopCatalog {
         ShopItem(
             id = "skate_aero",
             name = "Aero Blue",
-            price = 100,
+            price = 10,
             type = ShopItemType.SKATE,
             assetName = "skate3.png",
             particleName = "particle_aero.png",
@@ -48,7 +48,7 @@ object ShopCatalog {
         ShopItem(
             id = "skate_inferno",
             name = "Inferno",
-            price = 200,
+            price = 20,
             type = ShopItemType.SKATE,
             assetName = "skate4.png",
             particleName = "particle_inferno.png",
@@ -57,7 +57,7 @@ object ShopCatalog {
         ShopItem(
             id = "skate_volt",
             name = "Volt Runner",
-            price = 3500,
+            price = 35,
             type = ShopItemType.SKATE,
             assetName = "skate5.png",
             particleName = "particle_volt.png",

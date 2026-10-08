@@ -41,6 +41,12 @@ class AssetManager(private val context: Context) {
     lateinit var introBackground: Bitmap
         private set
 
+    lateinit var speedBoostFrames: Array<Bitmap>
+        private set
+
+    lateinit var speedBoostParticle: Bitmap
+        private set
+
     fun obstacleBitmap(type: ObstacleType): Bitmap = obstacleBitmaps[type.ordinal]
 
     /** Idempotent and thread-safe: call from Splash (background thread) and defensively from GameActivity. */
@@ -72,10 +78,58 @@ class AssetManager(private val context: Context) {
         // cinematic background. It remains visible after the intro and is
         // naturally scrolled away during gameplay.
         introBackground = make(
-            "background/intro.png",
+            "background/BG.png",
             Constants.INTRO_BACKGROUND_WORLD_WIDTH.toInt(),
             Constants.INTRO_BACKGROUND_WORLD_HEIGHT.toInt()
         ) { c, w, h -> drawIntroFallback(c, w, h) }
+
+        val boostW =
+            (40f * Constants.BITMAP_SCALE).toInt()
+
+        val boostH =
+            (40f * Constants.BITMAP_SCALE).toInt()
+
+        speedBoostFrames = arrayOf(
+            make(
+                "powerups/volt_booster1.png",
+                boostW,
+                boostH
+            ) { c, w, h ->
+                drawSpeedBoostFallback(c, w, h)
+            },
+
+            make(
+                "powerups/volt_booster2.png",
+                boostW,
+                boostH
+            ) { c, w, h ->
+                drawSpeedBoostFallback(c, w, h)
+            },
+
+            make(
+                "powerups/volt_booster3.png",
+                boostW,
+                boostH
+            ) { c, w, h ->
+                drawSpeedBoostFallback(c, w, h)
+            }
+        )
+
+        speedBoostParticle = make(
+            "powerups/volt_particle.png",
+            (14f * Constants.BITMAP_SCALE).toInt(),
+            (14f * Constants.BITMAP_SCALE).toInt()
+        ) { c, w, h ->
+            // Fallback only if the PNG is missing.
+            val p = Paint(Paint.ANTI_ALIAS_FLAG)
+            p.color = Color.CYAN
+            c.drawCircle(
+                w / 2f,
+                h / 2f,
+                w * 0.35f,
+                p
+            )
+        }
 
         loaded = true
     }
@@ -116,6 +170,28 @@ class AssetManager(private val context: Context) {
                 part(ch.skateSkin, "skate", Rig.SKATE_W, Rig.SKATE_H) { c, w, h -> drawSkate(c, w, h, skate) }
             }
         }
+        fun skateFarBmp(): Bitmap {
+            val file = when (ch.skateSkin) {
+                "skate_basic" -> "skate1_far.png"
+                "skate_ice" -> "skate2_far.png"
+                "skate_aero" -> "skate3_far.png"
+                "skate_inferno" -> "skate4_far.png"
+                "skate_volt" -> "skate5_far.png"
+                "skate_default" -> "skate1_far.png"
+                "skate_2" -> "skate3_far.png"
+                else -> null
+            }
+
+            return if (file != null) {
+                loadFromAssets(
+                    "shop/skates/$file",
+                    (Rig.SKATE_W * Constants.BITMAP_SCALE).toInt(),
+                    (Rig.SKATE_H * Constants.BITMAP_SCALE).toInt()
+                ) ?: skateBmp()
+            } else {
+                skateBmp()
+            }
+        }
 
         val far = 0.72f // far-side limbs are darker to suggest depth
         return PlayerSprites(
@@ -133,16 +209,7 @@ class AssetManager(private val context: Context) {
             handFar = handBmp(ch.headSkin, darken(skin, far)),
             thighFar = limb(ch.legSkin, "thigh_far", Rig.THIGH_LEN, Rig.THIGH_THICK, darken(pants, far)),
             shinFar = limb(ch.legSkin, "shin_far", Rig.SHIN_LEN, Rig.SHIN_THICK, darken(pants, far)),
-            skateFar = run {
-                val base = skateBmp()
-                Bitmap.createBitmap(base.width, base.height, Bitmap.Config.ARGB_8888).also { out ->
-                    val cc = Canvas(out)
-                    cc.drawBitmap(base, 0f, 0f, Paint(Paint.ANTI_ALIAS_FLAG))
-                    val pp = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(72, 0, 0, 0) }
-                    cc.drawRect(0f, 0f, out.width.toFloat(), out.height.toFloat(), pp)
-                    base.recycle()
-                }
-            }
+            skateFar = skateFarBmp()
         )
     }
 
@@ -151,6 +218,64 @@ class AssetManager(private val context: Context) {
         obstacleBitmaps.forEach { it.recycle() }
         listOf(coinBitmap, farBackground, midBackground, groundTile, introBackground).forEach { it.recycle() }
         loaded = false
+
+        speedBoostFrames.forEach {
+            it.recycle()
+        }
+        speedBoostParticle.recycle()
+    }
+
+    private fun drawSpeedBoostFallback(
+        c: Canvas,
+        w: Float,
+        h: Float
+    ) {
+        val p = paint(Color.rgb(40, 200, 255))
+
+        c.drawCircle(
+            w / 2f,
+            h / 2f,
+            w * 0.35f,
+            p
+        )
+
+        p.color = Color.WHITE
+
+        val path = Path()
+
+        path.moveTo(
+            w * 0.58f,
+            h * 0.15f
+        )
+
+        path.lineTo(
+            w * 0.35f,
+            h * 0.52f
+        )
+
+        path.lineTo(
+            w * 0.50f,
+            h * 0.52f
+        )
+
+        path.lineTo(
+            w * 0.42f,
+            h * 0.85f
+        )
+
+        path.lineTo(
+            w * 0.70f,
+            h * 0.43f
+        )
+
+        path.lineTo(
+            w * 0.54f,
+            h * 0.43f
+        )
+
+        path.close()
+
+        c.drawPath(path, p)
     }
 
     // ------------------------------------------------------------------ helpers

@@ -40,13 +40,6 @@ class PlayerAnimator(private val player: Player) {
         state = AnimationState.SKATING
     }
 
-    /**
-     * Cinematic entrance.
-     *
-     * The player starts above the world at -180 degrees and smoothly
-     * rotates to exactly 0 degrees while falling. There is no 360-degree
-     * root flip, so the landing cannot snap back to zero.
-     */
     fun updateIntro(
         time: Float,
         dt: Float
@@ -138,7 +131,6 @@ class PlayerAnimator(private val player: Player) {
 
                 introPose.lerp(skatePose, skatePose, 0f)
 
-                // Strong compression, then recovery.
                 val compression =
                     if (raw < 0.35f) {
                         smooth(raw / 0.35f)
@@ -364,11 +356,11 @@ class PlayerAnimator(private val player: Player) {
             boostPose.rightKnee = 10f
             boostPose.rightSkate = 20f
 
-            boostPose.leftArm = -48f
-            boostPose.leftForearm = -24f
+            boostPose.leftArm = -50f
+            boostPose.leftForearm = -50f
 
-            boostPose.rightArm = 20f
-            boostPose.rightForearm = -42f
+            boostPose.rightArm = 55f
+            boostPose.rightForearm = -35f
 
             out.lerp(
                 out,
@@ -377,9 +369,6 @@ class PlayerAnimator(private val player: Player) {
             )
         }
 
-        // -------------------------------------------------------------
-        // LANDING
-        // -------------------------------------------------------------
 
         if (landDip > 0f) {
 
@@ -398,9 +387,6 @@ class PlayerAnimator(private val player: Player) {
             out.headRotation -= 5f * landDip
         }
 
-        // -------------------------------------------------------------
-        // CRASH
-        // -------------------------------------------------------------
 
         if (player.crashed) {
 

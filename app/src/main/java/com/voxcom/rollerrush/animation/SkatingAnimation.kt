@@ -62,16 +62,16 @@ class SkatingAnimation {
         // When a leg pushes backward, the arm on that side moves forward;
         // when that leg recovers, the arm sweeps backward. This keeps the
         // upper body alive while preserving the low speed-skater posture.
-        val leftArmSwing = -30f * sin(2f * PI.toFloat() * cycle)
-        val rightArmSwing = -30f * sin(2f * PI.toFloat() * (cycle - RIGHT_OFFSET))
+        val leftArmSwing = -60f * sin(2f * PI.toFloat() * cycle)
+        val rightArmSwing = -60f * sin(2f * PI.toFloat() * (cycle - RIGHT_OFFSET))
 
         out.leftArm = 32f + leftArmSwing
         out.rightArm = 32f + rightArmSwing
 
         // Keep the elbows bent and tucked behind the torso. The forearms
         // follow the swing with a smaller amplitude so the hands do not flap.
-        out.leftForearm = -24f - 7f * sin(2f * PI.toFloat() * cycle + 0.35f)
-        out.rightForearm = -24f - 7f * sin(2f * PI.toFloat() * (cycle - RIGHT_OFFSET) + 0.35f)
+        out.leftForearm = -50f - 7f * sin(2f * PI.toFloat() * cycle + 0.35f)
+        out.rightForearm = -50f - 7f * sin(2f * PI.toFloat() * (cycle - RIGHT_OFFSET) + 0.35f)
     }
 
     companion object {
@@ -91,10 +91,6 @@ class SkatingAnimation {
         private fun bump(x: Float): Float { val s = sin(x * PI.toFloat()); return s * s }
         private fun lerp(a: Float, b: Float, t: Float) = a + (b - a) * t
 
-        /**
-         * Pose of ONE leg at its own cycle position [c] (0..1).
-         * out = [thigh (world angle), knee (relative), skate (ABSOLUTE angle)].
-         */
         private fun legCurve(c: Float, out: FloatArray) {
             when {
                 c < PUSH_END -> {                         // PUSH: sweep back, straighten, heel lifts
@@ -121,7 +117,6 @@ class SkatingAnimation {
             }
         }
 
-        /** Jump / airborne pose: legs tucked (compressed), arms counterbalancing, body tilting with vertical speed. */
         fun airPose(vy: Float, out: Pose) {
             // Left leg forward, right leg trailing.
             out.leftThigh = -55f; out.leftKnee = 85f
@@ -144,8 +139,8 @@ class SkatingAnimation {
             out.headRotation = 20f
             out.hipOffsetX = 0f
             out.bodyOffsetY = 0f
-            out.leftThigh = 50f; out.leftKnee = 20f; out.leftSkate = -40f
-            out.rightThigh = -40f; out.rightKnee = 50f; out.rightSkate = -20f
+            out.leftThigh = -50f; out.leftKnee = 40f; out.leftSkate = -40f
+            out.rightThigh = -40f; out.rightKnee = 60f; out.rightSkate = -20f
             val flail = sin(t * 18f) * 12f
             out.leftArm = -100f + flail; out.leftForearm = -20f
             out.rightArm = -70f - flail; out.rightForearm = -30f

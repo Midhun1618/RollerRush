@@ -693,11 +693,9 @@ class GameWorld(
                 )
             ) {
 
-                p.active =
-                    false
+                p.collect()
 
-                speedBoostReady =
-                    true
+                speedBoostReady = true
             }
         }
 
