@@ -40,7 +40,15 @@ class AssetManager(private val context: Context) {
         private set
     lateinit var introBackground: Bitmap
         private set
+    private lateinit var speedBoostEffectFrames: Array<Bitmap>
 
+    private var speedBoostEffectLoaded = false
+
+    fun speedBoostEffectFrame(index: Int): Bitmap {
+        return speedBoostEffectFrames[
+            index.coerceAtLeast(0) % speedBoostEffectFrames.size
+        ]
+    }
     lateinit var speedBoostFrames: Array<Bitmap>
         private set
 
@@ -142,6 +150,8 @@ class AssetManager(private val context: Context) {
         val pants = SkinCatalog.colorFor(ch.legSkin)
         val skate = SkinCatalog.colorFor(ch.skateSkin)
 
+        loadSpeedBoostEffects(ch.skateSkin)
+
         fun part(id: String, part: String, wU: Float, hU: Float, draw: (Canvas, Float, Float) -> Unit): Bitmap =
             make("player/$part.png", (wU * Constants.BITMAP_SCALE).toInt(), (hU * Constants.BITMAP_SCALE).toInt(), draw)
 
@@ -212,11 +222,58 @@ class AssetManager(private val context: Context) {
             skateFar = skateFarBmp()
         )
     }
+    private fun loadSpeedBoostEffects(skateSkin: String) {
+
+        val folder = when (skateSkin) {
+            "skate_basic",
+            "skate_default" -> "red"
+
+            "skate_ice" -> "ice"
+
+            "skate_aero",
+            "skate_2" -> "aero"
+
+            "skate_inferno" -> "inferno"
+
+            "skate_volt" -> "volt"
+
+            else -> "red"
+        }
+
+        val effectW = 100f
+        val effectH = 100f
+
+        speedBoostEffectFrames = Array(4) { index ->
+            make(
+                "powerups/effects/$folder/effect${index + 1}.png",
+                (effectW * Constants.BITMAP_SCALE).toInt(),
+                (effectH * Constants.BITMAP_SCALE).toInt()
+            ) { c, w, h ->
+                // Fallback if an effect image is missing.
+                val p = Paint(Paint.ANTI_ALIAS_FLAG)
+                p.color = Color.argb(70, 255, 193, 7)
+                c.drawCircle(
+                    w * 0.5f,
+                    h * 0.5f,
+                    minOf(w, h) * 0.38f,
+                    p
+                )
+            }
+        }
+
+        speedBoostEffectLoaded = true
+    }
 
     fun release() {
         if (!loaded) return
         obstacleBitmaps.forEach { it.recycle() }
         listOf(coinBitmap, farBackground, midBackground, groundTile, introBackground).forEach { it.recycle() }
+
+        if (speedBoostEffectLoaded) {
+            speedBoostEffectFrames.forEach { it.recycle() }
+            speedBoostEffectLoaded = false
+        }
+
         loaded = false
 
         speedBoostFrames.forEach {

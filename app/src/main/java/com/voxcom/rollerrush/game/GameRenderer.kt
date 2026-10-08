@@ -28,6 +28,12 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
     private val dst = RectF()
     private val sb = StringBuilder(32)
 
+    private var speedBoostEffectFrame = 0
+    private var speedBoostEffectLastNs = 0L
+
+    private val speedBoostEffectPaint =
+        Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
+
     /** Pause button in SCREEN pixels (GameView hit-tests touches against it). */
     val pauseRect = RectF()
     private var margin = 0f
@@ -92,12 +98,67 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         for (i in 0 until pu.size) { val p = pu[i]; if (p.active) p.draw(canvas, assets, fill) }
 
         world.player.draw(canvas, bmpPaint)
-
+        drawSpeedBoostEffect(canvas, world)
         drawForeground(canvas, scroll, view)
         if (prefs.debugHitboxes) drawDebug(canvas, world)
         canvas.restore()
 
         drawHud(canvas, world, camera)
+    }
+
+    private fun drawSpeedBoostEffect(
+        canvas: Canvas,
+        world: GameWorld
+    ) {
+        if (!world.speedBoostActive) {
+            speedBoostEffectFrame = 0
+            speedBoostEffectLastNs = 0L
+            return
+        }
+
+        if (speedBoostEffectLastNs == 0L) {
+            speedBoostEffectLastNs = System.nanoTime()
+        }
+
+        val now = System.nanoTime()
+
+        // 4 frames at approximately 14 FPS.
+        if (now - speedBoostEffectLastNs >= 70_000_000L) {
+            val steps =
+                ((now - speedBoostEffectLastNs) / 70_000_000L)
+                    .toInt()
+                    .coerceAtMost(4)
+
+            speedBoostEffectFrame =
+                (speedBoostEffectFrame + steps) % 4
+
+            speedBoostEffectLastNs = now
+        }
+
+        val bmp = assets.speedBoostEffectFrame(speedBoostEffectFrame)
+
+        val playerCenterX =
+            world.player.x + 18f
+
+        val playerCenterY =
+            world.player.bottomY - 34f
+
+        val effectW = 100f
+        val effectH = 100f
+
+        dst.set(
+            playerCenterX - effectW * 0.5f,
+            playerCenterY - effectH * 0.5f,
+            playerCenterX + effectW * 0.5f,
+            playerCenterY + effectH * 0.5f
+        )
+
+        canvas.drawBitmap(
+            bmp,
+            null,
+            dst,
+            speedBoostEffectPaint
+        )
     }
 
     /** Tiles [bmp] horizontally, scrolling by [scroll]. Slight overlap hides seams. */
