@@ -1,181 +1,387 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/shop_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_shop">
+    android:background="#28171B">
+
+    <!-- BACK -->
+
+    <TextView
+        android:id="@+id/shop_back_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="18dp"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:text="‹"
+        android:textColor="#FFFFFF"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- TITLE -->
+
+    <TextView
+        android:id="@+id/shop_title"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:text="SKATE SHOP"
+        android:textColor="#FFFFFF"
+        android:textSize="21sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.07"
+        app:layout_constraintStart_toEndOf="@id/shop_back_button"
+        app:layout_constraintTop_toTopOf="@id/shop_back_button"
+        app:layout_constraintBottom_toBottomOf="@id/shop_back_button" />
+
+    <!-- COINS -->
+
+    <TextView
+        android:id="@+id/coins_label"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginEnd="20dp"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp"
+        android:gravity="center"
+        android:text="●  0"
+        android:textColor="#FFD34B"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:background="#38282A"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/shop_back_button"
+        app:layout_constraintBottom_toBottomOf="@id/shop_back_button" />
+
+
+    <!-- LEFT SKATE PREVIEW -->
+
+    <FrameLayout
+        android:id="@+id/shop_preview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="28dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/shop_details"
+        app:layout_constraintTop_toBottomOf="@id/shop_back_button"
+        app:layout_constraintBottom_toTopOf="@id/shop_skate_selector"
+        app:layout_constraintHorizontal_weight="1.25">
+
+        <!-- Subtle glow -->
+
+        <View
+            android:id="@+id/shop_preview_glow"
+            android:layout_width="270dp"
+            android:layout_height="160dp"
+            android:layout_gravity="center"
+            android:background="#182A2D"
+            android:alpha="0.45" />
+
+        <!-- PARTICLES -->
+
+        <ImageView
+            android:id="@+id/shop_particle_image"
+            android:layout_width="310dp"
+            android:layout_height="210dp"
+            android:layout_gravity="center"
+            android:alpha="0"
+            android:scaleType="fitCenter"
+            android:importantForAccessibility="no" />
+
+        <!-- SKATE -->
+
+        <ImageView
+            android:id="@+id/shop_skate_image"
+            android:layout_width="280dp"
+            android:layout_height="150dp"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true" />
+
+    </FrameLayout>
+
+
+    <!-- DETAILS -->
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:id="@+id/shop_details"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="30dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        app:layout_constraintStart_toEndOf="@id/shop_preview"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/shop_back_button"
+        app:layout_constraintBottom_toTopOf="@id/shop_skate_selector"
+        app:layout_constraintHorizontal_weight="0.9">
+
+        <TextView
+            android:id="@+id/shop_skate_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="RED STREET"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05" />
+
+        <TextView
+            android:id="@+id/shop_skate_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:maxLines="2"
+            android:text="Your original street setup."
+            android:textColor="#AEB7C2"
+            android:textSize="12sp" />
+
+
+        <!-- SPEED -->
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="26dp"
+            android:layout_marginTop="17dp"
             android:gravity="center_vertical"
-            android:paddingStart="28dp"
-            android:paddingTop="12dp"
-            android:paddingEnd="28dp"
-            android:paddingBottom="8dp">
+            android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/shop_title"
-                android:layout_width="0dp"
+                android:layout_width="72dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:fontFamily="sans"
-                android:gravity="center_vertical"
-                android:text="SKATE SHOP"
-                android:textColor="#FFFFFF"
-                android:textSize="30sp"
+                android:text="SPEED"
+                android:textColor="#8995A5"
+                android:textSize="10sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/coins_label"
+                android:id="@+id/shop_speed_value"
                 android:layout_width="wrap_content"
-                android:layout_height="44dp"
-                android:gravity="center"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:text="COINS  0"
+                android:layout_height="wrap_content"
+                android:text="● ○ ○ ○ ○"
                 android:textColor="#FFFFFF"
-                android:textSize="19sp"
-                android:textStyle="bold" />
+                android:textSize="12sp" />
+
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/shop_subtitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:paddingBottom="10dp"
-            android:text="CHOOSE YOUR RIDE"
-            android:textColor="#C9D4E1"
-            android:textSize="14sp"
-            android:textStyle="bold" />
 
-        <ScrollView
-            android:id="@+id/shop_scroll"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:fillViewport="true"
-            android:overScrollMode="never"
-            android:scrollbars="none">
+        <!-- JUMP -->
 
-            <LinearLayout
-                android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="26dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="72dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:paddingBottom="22dp">
+                android:text="JUMP"
+                android:textColor="#8995A5"
+                android:textSize="10sp"
+                android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+            <TextView
+                android:id="@+id/shop_jump_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="● ○ ○"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
 
-                    <include layout="@layout/item_skate_red" />
-                    <Space android:layout_width="12dp" android:layout_height="1dp" />
-                    <include layout="@layout/item_skate_ice" />
-                </LinearLayout>
+        </LinearLayout>
 
-                <Space android:layout_width="1dp" android:layout_height="12dp" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+        <!-- CONTROL -->
 
-                    <include layout="@layout/item_skate_aero" />
-                    <Space android:layout_width="12dp" android:layout_height="1dp" />
-                    <include layout="@layout/item_skate_inferno" />
-                </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="26dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-                <Space android:layout_width="1dp" android:layout_height="12dp" />
+            <TextView
+                android:layout_width="72dp"
+                android:layout_height="wrap_content"
+                android:text="CONTROL"
+                android:textColor="#8995A5"
+                android:textSize="10sp"
+                android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+            <TextView
+                android:id="@+id/shop_control_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="● ○ ○"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
 
-                    <include layout="@layout/item_skate_volt" />
-                    <Space android:layout_width="12dp" android:layout_height="1dp" />
+        </LinearLayout>
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="150dp"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:background="@drawable/bg_shop_card">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="MORE RIDES\nCOMING SOON"
-                            android:gravity="center"
-                            android:textColor="#71839A"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </LinearLayout>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    android:layout_marginBottom="8dp"
-                    android:text="CHARACTERS"
-                    android:textColor="#FFFFFF"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+        <!-- ACTION BUTTON -->
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+        <TextView
+            android:id="@+id/shop_action_button"
+            android:layout_width="190dp"
+            android:layout_height="44dp"
+            android:layout_marginTop="12dp"
+            android:background="#D94F45"
+            android:gravity="center"
+            android:text="UNLOCK"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08"
+            android:clickable="true"
+            android:focusable="true" />
 
-                    <TextView
-                        android:id="@+id/character_basic_button"
-                        android:layout_width="0dp"
-                        android:layout_height="52dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_button"
-                        android:gravity="center"
-                        android:text="BASIC CHARACTER"
-                        android:textColor="#FFFFFF"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                    <Space android:layout_width="12dp" android:layout_height="1dp" />
-
-                    <TextView
-                        android:id="@+id/character_2_button"
-                        android:layout_width="0dp"
-                        android:layout_height="52dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_button"
-                        android:gravity="center"
-                        android:text="CHARACTER SKIN 2"
-                        android:textColor="#FFFFFF"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/back_button"
-                    android:layout_width="220dp"
-                    android:layout_height="48dp"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="18dp"
-                    android:background="@drawable/bg_button"
-                    android:gravity="center"
-                    android:text="BACK"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </ScrollView>
     </LinearLayout>
-</FrameLayout>
+
+
+    <!-- BOTTOM SKATE SELECTOR -->
+
+    <HorizontalScrollView
+        android:id="@+id/shop_skate_selector"
+        android:layout_width="0dp"
+        android:layout_height="76dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="5dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
+
+
+            <!-- RED -->
+
+            <FrameLayout
+                android:id="@+id/selector_red"
+                android:layout_width="92dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="8dp"
+                android:background="#3B282A"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/selector_red_image"
+                    android:layout_width="80dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:scaleType="fitCenter" />
+
+            </FrameLayout>
+
+
+            <!-- ICE -->
+
+            <FrameLayout
+                android:id="@+id/selector_ice"
+                android:layout_width="92dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="8dp"
+                android:background="#26383D"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/selector_ice_image"
+                    android:layout_width="80dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:scaleType="fitCenter" />
+
+            </FrameLayout>
+
+
+            <!-- AERO -->
+
+            <FrameLayout
+                android:id="@+id/selector_aero"
+                android:layout_width="92dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="8dp"
+                android:background="#273740"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/selector_aero_image"
+                    android:layout_width="80dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:scaleType="fitCenter" />
+
+            </FrameLayout>
+
+
+            <!-- INFERNO -->
+
+            <FrameLayout
+                android:id="@+id/selector_inferno"
+                android:layout_width="92dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="8dp"
+                android:background="#3D2927"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/selector_inferno_image"
+                    android:layout_width="80dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:scaleType="fitCenter" />
+
+            </FrameLayout>
+
+
+            <!-- VOLT -->
+
+            <FrameLayout
+                android:id="@+id/selector_volt"
+                android:layout_width="92dp"
+                android:layout_height="60dp"
+                android:background="#302A3F"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/selector_volt_image"
+                    android:layout_width="80dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:scaleType="fitCenter" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
