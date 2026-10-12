@@ -24,7 +24,7 @@ object Constants {
     const val INTRO_CAMERA_PAN_X = 0f
     const val INTRO_START_ROTATION = -180f
     const val INTRO_LANDING_ROTATION = 0f
-    const val INTRO_BACKGROUND_WORLD_WIDTH = 1100f
+    const val INTRO_BACKGROUND_WORLD_WIDTH = 1150f
     const val INTRO_BACKGROUND_WORLD_HEIGHT = 360f
 
     const val TARGET_FPS = 60

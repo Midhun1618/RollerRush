@@ -7,18 +7,25 @@ import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.voxcom.rollerrush.RollerRushApp
+import com.voxcom.rollerrush.audio.BgmManager
+import com.voxcom.rollerrush.audio.CoinSoundManager
 import com.voxcom.rollerrush.utils.Constants
 
 /**
- * The only View used for gameplay. It owns the surface lifecycle, the loop thread and touch
- * input, and delegates everything else (simulation -> GameWorld, drawing -> GameRenderer).
+ * The only View used for gameplay. It owns the surface lifecycle,
+ * the loop thread and touch input, and delegates everything else
+ * (simulation -> GameWorld, drawing -> GameRenderer).
  */
 @SuppressLint("ViewConstructor")
-class GameView(context: Context) : SurfaceView(context), SurfaceHolder.Callback, GameLoop.Callbacks {
+class GameView(context: Context) :
+    SurfaceView(context),
+    SurfaceHolder.Callback,
+    GameLoop.Callbacks {
 
     interface Listener {
         /** Called on the game thread. */
         fun onGameOver(score: Int, distanceMeters: Int, coins: Int)
+
         /** Called on the UI thread (touch). */
         fun onPauseRequested()
     }
@@ -29,13 +36,25 @@ class GameView(context: Context) : SurfaceView(context), SurfaceHolder.Callback,
     private val camera = Camera()
     private val renderer = GameRenderer(app.gameAssets, app.prefs)
     private val sprites = app.gameAssets.createPlayerSprites(app.playerData.character)
-    private val world = GameWorld(camera, sprites, app.playerData.skateStats)
+
+    private val coinSoundManager = CoinSoundManager(context.applicationContext)
+
+    private val world = GameWorld(
+        camera,
+        sprites,
+        app.playerData.skateStats,
+        coinSoundManager
+    )
+
     private var loop: GameLoop? = null
     private var touchDownY = 0f
     private var touchMoved = false
     private var lastTapTime = 0L
 
-    val state: GameState get() = world.state
+    private val bgmManager = BgmManager(context.applicationContext)
+
+    val state: GameState
+        get() = world.state
 
     init {
         holder.addCallback(this)
@@ -44,89 +63,152 @@ class GameView(context: Context) : SurfaceView(context), SurfaceHolder.Callback,
     }
 
     // ---- Controls used by GameActivity ---------------------------------------
-    fun pauseGame() = world.pause()
-    fun resumeGame() = world.resume()
-    fun restartGame() = world.start()
 
-    /** Stop the thread and free the skater's bitmaps. Call from Activity.onDestroy. */
+    fun pauseGame() {
+        world.pause()
+        bgmManager.pause()
+    }
+
+    fun resumeGame() {
+        world.resume()
+
+        if (world.state == GameState.PLAYING) {
+            bgmManager.resume()
+        }
+    }
+
+    fun restartGame() {
+        world.start()
+        bgmManager.resume()
+    }
+
+    /**
+     * Stop the game thread and release resources.
+     * Call from Activity.onDestroy().
+     */
     fun release() {
         stopLoop()
+        bgmManager.release()
         sprites.recycle()
     }
 
     // ---- Surface lifecycle ---------------------------------------------------
-    override fun surfaceCreated(holder: SurfaceHolder) = Unit
 
-    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        camera.onSizeChanged(width, height)
-        renderer.onSizeChanged(width, height)
-        if (loop == null) {
-            loop = GameLoop(holder, this).also { it.startLoop() }
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        if (
+            world.state == GameState.INTRO ||
+            world.state == GameState.PLAYING
+        ) {
+            bgmManager.resume()
         }
     }
 
-    override fun surfaceDestroyed(holder: SurfaceHolder) = stopLoop()
+    override fun surfaceChanged(
+        holder: SurfaceHolder,
+        format: Int,
+        width: Int,
+        height: Int
+    ) {
+        camera.onSizeChanged(width, height)
+        renderer.onSizeChanged(width, height)
+
+        if (loop == null) {
+            loop = GameLoop(holder, this).also {
+                it.startLoop()
+            }
+        }
+    }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        stopLoop()
+        bgmManager.pause()
+    }
 
     private fun stopLoop() {
         loop?.stopLoop()
         loop = null
     }
 
-    // ---- GameLoop callbacks ----------------------------------------------------
+    // ---- GameLoop callbacks --------------------------------------------------
+
     override fun onUpdate(dt: Float) {
         var over = false
+
         synchronized(world) {
             world.update(dt)
             over = world.consumeGameOverEvent()
         }
-        if (over) listener?.onGameOver(world.score, world.distanceMeters, world.runCoins)
+
+        if (over) {
+            bgmManager.pause()
+            listener?.onGameOver(
+                world.score,
+                world.distanceMeters,
+                world.runCoins
+            )
+        }
     }
 
     override fun onRender(canvas: Canvas) {
-        synchronized(world) { renderer.render(canvas, world, camera) }
+        synchronized(world) {
+            renderer.render(canvas, world, camera)
+        }
     }
 
     override fun isIdle(): Boolean = world.state == GameState.PAUSED
 
-    // ---- Input -----------------------------------------------------------------
+    // ---- Input ---------------------------------------------------------------
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent): Boolean {
-        val action = e.actionMasked
-        when (action) {
+        when (e.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                touchDownY = e.getY()
+                touchDownY = e.y
                 touchMoved = false
 
-                if (renderer.pauseRect.contains(e.getX(), e.getY())) {
+                if (renderer.pauseRect.contains(e.x, e.y)) {
                     listener?.onPauseRequested()
                 }
+
                 return true
             }
 
             MotionEvent.ACTION_MOVE -> {
-                if (kotlin.math.abs(e.getY() - touchDownY) > Constants.SLIDE_SWIPE_DISTANCE * 0.35f) {
+                if (
+                    kotlin.math.abs(e.y - touchDownY) >
+                    Constants.SLIDE_SWIPE_DISTANCE * 0.35f
+                ) {
                     touchMoved = true
                 }
+
                 return true
             }
 
             MotionEvent.ACTION_UP -> {
-                if (renderer.pauseRect.contains(e.getX(), e.getY())) return true
+                if (renderer.pauseRect.contains(e.x, e.y)) {
+                    return true
+                }
+
                 if (world.state == GameState.PLAYING) {
-                    val dy = e.getY() - touchDownY
+                    val dy = e.y - touchDownY
                     val now = android.os.SystemClock.uptimeMillis()
 
                     if (dy < -Constants.JUMP_SWIPE_DISTANCE) {
-                        // Swipe UP = jump.
+                        // Swipe up = jump.
                         world.requestJump()
                         lastTapTime = 0L
+
                     } else if (dy > Constants.SLIDE_SWIPE_DISTANCE) {
-                        // Swipe DOWN = aggressive slide.
+                        // Swipe down = aggressive slide.
                         world.requestSlide()
                         lastTapTime = 0L
+
                     } else if (!touchMoved) {
                         // Double tap = activate a collected speed boost.
-                        if (now - lastTapTime <= (Constants.DOUBLE_TAP_WINDOW * 1000f).toLong()) {
+                        if (
+                            now - lastTapTime <=
+                            (Constants.DOUBLE_TAP_WINDOW * 1000f).toLong()
+                        ) {
                             world.requestSpeedBoost()
                             lastTapTime = 0L
                         } else {
@@ -134,6 +216,7 @@ class GameView(context: Context) : SurfaceView(context), SurfaceHolder.Callback,
                         }
                     }
                 }
+
                 performClick()
                 return true
             }
@@ -143,6 +226,12 @@ class GameView(context: Context) : SurfaceView(context), SurfaceHolder.Callback,
                 return true
             }
         }
+
+        return true
+    }
+
+    override fun performClick(): Boolean {
+        super.performClick()
         return true
     }
 }

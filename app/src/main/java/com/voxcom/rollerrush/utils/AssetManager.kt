@@ -86,7 +86,7 @@ class AssetManager(private val context: Context) {
         // cinematic background. It remains visible after the intro and is
         // naturally scrolled away during gameplay.
         introBackground = make(
-            "background/BG.png",
+            "background/building_intro.png",
             Constants.INTRO_BACKGROUND_WORLD_WIDTH.toInt(),
             Constants.INTRO_BACKGROUND_WORLD_HEIGHT.toInt()
         ) { c, w, h -> drawIntroFallback(c, w, h) }
@@ -137,6 +137,21 @@ class AssetManager(private val context: Context) {
                 w * 0.35f,
                 p
             )
+        }
+        farBackground = make(
+            "background/far.png",
+            TILE_W * 2,
+            200 * 2
+        ) { c, w, h ->
+            drawHills(c, w, h)
+        }
+
+        midBackground = make(
+            "background/mid.png",
+            TILE_W * 2,
+            140 * 2
+        ) { c, w, h ->
+            drawBuildings(c, w, h)
         }
 
         loaded = true

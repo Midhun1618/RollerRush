@@ -14,6 +14,7 @@ import com.voxcom.rollerrush.systems.DifficultySystem
 import com.voxcom.rollerrush.systems.ScoreSystem
 import com.voxcom.rollerrush.systems.SpawnSystem
 import com.voxcom.rollerrush.utils.Constants
+import com.voxcom.rollerrush.audio.CoinSoundManager
 
 /**
  * Owns ALL simulation state and runs one update step.
@@ -29,7 +30,8 @@ import com.voxcom.rollerrush.utils.Constants
 class GameWorld(
     val camera: Camera,
     sprites: PlayerSprites,
-    stats: SkateStats
+    stats: SkateStats,
+    coinSoundManager: CoinSoundManager
 ) {
 
     @Volatile
@@ -53,8 +55,7 @@ class GameWorld(
     val scoreSystem =
         ScoreSystem()
 
-    val coinSystem =
-        CoinSystem()
+    val coinSystem = CoinSystem(coinSoundManager)
 
     private val spawner =
         SpawnSystem()

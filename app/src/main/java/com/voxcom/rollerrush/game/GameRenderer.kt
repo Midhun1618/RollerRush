@@ -71,7 +71,8 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         // intro.png is part of the world beginning. It is NOT tied to
         // GameState.INTRO, so it cannot suddenly disappear when the
         // cinematic ends. Normal gameplay scrolls it naturally left.
-        val introX = -scroll
+        val introBuildingOffsetX = -100f
+        val introX = -scroll + introBuildingOffsetX
         val introRight = introX + Constants.INTRO_BACKGROUND_WORLD_WIDTH
 
         if (introX < view && introRight > -100f) {
