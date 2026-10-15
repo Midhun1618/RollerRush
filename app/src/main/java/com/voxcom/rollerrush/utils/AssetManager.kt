@@ -76,15 +76,11 @@ class AssetManager(private val context: Context) {
             p.color = Color.rgb(255, 193, 7); c.drawRect(w * 0.44f, h * 0.28f, w * 0.56f, h * 0.72f, p)
         }
 
-        // Parallax layers are drawn at 2 px / unit and must tile horizontally.
         val bg = 2
         farBackground = make("background/far.png", TILE_W * bg, 200 * bg) { c, w, h -> drawHills(c, w, h) }
         midBackground = make("background/mid.png", TILE_W * bg, 140 * bg) { c, w, h -> drawBuildings(c, w, h) }
-        groundTile = make("background/ground.png", 120 * 3, Constants.GROUND_THICKNESS.toInt() * 3) { c, w, h -> drawGround(c, w, h) }
+        groundTile = make("background/ground.webp", 280 * 3, Constants.GROUND_THICKNESS.toInt() * 3) { c, w, h -> drawGround(c, w, h) }
 
-        // This is the first section of the actual world, not a temporary
-        // cinematic background. It remains visible after the intro and is
-        // naturally scrolled away during gameplay.
         introBackground = make(
             "background/building_intro.png",
             Constants.INTRO_BACKGROUND_WORLD_WIDTH.toInt(),
@@ -200,7 +196,7 @@ class AssetManager(private val context: Context) {
                 "skate_basic" -> "skate1_far.png"
                 "skate_ice" -> "skate2_far.png"
                 "skate_aero" -> "skate3_far.png"
-                "skate_inferno" -> "skate4_far.png"
+                "skate_inferno9o" -> "skate4_far.png"
                 "skate_volt" -> "skate5_far.png"
                 "skate_default" -> "skate1_far.png"
                 "skate_2" -> "skate3_far.png"
@@ -264,15 +260,6 @@ class AssetManager(private val context: Context) {
                 (effectW * Constants.BITMAP_SCALE).toInt(),
                 (effectH * Constants.BITMAP_SCALE).toInt()
             ) { c, w, h ->
-                // Fallback if an effect image is missing.
-                val p = Paint(Paint.ANTI_ALIAS_FLAG)
-                p.color = Color.argb(70, 255, 193, 7)
-                c.drawCircle(
-                    w * 0.5f,
-                    h * 0.5f,
-                    minOf(w, h) * 0.38f,
-                    p
-                )
             }
         }
 

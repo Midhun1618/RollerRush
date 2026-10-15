@@ -8,6 +8,7 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.voxcom.rollerrush.RollerRushApp
 import com.voxcom.rollerrush.audio.BgmManager
+import com.voxcom.rollerrush.audio.BoosterSoundManager
 import com.voxcom.rollerrush.audio.CoinSoundManager
 import com.voxcom.rollerrush.utils.Constants
 
@@ -38,13 +39,17 @@ class GameView(context: Context) :
     private val sprites = app.gameAssets.createPlayerSprites(app.playerData.character)
 
     private val coinSoundManager = CoinSoundManager(context.applicationContext)
+    private val boosterSoundManager = BoosterSoundManager(context.applicationContext)
 
     private val world = GameWorld(
         camera,
         sprites,
         app.playerData.skateStats,
-        coinSoundManager
-    )
+        coinSoundManager,
+        boosterSoundManager
+    ) {
+        app.playerData.equippedSkateId
+    }
 
     private var loop: GameLoop? = null
     private var touchDownY = 0f
@@ -90,6 +95,7 @@ class GameView(context: Context) :
         stopLoop()
         bgmManager.release()
         sprites.recycle()
+        boosterSoundManager.release()
     }
 
     // ---- Surface lifecycle ---------------------------------------------------

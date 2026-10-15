@@ -67,7 +67,7 @@ object Constants {
     const val COIN_RADIUS = 9f
     const val COIN_PICKUP_RADIUS = 7.5f
 
-    const val GAME_OVER_DELAY = 0.9f
+    const val GAME_OVER_DELAY = 1.2f
     const val HIT_SLOW_MOTION_DURATION = 0.38f
     const val HIT_SLOW_MOTION_SCALE = 0.28f
 

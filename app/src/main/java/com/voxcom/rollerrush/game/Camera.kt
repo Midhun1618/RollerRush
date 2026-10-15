@@ -32,6 +32,8 @@ class Camera {
     var offsetY = 0f
         private set
 
+
+
     @Volatile
     var viewWidth = Constants.MIN_VIEW_WIDTH
         private set
@@ -88,6 +90,12 @@ class Camera {
     private var introActive = false
     private var introExiting = false
     private var introBlend = 0f
+    // ------------------------------------------------------------
+    // CRASH CAMERA
+    // ------------------------------------------------------------
+
+    private var crashTiltTime = 1f
+    private var crashTilt = 0f
 
     fun startIntro() {
         introActive = true
@@ -256,6 +264,21 @@ class Camera {
                 introExiting = false
             }
         }
+
+ // ------------------------------------------------------------
+// CRASH TILT: sharp reaction, then controlled settle
+// ------------------------------------------------------------
+
+        if (crashTiltTime < 0.65f) {
+            crashTiltTime += dt
+
+            crashTilt =
+                sin(crashTiltTime * 25f) *
+                        7f *
+                        exp(-crashTiltTime * 5f)
+        } else {
+            crashTilt = 0f
+        }
     }
 
     // ------------------------------------------------------------
@@ -296,6 +319,9 @@ class Camera {
         introActive = false
         introExiting = false
         introBlend = 0f
+
+        crashTiltTime = 1f
+        crashTilt = 0f
     }
 
     // ------------------------------------------------------------
@@ -400,15 +426,20 @@ class Camera {
     // ------------------------------------------------------------
 
     fun triggerCrash() {
-
+        // Sharp impact shake.
         addShake(
-            strength = 12f,
+            strength = 14f,
             duration = 0.42f
         )
 
+        // Start the camera tilt reaction.
+        crashTiltTime = 0f
+        crashTilt = 0f
+
+        // Quick push-in, followed by the existing automatic zoom return.
         kickZoom(
-            target = 1.12f,
-            duration = 0.30f
+            target = 1.10f,
+            duration = 0.18f
         )
     }
 
@@ -519,7 +550,7 @@ class Camera {
         canvas.translate(finalX, finalY)
 
         canvas.rotate(
-            slideTilt * (1f - introBlend)
+            (slideTilt + crashTilt) * (1f - introBlend)
         )
 
         canvas.scale(zScale, zScale)

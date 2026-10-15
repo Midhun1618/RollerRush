@@ -1,605 +1,290 @@
 package com.voxcom.rollerrush.ui
 
-import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
-import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
-import android.widget.HorizontalScrollView
+import android.widget.Button
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import com.voxcom.rollerrush.R
 import com.voxcom.rollerrush.data.GamePreferences
 import com.voxcom.rollerrush.data.InventoryData
 import com.voxcom.rollerrush.data.PlayerData
 import com.voxcom.rollerrush.data.ShopCatalog
-import com.voxcom.rollerrush.data.ShopItem
 import com.voxcom.rollerrush.data.SkateStats
 
 class ShopActivity : AppCompatActivity() {
 
+    /** One entry per skate card in the horizontal selector. */
+    private class Slot(
+        val id: String,
+        val cardId: Int,
+        val nameId: Int,
+        val skateImageId: Int,
+        val skateDrawable: Int,
+        val textureDrawable: Int
+    ) {
+        lateinit var card: View
+        lateinit var label: TextView
+        lateinit var image: ImageView
+    }
+
+    private val slots = listOf(
+        Slot("skate_basic", R.id.selector_card1, R.id.selector_name1, R.id.selector_skate1, R.drawable.skate1, R.drawable.card_texture_bg_1),
+        Slot("skate_ice", R.id.selector_card2, R.id.selector_name2, R.id.selector_skate2, R.drawable.skate2, R.drawable.card_texture_bg_2),
+        Slot("skate_aero", R.id.selector_card3, R.id.selector_name3, R.id.selector_skate3, R.drawable.skate3, R.drawable.card_texture_bg_3),
+        Slot("skate_inferno", R.id.selector_card4, R.id.selector_name4, R.id.selector_skate4, R.drawable.skate4, R.drawable.card_texture_bg_4),
+        Slot("skate_volt", R.id.selector_card5, R.id.selector_name5, R.id.selector_skate5, R.drawable.skate5, R.drawable.card_texture_bg_5)
+    )
+
     private lateinit var playerData: PlayerData
     private lateinit var inventory: InventoryData
 
-    private lateinit var root: View
     private lateinit var coinsLabel: TextView
 
-    private lateinit var skateImage: ImageView
-    private lateinit var particleImage: ImageView
-
-    private lateinit var skateName: TextView
-    private lateinit var skateDescription: TextView
-
-    private lateinit var speedValue: TextView
-    private lateinit var jumpValue: TextView
-    private lateinit var controlValue: TextView
-
-    private lateinit var actionButton: TextView
-
-    private lateinit var skateSelector: HorizontalScrollView
+    // Info popup
+    private lateinit var overlay: View
+    private lateinit var infoCard: View
+    private lateinit var infoName: TextView
+    private lateinit var infoSubtitle: TextView
+    private lateinit var infoTexture: ImageView
+    private lateinit var infoSkate: ImageView
+    private lateinit var speedMeter: ProgressBar
+    private lateinit var powerMeter: ProgressBar
+    private lateinit var priceRow: View
+    private lateinit var priceLabel: TextView
+    private lateinit var actionButton: Button
 
     private var selectedId = "skate_basic"
 
-    private val skateIds = listOf(
-        "skate_basic",
-        "skate_ice",
-        "skate_aero",
-        "skate_inferno",
-        "skate_volt"
-    )
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_shop)
 
         val prefs = GamePreferences(this)
-
         playerData = PlayerData(prefs)
         inventory = InventoryData(prefs)
 
-        root = findViewById(R.id.shop_root)
-        coinsLabel = findViewById(R.id.coins_label)
-
-        skateImage = findViewById(R.id.shop_skate_image)
-        particleImage = findViewById(R.id.shop_particle_image)
-
-        skateName = findViewById(R.id.shop_skate_name)
-        skateDescription = findViewById(R.id.shop_skate_description)
-
-        speedValue = findViewById(R.id.shop_speed_value)
-        jumpValue = findViewById(R.id.shop_jump_value)
-        controlValue = findViewById(R.id.shop_control_value)
-
-        actionButton = findViewById(R.id.shop_action_button)
-
-        skateSelector = findViewById(R.id.shop_skate_selector)
-
-        findViewById<View>(R.id.shop_back_button).setOnClickListener {
-            finish()
-        }
-
+        bindViews()
         setupSelector()
         setupActionButton()
+        setupOverlay()
 
-        selectedId = playerData.equippedSkateId
-
-        if (selectedId !in skateIds) {
-            selectedId = "skate_basic"
+        findViewById<View>(R.id.shop_back_button).setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
         }
 
+        // Back closes the popup first, then the screen.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (overlay.isVisible) hideInfo() else finish()
+            }
+        })
+
+        selectedId = playerData.equippedSkateId
+        if (slots.none { it.id == selectedId }) selectedId = "skate_basic"
+
         updateCoins()
-        showSkate(selectedId, true)
+        refreshCards()
+    }
+
+    // ---------------------------------------------------------------- setup
+
+    private fun bindViews() {
+        coinsLabel = findViewById(R.id.coins_label)
+
+        overlay = findViewById(R.id.info_overlay)
+        infoCard = findViewById(R.id.skate_info_card)
+        infoName = findViewById(R.id.name_skate_info)
+        infoSubtitle = findViewById(R.id.subtitle_skate_info)
+        infoTexture = findViewById(R.id.bgcard_skateinfo)
+        infoSkate = findViewById(R.id.skateimg_skateinfo)
+        speedMeter = findViewById(R.id.speed_meter)
+        powerMeter = findViewById(R.id.power_meter)
+        priceRow = findViewById(R.id.linearLayout)
+        priceLabel = findViewById(R.id.price_skate_info)
+        actionButton = findViewById(R.id.buyBtn)
+
+        slots.forEach {
+            it.card = findViewById(it.cardId)
+            it.label = findViewById(it.nameId)
+            it.image = findViewById(it.skateImageId)
+        }
     }
 
     private fun setupSelector() {
-
-        val selectorIds = listOf(
-            R.id.selector_red to "skate_basic",
-            R.id.selector_ice to "skate_ice",
-            R.id.selector_aero to "skate_aero",
-            R.id.selector_inferno to "skate_inferno",
-            R.id.selector_volt to "skate_volt"
-        )
-
-        val imageIds = listOf(
-            R.id.selector_red_image,
-            R.id.selector_ice_image,
-            R.id.selector_aero_image,
-            R.id.selector_inferno_image,
-            R.id.selector_volt_image
-        )
-
-        selectorIds.forEachIndexed { index, (viewId, id) ->
-
-            val view = findViewById<View>(viewId)
-
-            val image =
-                findViewById<ImageView>(imageIds[index])
-
-            image.setImageBitmap(
-                loadSkateBitmap(id)
-            )
-
-            view.setOnClickListener {
-                selectSkate(id)
-            }
+        slots.forEach { slot ->
+            slot.image.setImageResource(slot.skateDrawable)
+            slot.card.setOnClickListener { showInfo(slot.id) }
         }
+    }
+
+    private fun setupOverlay() {
+        overlay.visibility = View.GONE
+        // Tap outside the card closes the popup.
+        overlay.setOnClickListener { hideInfo() }
+        // Taps on the card itself must not fall through to the overlay.
+        infoCard.setOnClickListener { }
     }
 
     private fun setupActionButton() {
-
         actionButton.setOnClickListener {
+            val item = ShopCatalog.skate(selectedId) ?: return@setOnClickListener
 
-            val item = ShopCatalog.skate(selectedId)
-                ?: return@setOnClickListener
-
-            if (playerData.equippedSkateId == selectedId) {
-                return@setOnClickListener
-            }
+            if (playerData.equippedSkateId == selectedId) return@setOnClickListener
 
             if (inventory.owns(selectedId)) {
-
                 playerData.equippedSkateId = selectedId
-
-                updateShop()
-
-                playSelectionExplosion(
-                    selectedId,
-                    true
-                )
-
-                return@setOnClickListener
+            } else {
+                if (!playerData.spendCoins(item.price)) {
+                    Toast.makeText(this, "Not enough coins", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                inventory.unlock(selectedId)
+                playerData.equippedSkateId = selectedId
             }
-
-            if (!playerData.spendCoins(item.price)) {
-
-                Toast.makeText(
-                    this,
-                    "Not enough coins",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                return@setOnClickListener
-            }
-
-            inventory.unlock(selectedId)
-
-            playerData.equippedSkateId = selectedId
 
             updateCoins()
-            updateShop()
-
-            playSelectionExplosion(
-                selectedId,
-                true
-            )
+            refreshCards()
+            bindInfo(selectedId, animateMeters = false)
+            playPop()
         }
     }
 
-    private fun selectSkate(id: String) {
+    // ------------------------------------------------------------ popup
 
-        if (id !in skateIds) {
-            return
-        }
-
-        val changed =
-            selectedId != id
-
+    private fun showInfo(id: String) {
         selectedId = id
+        bindInfo(id, animateMeters = true)
 
-        showSkate(
-            id,
-            false
-        )
+        overlay.alpha = 0f
+        overlay.visibility = View.VISIBLE
+        overlay.animate().alpha(1f).setDuration(180).start()
 
-        if (changed) {
-            playSelectionExplosion(
-                id,
-                false
-            )
+        infoCard.scaleX = 0.9f
+        infoCard.scaleY = 0.9f
+        infoCard.animate()
+            .scaleX(1f).scaleY(1f)
+            .setDuration(220)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
+    }
+
+    private fun hideInfo() {
+        overlay.animate()
+            .alpha(0f)
+            .setDuration(140)
+            .withEndAction { overlay.visibility = View.GONE }
+            .start()
+    }
+
+    private fun bindInfo(id: String, animateMeters: Boolean) {
+        val slot = slots.first { it.id == id }
+        val item = ShopCatalog.skate(id) ?: return
+        val stats = SkateStats.forSkate(id)
+
+        val owned = inventory.owns(id)
+        val equipped = playerData.equippedSkateId == id
+
+        infoName.text = item.name.uppercase()
+        infoSubtitle.text = item.description
+        infoTexture.setImageResource(slot.textureDrawable)
+        infoSkate.setImageResource(slot.skateDrawable)
+
+        // The layout uses 0-100 bars; the data model uses levels.
+        // Speed: level out of 5.  Power: average of jump + control (each out of 3).
+        val speedPct = (stats.speedLevel / 5f * 100f).toInt()
+        val powerPct = ((stats.jumpLevel + stats.controlLevel) / 6f * 100f).toInt()
+        setMeter(speedMeter, speedPct, animateMeters)
+        setMeter(powerMeter, powerPct, animateMeters)
+
+        priceLabel.text = String.format("%,d", item.price)
+        priceRow.visibility = if (owned) View.INVISIBLE else View.VISIBLE
+
+        when {
+            equipped -> {
+                actionButton.text = "EQUIPPED"
+                actionButton.isEnabled = false
+                actionButton.alpha = 0.55f
+            }
+            owned -> {
+                actionButton.text = "EQUIP"
+                actionButton.isEnabled = true
+                actionButton.alpha = 1f
+            }
+            else -> {
+                actionButton.text = "BUY NOW"
+                actionButton.isEnabled = true
+                actionButton.alpha = 1f
+            }
+        }
+
+        // Locked skates are shown as a black silhouette in the popup too.
+        if (owned) infoSkate.clearColorFilter() else infoSkate.setColorFilter(Color.BLACK)
+    }
+
+    private fun setMeter(bar: ProgressBar, value: Int, animate: Boolean) {
+        bar.max = 100
+        if (animate) {
+            ObjectAnimator.ofInt(bar, "progress", 0, value).apply {
+                duration = 450
+                interpolator = DecelerateInterpolator()
+                start()
+            }
+        } else {
+            bar.progress = value
         }
     }
 
-    private fun showSkate(
-        id: String,
-        initial: Boolean
-    ) {
-
-        selectedId = id
-
-        val item =
-            ShopCatalog.skate(id)
-                ?: return
-
-        val stats =
-            SkateStats.forSkate(id)
-
-        skateImage.setImageBitmap(
-            loadSkateBitmap(id)
-        )
-
-        particleImage.setImageBitmap(
-            loadParticleBitmap(id)
-        )
-
-        skateName.text =
-            item.name.uppercase()
-
-        skateDescription.text =
-            item.description
-
-        speedValue.text =
-            buildStatText(
-                stats.speedLevel,
-                5
-            )
-
-        jumpValue.text =
-            buildStatText(
-                stats.jumpLevel,
-                3
-            )
-
-        controlValue.text =
-            buildStatText(
-                stats.controlLevel,
-                3
-            )
-
-        updateActionButton()
-
-        applyTheme(id)
-
-        updateSelector()
-
-        if (initial) {
-            particleImage.alpha = 0f
-        }
+    private fun playPop() {
+        infoSkate.scaleX = 0.88f
+        infoSkate.scaleY = 0.88f
+        infoSkate.animate()
+            .scaleX(1f).scaleY(1f)
+            .setDuration(260)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
     }
 
-    private fun updateShop() {
+    // --------------------------------------------------------- selector
 
-        updateCoins()
+    /** Updates every card: background, label text and silhouette, based on owned / equipped state. */
+    private fun refreshCards() {
+        val equippedId = playerData.equippedSkateId
 
-        updateActionButton()
+        slots.forEach { slot ->
+            val item = ShopCatalog.skate(slot.id)
+            val owned = inventory.owns(slot.id)
+            val equipped = slot.id == equippedId
 
-        updateSelector()
+            slot.card.setBackgroundResource(
+                if (equipped) R.drawable.shop_equipped_item_card_bg
+                else R.drawable.shop_item_card_bg
+            )
 
-        applyTheme(selectedId)
+            slot.label.text = when {
+                equipped -> "EQUIPPED"
+                owned -> item?.name?.uppercase() ?: ""
+                else -> "LOCKED"
+            }
+            slot.label.setBackgroundResource(
+                if (owned) 0 else R.drawable.grey_container
+            )
+
+            if (owned) slot.image.clearColorFilter()
+            else slot.image.setColorFilter(Color.BLACK)
+        }
     }
 
     private fun updateCoins() {
-
-        coinsLabel.text =
-            "●  ${playerData.coins}"
-
-        coinsLabel.setTextColor(
-            Color.rgb(
-                255,
-                211,
-                75
-            )
-        )
+        // The coin icon is a separate ImageView in the layout, so only the number is shown here.
+        coinsLabel.text = String.format("%,d", playerData.coins)
     }
-
-    private fun updateActionButton() {
-
-        val item =
-            ShopCatalog.skate(selectedId)
-                ?: return
-
-        val owned =
-            inventory.owns(selectedId)
-
-        val equipped =
-            playerData.equippedSkateId == selectedId
-
-        when {
-
-            equipped -> {
-                actionButton.text = "EQUIPPED"
-                actionButton.alpha = 0.55f
-            }
-
-            owned -> {
-                actionButton.text = "EQUIP"
-                actionButton.alpha = 1f
-            }
-
-            else -> {
-                actionButton.text =
-                    "UNLOCK   •   ${item.price}"
-                actionButton.alpha = 1f
-            }
-        }
-    }
-
-    private fun updateSelector() {
-
-        val selectorIds = listOf(
-            R.id.selector_red to "skate_basic",
-            R.id.selector_ice to "skate_ice",
-            R.id.selector_aero to "skate_aero",
-            R.id.selector_inferno to "skate_inferno",
-            R.id.selector_volt to "skate_volt"
-        )
-
-        selectorIds.forEach { (viewId, id) ->
-
-            val view =
-                findViewById<View>(viewId)
-
-            val selected =
-                id == selectedId
-
-            view.animate()
-                .scaleX(
-                    if (selected) 1.12f else 1f
-                )
-                .scaleY(
-                    if (selected) 1.12f else 1f
-                )
-                .alpha(
-                    if (selected) 1f else 0.62f
-                )
-                .setDuration(160)
-                .start()
-        }
-    }
-
-    private fun buildStatText(
-        level: Int,
-        max: Int
-    ): String {
-
-        val result = StringBuilder()
-
-        for (i in 1..max) {
-
-            if (i <= level) {
-                result.append("●")
-            } else {
-                result.append("○")
-            }
-
-            if (i < max) {
-                result.append(" ")
-            }
-        }
-
-        return result.toString()
-    }
-
-    private fun applyTheme(id: String) {
-
-        val colors = when (id) {
-
-            "skate_ice" -> intArrayOf(
-                Color.rgb(13, 38, 52),
-                Color.rgb(33, 105, 125)
-            )
-
-            "skate_aero" -> intArrayOf(
-                Color.rgb(11, 32, 50),
-                Color.rgb(31, 89, 125)
-            )
-
-            "skate_inferno" -> intArrayOf(
-                Color.rgb(48, 15, 17),
-                Color.rgb(115, 43, 23)
-            )
-
-            "skate_volt" -> intArrayOf(
-                Color.rgb(23, 17, 48),
-                Color.rgb(67, 39, 103)
-            )
-
-            else -> intArrayOf(
-                Color.rgb(43, 20, 24),
-                Color.rgb(100, 43, 39)
-            )
-        }
-
-        root.background =
-            GradientDrawable(
-                GradientDrawable.Orientation.TL_BR,
-                colors
-            )
-    }
-
-    private fun playSelectionExplosion(
-        id: String,
-        strong: Boolean
-    ) {
-
-        particleImage.setImageBitmap(
-            loadParticleBitmap(id)
-        )
-
-        particleImage.visibility =
-            View.VISIBLE
-
-        particleImage.alpha = 0f
-        particleImage.scaleX =
-            if (strong) 0.25f else 0.35f
-        particleImage.scaleY =
-            if (strong) 0.25f else 0.35f
-        particleImage.rotation = 0f
-
-        skateImage.scaleX = 0.92f
-        skateImage.scaleY = 0.92f
-        skateImage.alpha = 0.82f
-
-        val particleIn =
-            ObjectAnimator.ofFloat(
-                particleImage,
-                View.ALPHA,
-                0f,
-                1f
-            )
-
-        val particleScaleX =
-            ObjectAnimator.ofFloat(
-                particleImage,
-                View.SCALE_X,
-                if (strong) 0.25f else 0.35f,
-                1.18f
-            )
-
-        val particleScaleY =
-            ObjectAnimator.ofFloat(
-                particleImage,
-                View.SCALE_Y,
-                if (strong) 0.25f else 0.35f,
-                1.18f
-            )
-
-        val particleRotate =
-            ObjectAnimator.ofFloat(
-                particleImage,
-                View.ROTATION,
-                0f,
-                if (strong) 20f else 12f
-            )
-
-        val particleOut =
-            ObjectAnimator.ofFloat(
-                particleImage,
-                View.ALPHA,
-                1f,
-                0f
-            )
-
-        val skateScaleX =
-            ObjectAnimator.ofFloat(
-                skateImage,
-                View.SCALE_X,
-                0.92f,
-                1.04f,
-                1f
-            )
-
-        val skateScaleY =
-            ObjectAnimator.ofFloat(
-                skateImage,
-                View.SCALE_Y,
-                0.92f,
-                1.04f,
-                1f
-            )
-
-        val skateAlpha =
-            ObjectAnimator.ofFloat(
-                skateImage,
-                View.ALPHA,
-                0.82f,
-                1f
-            )
-
-        val explosionIn =
-            AnimatorSet().apply {
-
-                playTogether(
-                    particleIn,
-                    particleScaleX,
-                    particleScaleY,
-                    particleRotate,
-                    skateScaleX,
-                    skateScaleY,
-                    skateAlpha
-                )
-
-                duration =
-                    if (strong) 420L else 300L
-
-                interpolator =
-                    DecelerateInterpolator()
-            }
-
-        val explosionOut =
-            AnimatorSet().apply {
-
-                playTogether(
-                    particleOut
-                )
-
-                duration = 380L
-
-                interpolator =
-                    DecelerateInterpolator()
-            }
-
-        explosionIn.start()
-
-        explosionIn.addListener(
-            object :
-                android.animation.AnimatorListenerAdapter() {
-
-                override fun onAnimationEnd(
-                    animation: android.animation.Animator
-                ) {
-                    explosionOut.start()
-                }
-            }
-        )
-    }
-
-    private fun loadSkateBitmap(
-        id: String
-    ) =
-        assets.open(
-            "shop/skates/" +
-                    when (id) {
-
-                        "skate_ice" ->
-                            "skate2.png"
-
-                        "skate_aero" ->
-                            "skate3.png"
-
-                        "skate_inferno" ->
-                            "skate4.png"
-
-                        "skate_volt" ->
-                            "skate5.png"
-
-                        else ->
-                            "skate1.png"
-                    }
-        ).use {
-            BitmapFactory.decodeStream(it)
-        }
-
-    private fun loadParticleBitmap(
-        id: String
-    ) =
-        assets.open(
-            "shop/particles/" +
-                    when (id) {
-
-                        "skate_ice" ->
-                            "particle_ice.png"
-
-                        "skate_aero" ->
-                            "particle_aero.png"
-
-                        "skate_inferno" ->
-                            "particle_inferno.png"
-
-                        "skate_volt" ->
-                            "particle_volt.png"
-
-                        else ->
-                            "particle_red.png"
-                    }
-        ).use {
-            BitmapFactory.decodeStream(it)
-        }
 }

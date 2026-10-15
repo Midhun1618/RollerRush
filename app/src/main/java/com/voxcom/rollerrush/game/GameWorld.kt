@@ -1,5 +1,6 @@
 package com.voxcom.rollerrush.game
 
+import com.voxcom.rollerrush.audio.BoosterSoundManager
 import com.voxcom.rollerrush.data.SkateStats
 import com.voxcom.rollerrush.entities.Coin
 import com.voxcom.rollerrush.entities.Obstacle
@@ -31,7 +32,9 @@ class GameWorld(
     val camera: Camera,
     sprites: PlayerSprites,
     stats: SkateStats,
-    coinSoundManager: CoinSoundManager
+    coinSoundManager: CoinSoundManager,
+    private val boosterSoundManager: BoosterSoundManager,
+    private val equippedSkateId: () -> String
 ) {
 
     @Volatile
@@ -241,18 +244,15 @@ class GameWorld(
 
     /** Double-tap activates a collected speed boost. */
     fun requestSpeedBoost() {
-
         if (
-            state ==
-            GameState.PLAYING &&
+            state == GameState.PLAYING &&
             speedBoostReady &&
             speedBoostTimer <= 0f
         ) {
-
             speedBoostReady = false
+            speedBoostTimer = Constants.SPEED_BOOST_DURATION
 
-            speedBoostTimer =
-                Constants.SPEED_BOOST_DURATION
+            boosterSoundManager.playForSkate(equippedSkateId())
 
             camera.setSpeedBoost(true)
         }
@@ -710,32 +710,32 @@ class GameWorld(
             coinSystem.runCoins
         )
 
-        // --------------------------------------------------------
-        // OBSTACLE COLLISION
-        // --------------------------------------------------------
+// --------------------------------------------------------
+// OBSTACLE COLLISION
+// --------------------------------------------------------
 
-        if (
-            CollisionSystem.playerHitsObstacle(
-                player,
-                obstacles
-            )
-        ) {
+        if (CollisionSystem.playerHitsObstacle(player, obstacles)) {
 
+            // Disable every obstacle hitbox immediately.
+            // The crash animation can now continue without collisions.
+            for (obstacle in obstacles) {
+                obstacle.active = false
+            }
+
+            // Cancel booster effects.
+            speedBoostTimer = 0f
+            speedBoostReady = false
+            camera.setSpeedBoost(false)
+
+            // Trigger crash animation and cinematic camera effects.
             player.crash()
-
             camera.triggerCrash()
 
-            slowMotionTimer =
-                Constants.HIT_SLOW_MOTION_DURATION
+            slowMotionTimer = Constants.HIT_SLOW_MOTION_DURATION
+            timeScale = Constants.HIT_SLOW_MOTION_SCALE
 
-            timeScale =
-                Constants.HIT_SLOW_MOTION_SCALE
-
-            state =
-                GameState.GAME_OVER
-
-            gameOverTimer =
-                0f
+            state = GameState.GAME_OVER
+            gameOverTimer = 0f
         }
     }
 
@@ -777,11 +777,8 @@ class GameWorld(
                     crashScale
         )
 
-        animator.update(
-            dt *
-                    crashScale,
-            0f
-        )
+        // Let the crash animation finish at normal animation speed.
+        animator.update(dt, 0f)
 
         player.updateHitboxes()
 

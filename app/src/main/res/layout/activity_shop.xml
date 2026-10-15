@@ -3,10 +3,11 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/shop_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#28171B">
+    android:background="@drawable/blue_grad">
 
     <!-- BACK -->
 
@@ -33,7 +34,7 @@
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         android:gravity="center_vertical"
-        android:text="SKATE SHOP"
+        android:text="SHOP"
         android:textColor="#FFFFFF"
         android:textSize="21sp"
         android:textStyle="bold"
@@ -43,345 +44,465 @@
         app:layout_constraintBottom_toBottomOf="@id/shop_back_button" />
 
     <!-- COINS -->
-
-    <TextView
-        android:id="@+id/coins_label"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:layout_marginEnd="20dp"
-        android:paddingStart="15dp"
-        android:paddingEnd="15dp"
-        android:gravity="center"
-        android:text="●  0"
-        android:textColor="#FFD34B"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:background="#38282A"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/shop_back_button"
-        app:layout_constraintBottom_toBottomOf="@id/shop_back_button" />
-
-
-    <!-- LEFT SKATE PREVIEW -->
-
-    <FrameLayout
-        android:id="@+id/shop_preview"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="28dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="15dp"
-        android:layout_marginBottom="5dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/shop_details"
-        app:layout_constraintTop_toBottomOf="@id/shop_back_button"
-        app:layout_constraintBottom_toTopOf="@id/shop_skate_selector"
-        app:layout_constraintHorizontal_weight="1.25">
-
-        <!-- Subtle glow -->
-
-        <View
-            android:id="@+id/shop_preview_glow"
-            android:layout_width="270dp"
-            android:layout_height="160dp"
-            android:layout_gravity="center"
-            android:background="#182A2D"
-            android:alpha="0.45" />
-
-        <!-- PARTICLES -->
-
-        <ImageView
-            android:id="@+id/shop_particle_image"
-            android:layout_width="310dp"
-            android:layout_height="210dp"
-            android:layout_gravity="center"
-            android:alpha="0"
-            android:scaleType="fitCenter"
-            android:importantForAccessibility="no" />
-
-        <!-- SKATE -->
-
-        <ImageView
-            android:id="@+id/shop_skate_image"
-            android:layout_width="280dp"
-            android:layout_height="150dp"
-            android:layout_gravity="center"
-            android:scaleType="fitCenter"
-            android:adjustViewBounds="true" />
-
-    </FrameLayout>
-
-
-    <!-- DETAILS -->
-
     <LinearLayout
-        android:id="@+id/shop_details"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="30dp"
-        android:layout_marginBottom="8dp"
-        android:gravity="center_vertical"
-        android:orientation="vertical"
-        app:layout_constraintStart_toEndOf="@id/shop_preview"
+        android:layout_width="wrap_content"
+        android:layout_height="38dp"
+        android:orientation="horizontal"
+        android:layout_margin="15dp"
+        android:gravity="center"
+        android:paddingHorizontal="8dp"
+        android:background="@drawable/coin_container"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/shop_back_button"
-        app:layout_constraintBottom_toTopOf="@id/shop_skate_selector"
-        app:layout_constraintHorizontal_weight="0.9">
-
+        app:layout_constraintTop_toTopOf="parent">
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/rush_coin"/>
         <TextView
-            android:id="@+id/shop_skate_name"
-            android:layout_width="match_parent"
+            android:id="@+id/coins_label"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="RED STREET"
-            android:textColor="#FFFFFF"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.05" />
-
-        <TextView
-            android:id="@+id/shop_skate_description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:maxLines="2"
-            android:text="Your original street setup."
-            android:textColor="#AEB7C2"
-            android:textSize="12sp" />
-
-
-        <!-- SPEED -->
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="26dp"
-            android:layout_marginTop="17dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="72dp"
-                android:layout_height="wrap_content"
-                android:text="SPEED"
-                android:textColor="#8995A5"
-                android:textSize="10sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/shop_speed_value"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="● ○ ○ ○ ○"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-
-        </LinearLayout>
-
-
-        <!-- JUMP -->
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="26dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="72dp"
-                android:layout_height="wrap_content"
-                android:text="JUMP"
-                android:textColor="#8995A5"
-                android:textSize="10sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/shop_jump_value"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="● ○ ○"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-
-        </LinearLayout>
-
-
-        <!-- CONTROL -->
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="26dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="72dp"
-                android:layout_height="wrap_content"
-                android:text="CONTROL"
-                android:textColor="#8995A5"
-                android:textSize="10sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/shop_control_value"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="● ○ ○"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-
-        </LinearLayout>
-
-
-        <!-- ACTION BUTTON -->
-
-        <TextView
-            android:id="@+id/shop_action_button"
-            android:layout_width="190dp"
-            android:layout_height="44dp"
-            android:layout_marginTop="12dp"
-            android:background="#D94F45"
-            android:gravity="center"
-            android:text="UNLOCK"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08"
-            android:clickable="true"
-            android:focusable="true" />
-
+            android:text="0"
+            android:textColor="#FFD34B"
+            android:textSize="16sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
 
-    <!-- BOTTOM SKATE SELECTOR -->
-
-    <HorizontalScrollView
-        android:id="@+id/shop_skate_selector"
-        android:layout_width="0dp"
-        android:layout_height="76dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="5dp"
-        android:fillViewport="true"
-        android:scrollbars="none"
-        android:overScrollMode="never"
-        app:layout_constraintStart_toStartOf="parent"
+    <ScrollView
+        android:id="@+id/scrollView2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/shop_title">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp">
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginStart="40dp"
+                android:gravity="center_vertical"
+                android:letterSpacing="0.07"
+                android:text="SKATES"
+                android:textColor="#FFFFFF"
+                android:textSize="21sp"
+                android:textStyle="bold" />
+
+            <HorizontalScrollView
+                android:id="@+id/shop_skate_selector"
+                android:layout_width="match_parent"
+                android:layout_height="190dp"
+                android:layout_marginBottom="5dp"
+                android:fillViewport="true"
+                android:overScrollMode="never"
+                android:scrollbars="none"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/shop_title">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp">
+
+                    <View
+                        android:layout_width="20dp"
+                        android:layout_height="0dp" />
 
 
-            <!-- RED -->
+                    <!-- RED -->
 
-            <FrameLayout
-                android:id="@+id/selector_red"
-                android:layout_width="92dp"
-                android:layout_height="60dp"
-                android:layout_marginEnd="8dp"
-                android:background="#3B282A"
-                android:clickable="true"
-                android:focusable="true">
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/selector_card1"
+                        android:layout_width="150dp"
+                        android:layout_height="180dp"
+                        android:layout_marginEnd="12dp"
+                        android:background="@drawable/shop_item_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical">
 
-                <ImageView
-                    android:id="@+id/selector_red_image"
-                    android:layout_width="80dp"
-                    android:layout_height="48dp"
-                    android:layout_gravity="center"
-                    android:scaleType="fitCenter" />
+                        <ImageView
+                            android:id="@+id/imageView2"
+                            android:layout_width="135dp"
+                            android:layout_height="135dp"
+                            android:layout_margin="7dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/card_texture_bg_1"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
-            </FrameLayout>
+                        <TextView
+                            android:id="@+id/selector_name1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="10dp"
+                            android:text="RED STREET"
+                            android:textStyle="bold"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent" />
 
+                        <ImageView
+                            android:id="@+id/selector_skate1"
+                            android:layout_width="130dp"
+                            android:layout_height="130dp"
+                            android:layout_margin="10dp"
+                            android:rotation="40"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/skate1"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
-            <!-- ICE -->
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <FrameLayout
-                android:id="@+id/selector_ice"
-                android:layout_width="92dp"
-                android:layout_height="60dp"
-                android:layout_marginEnd="8dp"
-                android:background="#26383D"
-                android:clickable="true"
-                android:focusable="true">
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/selector_card2"
+                        android:layout_width="150dp"
+                        android:layout_height="180dp"
+                        android:layout_marginEnd="12dp"
+                        android:background="@drawable/shop_equipped_item_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical">
 
-                <ImageView
-                    android:id="@+id/selector_ice_image"
-                    android:layout_width="80dp"
-                    android:layout_height="48dp"
-                    android:layout_gravity="center"
-                    android:scaleType="fitCenter" />
+                        <ImageView
+                            android:layout_width="135dp"
+                            android:layout_height="135dp"
+                            android:layout_margin="7dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/card_texture_bg_2"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
-            </FrameLayout>
+                        <TextView
+                            android:id="@+id/selector_name2"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="8dp"
+                            android:layout_marginBottom="10dp"
+                            android:background="@drawable/grey_container"
+                            android:paddingHorizontal="8dp"
+                            android:text="LOCKED"
+                            android:textAlignment="center"
+                            android:textStyle="bold"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent" />
 
+                        <ImageView
+                            android:id="@+id/selector_skate2"
+                            android:layout_width="130dp"
+                            android:layout_height="130dp"
+                            android:layout_margin="10dp"
+                            android:rotation="40"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/skate2"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
-            <!-- AERO -->
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <FrameLayout
-                android:id="@+id/selector_aero"
-                android:layout_width="92dp"
-                android:layout_height="60dp"
-                android:layout_marginEnd="8dp"
-                android:background="#273740"
-                android:clickable="true"
-                android:focusable="true">
+                    <!-- AERO -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/selector_card3"
+                        android:layout_width="150dp"
+                        android:layout_height="180dp"
+                        android:layout_marginEnd="12dp"
+                        android:background="@drawable/shop_item_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical">
 
-                <ImageView
-                    android:id="@+id/selector_aero_image"
-                    android:layout_width="80dp"
-                    android:layout_height="48dp"
-                    android:layout_gravity="center"
-                    android:scaleType="fitCenter" />
+                        <ImageView
+                            android:layout_width="135dp"
+                            android:layout_height="135dp"
+                            android:layout_margin="7dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/card_texture_bg_3"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
-            </FrameLayout>
+                        <TextView
+                            android:id="@+id/selector_name3"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="8dp"
+                            android:layout_marginBottom="10dp"
+                            android:background="@drawable/grey_container"
+                            android:paddingHorizontal="8dp"
+                            android:text="LOCKED"
+                            android:textAlignment="center"
+                            android:textStyle="bold"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent" />
 
+                        <ImageView
+                            android:id="@+id/selector_skate3"
+                            android:layout_width="130dp"
+                            android:layout_height="130dp"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginTop="12dp"
+                            android:rotation="40"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/skate3"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
-            <!-- INFERNO -->
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <FrameLayout
-                android:id="@+id/selector_inferno"
-                android:layout_width="92dp"
-                android:layout_height="60dp"
-                android:layout_marginEnd="8dp"
-                android:background="#3D2927"
-                android:clickable="true"
-                android:focusable="true">
+                    <!-- INFERNO -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/selector_card4"
+                        android:layout_width="150dp"
+                        android:layout_height="180dp"
+                        android:layout_marginEnd="12dp"
+                        android:background="@drawable/shop_item_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical">
 
-                <ImageView
-                    android:id="@+id/selector_inferno_image"
-                    android:layout_width="80dp"
-                    android:layout_height="48dp"
-                    android:layout_gravity="center"
-                    android:scaleType="fitCenter" />
+                        <ImageView
+                            android:layout_width="135dp"
+                            android:layout_height="135dp"
+                            android:layout_margin="7dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/card_texture_bg_4"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
-            </FrameLayout>
+                        <TextView
+                            android:id="@+id/selector_name4"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="8dp"
+                            android:layout_marginBottom="10dp"
+                            android:background="@drawable/grey_container"
+                            android:paddingHorizontal="8dp"
+                            android:text="LOCKED"
+                            android:textAlignment="center"
+                            android:textStyle="bold"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent" />
 
+                        <ImageView
+                            android:id="@+id/selector_skate4"
+                            android:layout_width="130dp"
+                            android:layout_height="130dp"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginTop="12dp"
+                            android:rotation="40"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/skate4"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
-            <!-- VOLT -->
+                    </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <FrameLayout
-                android:id="@+id/selector_volt"
-                android:layout_width="92dp"
-                android:layout_height="60dp"
-                android:background="#302A3F"
-                android:clickable="true"
-                android:focusable="true">
+                    <!-- VOLT -->
 
-                <ImageView
-                    android:id="@+id/selector_volt_image"
-                    android:layout_width="80dp"
-                    android:layout_height="48dp"
-                    android:layout_gravity="center"
-                    android:scaleType="fitCenter" />
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/selector_card5"
+                        android:layout_width="150dp"
+                        android:layout_height="180dp"
+                        android:layout_marginEnd="12dp"
+                        android:background="@drawable/shop_item_card_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:orientation="vertical">
 
-            </FrameLayout>
+                        <ImageView
+                            android:layout_width="135dp"
+                            android:layout_height="135dp"
+                            android:layout_margin="7dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/card_texture_bg_5"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
+                        <TextView
+                            android:id="@+id/selector_name5"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="8dp"
+                            android:layout_marginBottom="10dp"
+                            android:background="@drawable/grey_container"
+                            android:paddingHorizontal="8dp"
+                            android:text="LOCKED"
+                            android:textAlignment="center"
+                            android:textStyle="bold"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent" />
+
+                        <ImageView
+                            android:id="@+id/selector_skate5"
+                            android:layout_width="130dp"
+                            android:layout_height="130dp"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginTop="12dp"
+                            android:rotation="40"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/skate5"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </LinearLayout>
+
+            </HorizontalScrollView>
         </LinearLayout>
 
-    </HorizontalScrollView>
+
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/info_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/glass_overlay"
+        android:gravity="center"
+        android:alpha="90"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/scrollView2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/skate_info_card"
+            android:layout_width="500dp"
+            android:layout_height="330dp"
+            android:background="@drawable/skate_card_info">
+
+            <LinearLayout
+                android:layout_width="190dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_margin="28dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" >
+                <TextView
+                    android:id="@+id/name_skate_info"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textStyle="bold"
+                    android:textSize="26sp"
+                    android:text="INFERNO"/>
+                <TextView
+                    android:id="@+id/subtitle_skate_info"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:text="Flame and Fire with Speed"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:textSize="12sp"
+                    android:text="Speed"/>
+                <androidx.core.widget.ContentLoadingProgressBar
+                    android:id="@+id/speed_meter"
+                    android:layout_width="180sp"
+                    android:layout_height="16dp"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:progressTint="#FFEDD1"
+                    android:progress="38"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textSize="12sp"
+                    android:text="Power"/>
+                <androidx.core.widget.ContentLoadingProgressBar
+                    android:id="@+id/power_meter"
+                    android:layout_width="180sp"
+                    android:layout_height="16dp"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:progressTint="#FFEDD1"
+                    android:progress="78"/>
+
+                <LinearLayout
+                    android:id="@+id/linearLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingVertical="4dp">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_marginRight="8dp"
+                        android:src="@drawable/rush_coin" />
+
+                    <TextView
+                        android:id="@+id/price_skate_info"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1,499"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/bgcard_skateinfo"
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:layout_margin="28dp"
+                android:src="@drawable/card_texture_bg_4"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+            <ImageView
+                android:id="@+id/skateimg_skateinfo"
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:layout_margin="28dp"
+                android:rotation="40"
+                android:src="@drawable/skate4"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+
+
+            <Button
+                android:id="@+id/buyBtn"
+                android:layout_width="180dp"
+                android:layout_height="60dp"
+                android:layout_margin="20dp"
+                android:backgroundTint="#E4B011"
+                android:text="BUY NOW"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/bgcard_skateinfo" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
