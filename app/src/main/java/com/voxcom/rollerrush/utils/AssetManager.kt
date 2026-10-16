@@ -64,12 +64,12 @@ class AssetManager(private val context: Context) {
         val s = Constants.BITMAP_SCALE
 
         obstacleBitmaps = arrayOf(
-            obstacle("obstacles/ground.png", 22f, 26f) { c, w, h -> drawCrate(c, w, h) },
-            obstacle("obstacles/tall.png", 20f, 58f) { c, w, h -> drawPillar(c, w, h) },
+            obstacle("obstacles/road_cone.webp", 22f, 26f) { c, w, h -> drawCrate(c, w, h) },
+            obstacle("obstacles/stone_stud.webp", 20f, 58f) { c, w, h -> drawPillar(c, w, h) },
             obstacle("obstacles/moving.png", 24f, 24f) { c, w, h -> drawSpiky(c, w, h) },
-            obstacle("obstacles/overhead.png", 38f, 24f) { c, w, h -> drawOverhead(c, w, h) }
+            obstacle("obstacles/graph.png", 38f, 24f) { c, w, h -> drawOverhead(c, w, h) }
         )
-        coinBitmap = make("coins/coin.png", (Constants.COIN_RADIUS * 2 * s).toInt(), (Constants.COIN_RADIUS * 2 * s).toInt()) { c, w, h ->
+        coinBitmap = make("coins/rush_coin.webp", (Constants.COIN_RADIUS * 2 * s).toInt(), (Constants.COIN_RADIUS * 2 * s).toInt()) { c, w, h ->
             val p = Paint(Paint.ANTI_ALIAS_FLAG)
             p.color = Color.rgb(255, 193, 7); c.drawOval(0f, 0f, w, h, p)
             p.color = Color.rgb(255, 224, 102); c.drawOval(w * 0.15f, h * 0.15f, w * 0.85f, h * 0.85f, p)
@@ -77,9 +77,9 @@ class AssetManager(private val context: Context) {
         }
 
         val bg = 2
-        farBackground = make("background/far.png", TILE_W * bg, 200 * bg) { c, w, h -> drawHills(c, w, h) }
-        midBackground = make("background/mid.png", TILE_W * bg, 140 * bg) { c, w, h -> drawBuildings(c, w, h) }
-        groundTile = make("background/ground.webp", 280 * 3, Constants.GROUND_THICKNESS.toInt() * 3) { c, w, h -> drawGround(c, w, h) }
+        farBackground = make("background/far_bg.webp", TILE_W * bg, 200 * bg) { c, w, h -> drawHills(c, w, h) }
+        midBackground = make("background/mid_bg.webp", TILE_W * bg, 140 * bg) { c, w, h -> drawBuildings(c, w, h) }
+        groundTile = make("background/ground_bg.webp", 280 * 3, Constants.GROUND_THICKNESS.toInt() * 3) { c, w, h -> drawGround(c, w, h) }
 
         introBackground = make(
             "background/building_intro.png",
@@ -135,7 +135,7 @@ class AssetManager(private val context: Context) {
             )
         }
         farBackground = make(
-            "background/far.png",
+            "background/far_bg.webp",
             TILE_W * 2,
             200 * 2
         ) { c, w, h ->
@@ -143,7 +143,7 @@ class AssetManager(private val context: Context) {
         }
 
         midBackground = make(
-            "background/mid.png",
+            "background/mid_bg.webp",
             TILE_W * 2,
             140 * 2
         ) { c, w, h ->

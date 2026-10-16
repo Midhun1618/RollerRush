@@ -31,14 +31,21 @@ class SpawnSystem {
     fun update(dt: Float, world: GameWorld) {
         timer -= dt
         powerUpTimer -= dt
+
+        // Spawn just past the right edge the camera can actually see (zoom / pan / tilt aware).
+        val right = maxOf(world.camera.viewWidth, world.camera.visibleRight)
+
         if (powerUpTimer <= 0f) {
             if (world.scoreSystem.distanceMeters >= Constants.SPEED_BOOST_UNLOCK_METERS) {
                 val pu = world.acquirePowerUp()
-                if (pu != null) pu.init(com.voxcom.rollerrush.entities.PowerUpType.SPEED,
-                    world.camera.viewWidth + Constants.SPAWN_MARGIN + 80f, Constants.GROUND_Y - 72f)
+                if (pu != null) pu.init(
+                    com.voxcom.rollerrush.entities.PowerUpType.SPEED,
+                    right + Constants.SPAWN_MARGIN + 80f,
+                    Constants.GROUND_Y - 72f
+                )
             }
             powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN +
-                rng.nextFloat() * (Constants.SPEED_BOOST_SPAWN_MAX - Constants.SPEED_BOOST_SPAWN_MIN)
+                    rng.nextFloat() * (Constants.SPEED_BOOST_SPAWN_MAX - Constants.SPEED_BOOST_SPAWN_MIN)
         }
 
         if (timer > 0f) return
@@ -46,7 +53,7 @@ class SpawnSystem {
         val interval = world.difficulty.nextSpawnInterval(rng)
         timer += interval
 
-        val spawnX = world.camera.viewWidth + Constants.SPAWN_MARGIN
+        val spawnX = right + Constants.SPAWN_MARGIN
         val meters = world.scoreSystem.distanceMeters
         val maxIndex = when {
             meters >= Constants.MOVING_UNLOCK_METERS -> 2

@@ -589,12 +589,8 @@ class GameWorld(
                     worldSpeed
                 )
 
-                if (
-                    o.isOffScreenLeft()
-                ) {
-
-                    o.active =
-                        false
+                if (o.isOffScreenLeft(camera.visibleLeft)) {
+                    o.active = false
                 }
             }
         }
@@ -617,12 +613,8 @@ class GameWorld(
                     worldSpeed
                 )
 
-                if (
-                    c.isOffScreenLeft()
-                ) {
-
-                    c.active =
-                        false
+                if (c.isOffScreenLeft(camera.visibleLeft)) {
+                    c.active = false
                 }
             }
         }
@@ -645,12 +637,8 @@ class GameWorld(
                     worldSpeed
                 )
 
-                if (
-                    p.isOffScreenLeft()
-                ) {
-
-                    p.active =
-                        false
+                if (p.isOffScreenLeft(camera.visibleLeft)) {
+                    p.active = false
                 }
             }
         }

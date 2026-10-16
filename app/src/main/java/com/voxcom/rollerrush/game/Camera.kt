@@ -38,6 +38,14 @@ class Camera {
     var viewWidth = Constants.MIN_VIEW_WIDTH
         private set
 
+    @Volatile
+    var visibleLeft = 0f
+        private set
+
+    @Volatile
+    var visibleRight = Constants.MIN_VIEW_WIDTH
+        private set
+
     // ------------------------------------------------------------
     // GENERAL CAMERA SHAKE
     // ------------------------------------------------------------
@@ -548,6 +556,14 @@ class Camera {
             normalY + (introY - normalY) * introBlend
 
         canvas.translate(finalX, finalY)
+        // World-space range that is actually visible after zoom / pan / tilt.
+        val tiltDeg = kotlin.math.abs((slideTilt + crashTilt) * (1f - introBlend))
+        val tiltExtra = kotlin.math.abs(
+            sin(Math.toRadians(tiltDeg.toDouble())).toFloat()
+        ) * screenHeight / zScale
+
+        visibleLeft  = focusX - finalX / zScale - tiltExtra - 2f
+        visibleRight = focusX + (screenWidth - finalX) / zScale + tiltExtra + 2f
 
         canvas.rotate(
             (slideTilt + crashTilt) * (1f - introBlend)

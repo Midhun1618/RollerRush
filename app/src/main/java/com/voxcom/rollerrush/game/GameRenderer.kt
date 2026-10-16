@@ -11,6 +11,7 @@ import android.graphics.Typeface
 import com.voxcom.rollerrush.data.GamePreferences
 import com.voxcom.rollerrush.utils.AssetManager
 import com.voxcom.rollerrush.utils.Constants
+import kotlin.math.floor
 
 /**
  * Draws one frame from the GameWorld state. Everything it needs (Paints, Rects, StringBuilder)
@@ -53,41 +54,29 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
 
         canvas.save()
         camera.applyTo(canvas, world.player.x, Constants.GROUND_Y - 65f) // from here on: world units
-        val view = camera.viewWidth
+        val left = camera.visibleLeft
+        val right = camera.visibleRight
         val scroll = world.scrollX
 
         // Parallax background + ground
+        // Parallax background + ground
         drawTiled(canvas, assets.farBackground, AssetManager.TILE_W.toFloat(),
-            Constants.GROUND_Y - 200f, 200f, scroll * 0.12f, view)
+            Constants.GROUND_Y - 200f, 200f, scroll * 0.12f, left, right)
         drawTiled(canvas, assets.midBackground, AssetManager.TILE_W.toFloat(),
-            Constants.GROUND_Y - 140f, 140f, scroll * 0.35f, view)
+            Constants.GROUND_Y - 140f, 140f, scroll * 0.35f, left, right)
         fill.color = Color.rgb(74, 78, 105)
-        canvas.drawRect(-200f, Constants.GROUND_Y, view + 200f, Constants.GROUND_Y + 600f, fill) // below-tile fill
-        drawTiled(canvas, assets.groundTile, 120f, Constants.GROUND_Y, Constants.GROUND_THICKNESS, scroll, view)
+        canvas.drawRect(left - 50f, Constants.GROUND_Y, right + 50f, Constants.GROUND_Y + 600f, fill)
+        drawTiled(canvas, assets.groundTile, 120f, Constants.GROUND_Y,
+            Constants.GROUND_THICKNESS, scroll, left, right)
 
-        // --------------------------------------------------------
-        // INTRO BACKGROUND WORLD SECTION
-        // --------------------------------------------------------
-        // intro.png is part of the world beginning. It is NOT tied to
-        // GameState.INTRO, so it cannot suddenly disappear when the
-        // cinematic ends. Normal gameplay scrolls it naturally left.
+// Intro building (part of the world, scrolls left naturally)
         val introBuildingOffsetX = -100f
         val introX = -scroll + introBuildingOffsetX
         val introRight = introX + Constants.INTRO_BACKGROUND_WORLD_WIDTH
 
-        if (introX < view && introRight > -100f) {
-            dst.set(
-                introX,
-                0f,
-                introRight,
-                Constants.INTRO_BACKGROUND_WORLD_HEIGHT
-            )
-            canvas.drawBitmap(
-                assets.introBackground,
-                null,
-                dst,
-                bmpPaint
-            )
+        if (introX < right && introRight > left) {
+            dst.set(introX, 0f, introRight, Constants.INTRO_BACKGROUND_WORLD_HEIGHT)
+            canvas.drawBitmap(assets.introBackground, null, dst, bmpPaint)
         }
 
         // Entities
@@ -100,7 +89,7 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
 
         world.player.draw(canvas, bmpPaint)
         drawSpeedBoostEffect(canvas, world)
-        drawForeground(canvas, scroll, view)
+        drawForeground(canvas, scroll, left, right)
         if (prefs.debugHitboxes) drawDebug(canvas, world)
         canvas.restore()
 
@@ -163,9 +152,11 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
     }
 
     /** Tiles [bmp] horizontally, scrolling by [scroll]. Slight overlap hides seams. */
-    private fun drawTiled(canvas: Canvas, bmp: Bitmap, tileW: Float, top: Float, h: Float, scroll: Float, viewW: Float) {
-        var x = -(scroll % tileW)
-        while (x < viewW) {
+    /** Tiles [bmp] across the whole visible range [left, right]. Slight overlap hides seams. */
+    private fun drawTiled(canvas: Canvas, bmp: Bitmap, tileW: Float, top: Float, h: Float,
+                          scroll: Float, left: Float, right: Float) {
+        var x = floor((left + scroll) / tileW) * tileW - scroll
+        while (x < right) {
             dst.set(x, top, x + tileW + 0.5f, top + h)
             canvas.drawBitmap(bmp, null, dst, bmpPaint)
             x += tileW
@@ -173,11 +164,12 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
     }
 
     /** Simple foreground: dark posts scrolling faster than the ground (adds depth). */
-    private fun drawForeground(canvas: Canvas, scroll: Float, view: Float) {
+    private fun drawForeground(canvas: Canvas, scroll: Float, left: Float, right: Float) {
         fill.color = Color.argb(200, 30, 32, 48)
         val spacing = 260f
-        var x = -((scroll * 1.35f) % spacing)
-        while (x < view) {
+        val s = scroll * 1.35f
+        var x = floor((left + s) / spacing) * spacing - s
+        while (x < right) {
             canvas.drawRect(x, Constants.GROUND_Y + 30f, x + 8f, Constants.GROUND_Y + 60f, fill)
             x += spacing
         }

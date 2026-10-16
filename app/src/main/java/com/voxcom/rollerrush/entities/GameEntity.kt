@@ -27,7 +27,8 @@ abstract class GameEntity {
     protected fun updateBounds() = bounds.set(x, y, x + width, y + height)
 
     /** True once fully off the left edge. */
-    fun isOffScreenLeft(): Boolean = x + width < -40f
+    /** True once fully off the left edge of what the camera can currently see. */
+    fun isOffScreenLeft(visibleLeft: Float = -40f): Boolean = x + width < visibleLeft - 30f
 
     abstract fun draw(canvas: Canvas, assets: AssetManager, paint: Paint)
 }
