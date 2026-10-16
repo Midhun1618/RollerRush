@@ -163,7 +163,6 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         }
     }
 
-    /** Simple foreground: dark posts scrolling faster than the ground (adds depth). */
     private fun drawForeground(canvas: Canvas, scroll: Float, left: Float, right: Float) {
         fill.color = Color.argb(200, 30, 32, 48)
         val spacing = 260f

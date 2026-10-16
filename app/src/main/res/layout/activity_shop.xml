@@ -267,6 +267,8 @@
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
+
+
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                     <!-- INFERNO -->
@@ -379,18 +381,14 @@
 
 
     </ScrollView>
-
     <LinearLayout
         android:id="@+id/info_overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/glass_overlay"
-        android:gravity="center"
         android:alpha="90"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/scrollView2"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:background="@drawable/glass_overlay"
+        android:gravity="center">
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/skate_info_card"
             android:layout_width="500dp"
@@ -400,49 +398,55 @@
             <LinearLayout
                 android:layout_width="190dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:layout_margin="28dp"
+                android:orientation="vertical"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" >
+                app:layout_constraintTop_toTopOf="parent">
+
                 <TextView
                     android:id="@+id/name_skate_info"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textStyle="bold"
+                    android:text="INFERNO"
                     android:textSize="26sp"
-                    android:text="INFERNO"/>
+                    android:textStyle="bold" />
+
                 <TextView
                     android:id="@+id/subtitle_skate_info"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="16sp"
-                    android:text="Flame and Fire with Speed"/>
+                    android:text="Flame and Fire with Speed"
+                    android:textSize="16sp" />
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
-                    android:textSize="12sp"
-                    android:text="Speed"/>
+                    android:text="Speed"
+                    android:textSize="12sp" />
+
                 <androidx.core.widget.ContentLoadingProgressBar
                     android:id="@+id/speed_meter"
+                    style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="180sp"
                     android:layout_height="16dp"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:progressTint="#FFEDD1"
-                    android:progress="38"/>
+                    android:progress="38"
+                    android:progressTint="#FFEDD1" />
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:textSize="12sp"
-                    android:text="Power"/>
+                    android:text="Power"
+                    android:textSize="12sp" />
+
                 <androidx.core.widget.ContentLoadingProgressBar
                     android:id="@+id/power_meter"
+                    style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="180sp"
                     android:layout_height="16dp"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:progressTint="#FFEDD1"
-                    android:progress="78"/>
+                    android:progress="78"
+                    android:progressTint="#FFEDD1" />
 
                 <LinearLayout
                     android:id="@+id/linearLayout"
@@ -477,6 +481,7 @@
                 android:src="@drawable/card_texture_bg_4"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
             <ImageView
                 android:id="@+id/skateimg_skateinfo"
                 android:layout_width="220dp"
@@ -486,7 +491,6 @@
                 android:src="@drawable/skate4"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
 
 
             <Button

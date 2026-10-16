@@ -66,7 +66,7 @@ class AssetManager(private val context: Context) {
         obstacleBitmaps = arrayOf(
             obstacle("obstacles/road_cone.webp", 22f, 26f) { c, w, h -> drawCrate(c, w, h) },
             obstacle("obstacles/stone_stud.webp", 20f, 58f) { c, w, h -> drawPillar(c, w, h) },
-            obstacle("obstacles/moving.png", 24f, 24f) { c, w, h -> drawSpiky(c, w, h) },
+            obstacle("obstacles/thorn_tyre.webp", 24f, 24f) { c, w, h -> drawSpiky(c, w, h) },
             obstacle("obstacles/graph.png", 38f, 24f) { c, w, h -> drawOverhead(c, w, h) }
         )
         coinBitmap = make("coins/rush_coin.webp", (Constants.COIN_RADIUS * 2 * s).toInt(), (Constants.COIN_RADIUS * 2 * s).toInt()) { c, w, h ->
