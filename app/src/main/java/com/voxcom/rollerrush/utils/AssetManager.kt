@@ -32,6 +32,8 @@ class AssetManager(private val context: Context) {
     private lateinit var obstacleBitmaps: Array<Bitmap>
     lateinit var coinBitmap: Bitmap
         private set
+    lateinit var rushRubyBitmap: Bitmap
+        private set
     lateinit var farBackground: Bitmap
         private set
     lateinit var midBackground: Bitmap
@@ -74,6 +76,39 @@ class AssetManager(private val context: Context) {
             p.color = Color.rgb(255, 193, 7); c.drawOval(0f, 0f, w, h, p)
             p.color = Color.rgb(255, 224, 102); c.drawOval(w * 0.15f, h * 0.15f, w * 0.85f, h * 0.85f, p)
             p.color = Color.rgb(255, 193, 7); c.drawRect(w * 0.44f, h * 0.28f, w * 0.56f, h * 0.72f, p)
+        }
+        rushRubyBitmap = make(
+            "coins/rush_ruby.webp",
+            (Constants.COIN_RADIUS * 2.6f * Constants.BITMAP_SCALE).toInt(),
+            (Constants.COIN_RADIUS * 2.6f * Constants.BITMAP_SCALE).toInt()
+        ) { canvas, width, height ->
+            val diamondPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.rgb(220, 20, 60)
+            }
+
+            val diamond = Path().apply {
+                moveTo(width * 0.5f, height * 0.04f)
+                lineTo(width * 0.96f, height * 0.38f)
+                lineTo(width * 0.5f, height * 0.96f)
+                lineTo(width * 0.04f, height * 0.38f)
+                close()
+            }
+
+            canvas.drawPath(diamond, diamondPaint)
+
+            val highlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.rgb(255, 170, 190)
+            }
+
+            val highlight = Path().apply {
+                moveTo(width * 0.5f, height * 0.12f)
+                lineTo(width * 0.76f, height * 0.38f)
+                lineTo(width * 0.5f, height * 0.48f)
+                lineTo(width * 0.28f, height * 0.38f)
+                close()
+            }
+
+            canvas.drawPath(highlight, highlightPaint)
         }
 
         val bg = 2
@@ -268,20 +303,42 @@ class AssetManager(private val context: Context) {
 
     fun release() {
         if (!loaded) return
+
         obstacleBitmaps.forEach { it.recycle() }
-        listOf(coinBitmap, farBackground, midBackground, groundTile, introBackground).forEach { it.recycle() }
+
+        listOf(
+            coinBitmap,
+            rushRubyBitmap,
+            farBackground,
+            midBackground,
+            groundTile,
+            introBackground
+        ).forEach { bitmap ->
+            if (!bitmap.isRecycled) {
+                bitmap.recycle()
+            }
+        }
 
         if (speedBoostEffectLoaded) {
-            speedBoostEffectFrames.forEach { it.recycle() }
+            speedBoostEffectFrames.forEach {
+                if (!it.isRecycled) {
+                    it.recycle()
+                }
+            }
             speedBoostEffectLoaded = false
         }
 
         loaded = false
 
         speedBoostFrames.forEach {
-            it.recycle()
+            if (!it.isRecycled) {
+                it.recycle()
+            }
         }
-        speedBoostParticle.recycle()
+
+        if (!speedBoostParticle.isRecycled) {
+            speedBoostParticle.recycle()
+        }
     }
 
     private fun drawSpeedBoostFallback(

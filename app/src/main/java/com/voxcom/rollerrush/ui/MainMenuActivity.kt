@@ -16,6 +16,7 @@ import com.voxcom.rollerrush.R
 class MainMenuActivity : BaseActivity() {
 
     private lateinit var coinsLabel: TextView
+    private lateinit var rushRubiesLabel: TextView
     private lateinit var highScoreLabel: TextView
     private lateinit var playButton: ImageView
     private lateinit var characterButton: ImageView
@@ -41,6 +42,7 @@ class MainMenuActivity : BaseActivity() {
         setContentView(R.layout.activity_main_menu)
 
         coinsLabel = findViewById(R.id.coinsLabel)
+        rushRubiesLabel = findViewById(R.id.rubiesLabel)
         highScoreLabel = findViewById(R.id.scoreLabel)
         playButton = findViewById(R.id.playButton)
         characterButton = findViewById(R.id.characterButton)
@@ -184,6 +186,7 @@ class MainMenuActivity : BaseActivity() {
 
         coinsLabel.text = "${app.playerData.coins}"
         highScoreLabel.text = "${app.playerData.highScore}"
+        rushRubiesLabel.text = "${app.playerData.rushRubies}"
     }
 
     override fun onDestroy() {

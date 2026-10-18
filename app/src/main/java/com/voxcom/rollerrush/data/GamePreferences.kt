@@ -3,11 +3,7 @@ package com.voxcom.rollerrush.data
 import android.content.Context
 import android.content.SharedPreferences
 
-/**
- * The ONLY class that touches SharedPreferences.
- * To move to Room / DataStore later, replace the internals of this class (or the
- * PlayerData / InventoryData classes that sit on top of it); nothing else changes.
- */
+
 class GamePreferences(context: Context) {
     private val sp: SharedPreferences =
         context.applicationContext.getSharedPreferences("roller_rush_prefs", Context.MODE_PRIVATE)
@@ -35,4 +31,6 @@ class GamePreferences(context: Context) {
     var debugHitboxes: Boolean
         get() = getBoolean("settings_debug_hitboxes", false)
         set(v) = putBoolean("settings_debug_hitboxes", v)
+
+
 }

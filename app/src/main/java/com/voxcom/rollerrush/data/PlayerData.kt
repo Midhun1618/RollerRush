@@ -25,6 +25,26 @@ class PlayerData(private val prefs: GamePreferences) {
 
     val skateStats: SkateStats get() = SkateStats.forSkate(equippedSkateId)
 
+    var rushRubies: Int
+        get() = prefs.getInt(KEY_RUSH_RUBIES, 0)
+        private set(v) = prefs.putInt(KEY_RUSH_RUBIES, v.coerceAtLeast(0))
+
+    fun addRushRubies(amount: Int = 1) {
+        if (amount <= 0) return
+
+        rushRubies = (rushRubies.toLong() + amount)
+            .coerceAtMost(Int.MAX_VALUE.toLong())
+            .toInt()
+    }
+
+    /** Returns true if the ruby purchase went through. */
+    fun spendRushRubies(amount: Int): Boolean {
+        if (amount <= 0 || amount > rushRubies) return false
+
+        rushRubies -= amount
+        return true
+    }
+
     fun addCoins(amount: Int) { if (amount > 0) coins += amount }
 
     /** @return true if the purchase went through. */
@@ -41,5 +61,6 @@ class PlayerData(private val prefs: GamePreferences) {
         const val KEY_HIGH_SCORE = "player_high_score"
         const val KEY_PRESET = "player_character_preset"
         const val KEY_SKATE = "player_equipped_skate"
+        const val KEY_RUSH_RUBIES = "player_rush_rubies"
     }
 }

@@ -27,13 +27,49 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         color = Color.WHITE; typeface = Typeface.DEFAULT_BOLD; setShadowLayer(4f, 0f, 2f, Color.BLACK)
     }
     private val dst = RectF()
+    private val boostTrailOffsets = floatArrayOf(
+        13f, 27f, 42f, 58f
+    )
+
+    private val boostTrailAlphas = intArrayOf(
+        72, 52, 34, 20
+    )
     private val sb = StringBuilder(32)
 
-    private var speedBoostEffectFrame = 0
-    private var speedBoostEffectLastNs = 0L
+    // ============================================================
+// SPEED BOOST: AFTERIMAGES + SPEED PARTICLES
+// ============================================================
 
-    private val speedBoostEffectPaint =
-        Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
+    private var boostLastNs = 0L
+    private var boostTrailPhase = 0f
+    private var boostParticleAccumulator = 0f
+
+    private val boostParticlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.ROUND
+        strokeWidth = 2f
+    }
+
+    // Fixed-size particle pool: no particle objects created per frame.
+    private val boostParticleCount = 36
+
+    private val boostParticleX = FloatArray(boostParticleCount)
+    private val boostParticleY = FloatArray(boostParticleCount)
+    private val boostParticleLength = FloatArray(boostParticleCount)
+    private val boostParticleLife = FloatArray(boostParticleCount)
+    private val boostParticleMaxLife = FloatArray(boostParticleCount)
+    private val boostParticleSpeed = FloatArray(boostParticleCount)
+    private val boostParticleSlant = FloatArray(boostParticleCount)
+
+    private var boostParticleIndex = 0
+    private var boostRandomState = 9371
+
+    private fun boostRandom(): Float {
+        boostRandomState =
+            (boostRandomState * 1103515245 + 12345) and 0x7fffffff
+
+        return boostRandomState.toFloat() / Int.MAX_VALUE.toFloat()
+    }
 
     /** Pause button in SCREEN pixels (GameView hit-tests touches against it). */
     val pauseRect = RectF()
@@ -81,14 +117,30 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
 
         // Entities
         val coins = world.coins
-        for (i in 0 until coins.size) { val c = coins[i]; if (c.active) c.draw(canvas, assets, bmpPaint) }
-        val obs = world.obstacles
-        for (i in 0 until obs.size) { val o = obs[i]; if (o.active) o.draw(canvas, assets, bmpPaint) }
-        val pu = world.powerUps
-        for (i in 0 until pu.size) { val p = pu[i]; if (p.active) p.draw(canvas, assets, fill) }
+        for (i in 0 until coins.size) {
+            val c = coins[i]
+            if (c.active) c.draw(canvas, assets, bmpPaint)
+        }
 
-        world.player.draw(canvas, bmpPaint)
+        if (world.rushRuby.active) {
+            world.rushRuby.draw(canvas, assets, bmpPaint)
+        }
+
+        val obs = world.obstacles
+        for (i in 0 until obs.size) {
+            val o = obs[i]
+            if (o.active) o.draw(canvas, assets, bmpPaint)
+        }
+
+        val pu = world.powerUps
+        for (i in 0 until pu.size) {
+            val p = pu[i]
+            if (p.active) p.draw(canvas, assets, fill)
+        }
+
+        // Booster trails must appear behind the actual skater.
         drawSpeedBoostEffect(canvas, world)
+        world.player.draw(canvas, bmpPaint)
         drawForeground(canvas, scroll, left, right)
         if (prefs.debugHitboxes) drawDebug(canvas, world)
         canvas.restore()
@@ -100,55 +152,192 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         canvas: Canvas,
         world: GameWorld
     ) {
-        if (!world.speedBoostActive) {
-            speedBoostEffectFrame = 0
-            speedBoostEffectLastNs = 0L
-            return
-        }
-
-        if (speedBoostEffectLastNs == 0L) {
-            speedBoostEffectLastNs = System.nanoTime()
-        }
-
         val now = System.nanoTime()
 
-        // 4 frames at approximately 14 FPS.
-        if (now - speedBoostEffectLastNs >= 70_000_000L) {
-            val steps =
-                ((now - speedBoostEffectLastNs) / 70_000_000L)
-                    .toInt()
-                    .coerceAtMost(4)
-
-            speedBoostEffectFrame =
-                (speedBoostEffectFrame + steps) % 4
-
-            speedBoostEffectLastNs = now
+        val dt = if (boostLastNs == 0L) {
+            0f
+        } else {
+            ((now - boostLastNs) / 1_000_000_000f)
+                .coerceIn(0f, 0.05f)
         }
 
-        val bmp = assets.speedBoostEffectFrame(speedBoostEffectFrame)
+        boostLastNs = now
 
-        val playerCenterX =
-            world.player.x + 18f
+        val boosting = world.speedBoostActive
+        val player = world.player
 
-        val playerCenterY =
-            world.player.bottomY - 34f
+        // Animate the afterimage trail.
+        if (boosting) {
+            boostTrailPhase += dt * 11f
 
-        val effectW = 100f
-        val effectH = 100f
+            if (boostTrailPhase > 1000f) {
+                boostTrailPhase -= 1000f
+            }
 
-        dst.set(
-            playerCenterX - effectW * 0.5f,
-            playerCenterY - effectH * 0.5f,
-            playerCenterX + effectW * 0.5f,
-            playerCenterY + effectH * 0.5f
-        )
+            // Spawn speed particles.
+            boostParticleAccumulator += dt
 
-        canvas.drawBitmap(
-            bmp,
-            null,
-            dst,
-            speedBoostEffectPaint
-        )
+            while (boostParticleAccumulator >= 0.035f) {
+                boostParticleAccumulator -= 0.035f
+                spawnBoostParticle(player.x, player.bottomY)
+            }
+        } else {
+            boostParticleAccumulator = 0f
+        }
+
+        // ========================================================
+        // 1. CHARACTER AFTERIMAGES
+        // ========================================================
+        if (boosting) {
+            for (i in boostTrailOffsets.indices) {
+                val wave =
+                    kotlin.math.sin(boostTrailPhase - i * 0.8f) * 2.5f
+
+                canvas.save()
+
+                // Move each copy progressively farther backwards.
+                canvas.translate(
+                    -boostTrailOffsets[i] - wave,
+                    wave * 0.45f
+                )
+
+                // Older copies are more transparent.
+                bmpPaint.alpha = boostTrailAlphas[i]
+
+                player.draw(canvas, bmpPaint)
+
+                canvas.restore()
+            }
+        }
+
+        // Restore full opacity before drawing particles or the real player.
+        bmpPaint.alpha = 255
+
+        // ========================================================
+        // 2. SPEED PARTICLES
+        // ========================================================
+        for (i in 0 until boostParticleCount) {
+            if (boostParticleLife[i] <= 0f) continue
+
+            boostParticleX[i] -= boostParticleSpeed[i] * dt
+            boostParticleLife[i] -= dt
+
+            val life = boostParticleLife[i]
+
+            if (life <= 0f) {
+                boostParticleLife[i] = 0f
+                continue
+            }
+
+            val progress = (
+                    1f - life / boostParticleMaxLife[i]
+                    ).coerceIn(0f, 1f)
+
+            val alpha = (
+                    210f * (1f - progress) *
+                            (1f - progress * 0.35f)
+                    ).toInt().coerceIn(0, 210)
+
+            if (alpha <= 0) continue
+
+            val x = boostParticleX[i]
+            val y = boostParticleY[i]
+            val length = boostParticleLength[i]
+
+            boostParticlePaint.color = Color.argb(
+                alpha, 70, 220, 255
+            )
+
+            boostParticlePaint.strokeWidth =
+                1.2f + (1f - progress) * 2.2f
+
+            canvas.drawLine(
+                x,
+                y,
+                x - length,
+                y + boostParticleSlant[i],
+                boostParticlePaint
+            )
+
+            // Occasional brighter streaks.
+            if (i % 5 == 0 && progress < 0.7f) {
+                boostParticlePaint.color = Color.argb(
+                    (alpha * 0.65f).toInt(),
+                    220, 250, 255
+                )
+
+                boostParticlePaint.strokeWidth = 1.4f
+
+                canvas.drawLine(
+                    x,
+                    y,
+                    x - length * 0.55f,
+                    y + boostParticleSlant[i] * 0.5f,
+                    boostParticlePaint
+                )
+            }
+        }
+
+        // ========================================================
+        // 3. SUBTLE ACCENT NEAR THE SKATES
+        // ========================================================
+        if (boosting) {
+            val pulse = 0.5f +
+                    0.5f * kotlin.math.sin(boostTrailPhase * 1.7f)
+
+            boostParticlePaint.color = Color.argb(
+                (45f + pulse * 45f).toInt(),
+                60, 210, 255
+            )
+
+            boostParticlePaint.strokeWidth = 2.2f
+
+            val playerCenterX = player.x + 18f
+            val groundY = player.bottomY - 5f
+
+            canvas.drawLine(
+                playerCenterX - 4f,
+                groundY,
+                playerCenterX - 24f - pulse * 8f,
+                groundY + 2f,
+                boostParticlePaint
+            )
+        }
+
+        // Keep shared Paint opacity safe for subsequent drawing.
+        bmpPaint.alpha = 255
+    }
+
+    private fun spawnBoostParticle(
+        playerX: Float,
+        playerBottomY: Float
+    ) {
+        val i = boostParticleIndex
+
+        boostParticleIndex =
+            (boostParticleIndex + 1) % boostParticleCount
+
+        // Spawn in the region just behind and around the skater.
+        boostParticleX[i] =
+            playerX + 5f + boostRandom() * 32f
+
+        boostParticleY[i] =
+            playerBottomY - 8f - boostRandom() * 68f
+
+        boostParticleLength[i] =
+            12f + boostRandom() * 38f
+
+        val life =
+            0.20f + boostRandom() * 0.22f
+
+        boostParticleLife[i] = life
+        boostParticleMaxLife[i] = life
+
+        boostParticleSpeed[i] =
+            320f + boostRandom() * 480f
+
+        boostParticleSlant[i] =
+            (boostRandom() - 0.5f) * 12f
     }
 
     /** Tiles [bmp] horizontally, scrolling by [scroll]. Slight overlap hides seams. */

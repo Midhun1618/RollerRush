@@ -16,6 +16,7 @@ import com.voxcom.rollerrush.systems.ScoreSystem
 import com.voxcom.rollerrush.systems.SpawnSystem
 import com.voxcom.rollerrush.utils.Constants
 import com.voxcom.rollerrush.audio.CoinSoundManager
+import com.voxcom.rollerrush.entities.RushRuby
 
 /**
  * Owns ALL simulation state and runs one update step.
@@ -34,6 +35,7 @@ class GameWorld(
     stats: SkateStats,
     coinSoundManager: CoinSoundManager,
     private val boosterSoundManager: BoosterSoundManager,
+    private val onRushRubyCollected: () -> Unit,
     private val equippedSkateId: () -> String
 ) {
 
@@ -84,6 +86,12 @@ class GameWorld(
         List(Constants.MAX_POWERUPS) {
             PowerUp()
         }
+
+    val rushRuby = RushRuby()
+
+    fun acquireRushRuby(): RushRuby? {
+        return if (!rushRuby.active) rushRuby else null
+    }
 
     // ------------------------------------------------------------
     // WORLD MOVEMENT
@@ -165,6 +173,7 @@ class GameWorld(
         for (i in 0 until powerUps.size) {
             powerUps[i].active = false
         }
+        rushRuby.active = false
 
         scrollX = 0f
 
@@ -253,6 +262,7 @@ class GameWorld(
             speedBoostTimer = Constants.SPEED_BOOST_DURATION
 
             boosterSoundManager.playForSkate(equippedSkateId())
+
 
             camera.setSpeedBoost(true)
         }
@@ -644,6 +654,18 @@ class GameWorld(
         }
 
         // --------------------------------------------------------
+        // RUSH RUBY
+        // --------------------------------------------------------
+
+        if (rushRuby.active) {
+            rushRuby.update(simDt, worldSpeed)
+
+            if (rushRuby.isOffScreenLeft(camera.visibleLeft)) {
+                rushRuby.active = false
+            }
+        }
+
+        // --------------------------------------------------------
         // COIN PICKUPS
         // --------------------------------------------------------
 
@@ -686,6 +708,22 @@ class GameWorld(
 
                 speedBoostReady = true
             }
+        }
+        // --------------------------------------------------------
+        // RUSH RUBY PICKUP
+        // --------------------------------------------------------
+
+        if (
+            rushRuby.active &&
+            CollisionSystem.playerTouchesCircle(
+                player,
+                rushRuby.centerX,
+                rushRuby.centerY,
+                Constants.COIN_PICKUP_RADIUS
+            )
+        ) {
+            rushRuby.active = false
+            onRushRubyCollected()
         }
 
         // --------------------------------------------------------

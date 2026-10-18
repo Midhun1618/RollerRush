@@ -85,7 +85,7 @@ class SkatingAnimation {
         private const val SUP_K = 52f    // supporting leg: deep knee bend for a low skating stance
         private const val PUSH_T = 58f   // pushing leg: strongly swept backward
         private const val PUSH_K = -4f   // pushing leg: nearly straight
-        private const val BASE_LEAN = 50f
+        private const val BASE_LEAN = 60f
 
         private fun smooth(x: Float) = x * x * (3f - 2f * x)
         private fun bump(x: Float): Float { val s = sin(x * PI.toFloat()); return s * s }

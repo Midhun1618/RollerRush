@@ -46,7 +46,10 @@ class GameView(context: Context) :
         sprites,
         app.playerData.skateStats,
         coinSoundManager,
-        boosterSoundManager
+        boosterSoundManager,
+        {
+            app.playerData.addRushRubies(1)
+        }
     ) {
         app.playerData.equippedSkateId
     }

@@ -25,8 +25,13 @@ class SpawnSystem {
     private val normalTypes = arrayOf(ObstacleType.GROUND, ObstacleType.TALL, ObstacleType.MOVING)
     private var timer = Constants.FIRST_SPAWN_DELAY
     private var powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN
+    private var nextRushRubyDistance = 0
 
-    fun reset() { timer = Constants.FIRST_SPAWN_DELAY; powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN }
+    fun reset() {
+        timer = Constants.FIRST_SPAWN_DELAY;
+        powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN
+        nextRushRubyDistance = rng.nextInt(1000, 2001)
+    }
 
     fun update(dt: Float, world: GameWorld) {
         timer -= dt
@@ -34,6 +39,24 @@ class SpawnSystem {
 
         // Spawn just past the right edge the camera can actually see (zoom / pan / tilt aware).
         val right = maxOf(world.camera.viewWidth, world.camera.visibleRight)
+        // ------------------------------------------------------------
+// REPEATING RUSH RUBY SPAWNING
+// Spawn a ruby every random 1,000–2,000 meters.
+// ------------------------------------------------------------
+
+        if (world.scoreSystem.distanceMeters >= nextRushRubyDistance) {
+            val ruby = world.acquireRushRuby()
+
+            if (ruby != null) {
+                ruby.init(
+                    right + Constants.SPAWN_MARGIN + 100f,
+                    Constants.GROUND_Y - 72f
+                )
+
+                // Schedule the next ruby relative to the previous target.
+                nextRushRubyDistance += rng.nextInt(1000, 2001)
+            }
+        }
 
         if (powerUpTimer <= 0f) {
             if (world.scoreSystem.distanceMeters >= Constants.SPEED_BOOST_UNLOCK_METERS) {
