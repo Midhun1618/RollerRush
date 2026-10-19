@@ -36,7 +36,9 @@ class GameWorld(
     coinSoundManager: CoinSoundManager,
     private val boosterSoundManager: BoosterSoundManager,
     private val onRushRubyCollected: () -> Unit,
-    private val equippedSkateId: () -> String
+    private val onObstacleHit: () -> Unit,
+    private val equippedSkateId: () -> String,
+
 ) {
 
     @Volatile
@@ -355,9 +357,9 @@ class GameWorld(
         }
     }
 
-    // ------------------------------------------------------------
+    //------------------------------------------------------------
     // INTRO UPDATE
-    // ------------------------------------------------------------
+    //------------------------------------------------------------
 
     private fun updateIntro(dt: Float) {
 
@@ -741,6 +743,7 @@ class GameWorld(
 // --------------------------------------------------------
 
         if (CollisionSystem.playerHitsObstacle(player, obstacles)) {
+            onObstacleHit()
 
             // Disable every obstacle hitbox immediately.
             // The crash animation can now continue without collisions.

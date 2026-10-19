@@ -10,6 +10,7 @@ import com.voxcom.rollerrush.RollerRushApp
 import com.voxcom.rollerrush.audio.BgmManager
 import com.voxcom.rollerrush.audio.BoosterSoundManager
 import com.voxcom.rollerrush.audio.CoinSoundManager
+import com.voxcom.rollerrush.audio.GameSoundEffects
 import com.voxcom.rollerrush.utils.Constants
 
 /**
@@ -39,6 +40,8 @@ class GameView(context: Context) :
     private val sprites = app.gameAssets.createPlayerSprites(app.playerData.character)
 
     private val coinSoundManager = CoinSoundManager(context.applicationContext)
+    private val gameSoundEffects =
+        GameSoundEffects(context.applicationContext)
     private val boosterSoundManager = BoosterSoundManager(context.applicationContext)
 
     private val world = GameWorld(
@@ -49,7 +52,10 @@ class GameView(context: Context) :
         boosterSoundManager,
         {
             app.playerData.addRushRubies(1)
-        }
+            gameSoundEffects.playRubyCollected()
+        },{
+            gameSoundEffects.playObstacleHit()
+        },
     ) {
         app.playerData.equippedSkateId
     }

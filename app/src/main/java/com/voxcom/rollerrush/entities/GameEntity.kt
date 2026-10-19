@@ -20,7 +20,7 @@ abstract class GameEntity {
     protected val dst = RectF()
 
     open fun update(dt: Float, worldSpeed: Float) {
-        x -= worldSpeed * dt            // world moves toward the player
+        x -= worldSpeed * dt
         updateBounds()
     }
 

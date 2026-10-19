@@ -42,6 +42,8 @@ class AssetManager(private val context: Context) {
         private set
     lateinit var introBackground: Bitmap
         private set
+    lateinit var rushRubyGlowBitmap: Bitmap
+        private set
     private lateinit var speedBoostEffectFrames: Array<Bitmap>
 
     private var speedBoostEffectLoaded = false
@@ -109,6 +111,14 @@ class AssetManager(private val context: Context) {
             }
 
             canvas.drawPath(highlight, highlightPaint)
+        }
+
+        rushRubyGlowBitmap = make(
+            "coins/rush_ruby_glow.webp",
+            (Constants.COIN_RADIUS * 6.5f * Constants.BITMAP_SCALE).toInt(),
+            (Constants.COIN_RADIUS * 6.5f * Constants.BITMAP_SCALE).toInt()
+        ) { _, _, _ ->
+            // Transparent fallback if the lighting image is missing.
         }
 
         val bg = 2

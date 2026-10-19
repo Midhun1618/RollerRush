@@ -95,7 +95,6 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         val scroll = world.scrollX
 
         // Parallax background + ground
-        // Parallax background + ground
         drawTiled(canvas, assets.farBackground, AssetManager.TILE_W.toFloat(),
             Constants.GROUND_Y - 200f, 200f, scroll * 0.12f, left, right)
         drawTiled(canvas, assets.midBackground, AssetManager.TILE_W.toFloat(),
@@ -105,7 +104,7 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         drawTiled(canvas, assets.groundTile, 120f, Constants.GROUND_Y,
             Constants.GROUND_THICKNESS, scroll, left, right)
 
-// Intro building (part of the world, scrolls left naturally)
+        // Intro building (part of the world, scrolls left naturally)
         val introBuildingOffsetX = -100f
         val introX = -scroll + introBuildingOffsetX
         val introRight = introX + Constants.INTRO_BACKGROUND_WORLD_WIDTH

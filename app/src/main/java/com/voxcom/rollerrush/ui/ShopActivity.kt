@@ -1,3 +1,4 @@
+
 package com.voxcom.rollerrush.ui
 
 import android.animation.ObjectAnimator
@@ -14,6 +15,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.voxcom.rollerrush.R
+import com.voxcom.rollerrush.audio.GameSoundEffects
 import com.voxcom.rollerrush.data.GamePreferences
 import com.voxcom.rollerrush.data.InventoryData
 import com.voxcom.rollerrush.data.PlayerData
@@ -37,11 +39,46 @@ class ShopActivity : AppCompatActivity() {
     }
 
     private val slots = listOf(
-        Slot("skate_basic", R.id.selector_card1, R.id.selector_name1, R.id.selector_skate1, R.drawable.skate1, R.drawable.card_texture_bg_1),
-        Slot("skate_ice", R.id.selector_card2, R.id.selector_name2, R.id.selector_skate2, R.drawable.skate2, R.drawable.card_texture_bg_2),
-        Slot("skate_aero", R.id.selector_card3, R.id.selector_name3, R.id.selector_skate3, R.drawable.skate3, R.drawable.card_texture_bg_3),
-        Slot("skate_inferno", R.id.selector_card4, R.id.selector_name4, R.id.selector_skate4, R.drawable.skate4, R.drawable.card_texture_bg_4),
-        Slot("skate_volt", R.id.selector_card5, R.id.selector_name5, R.id.selector_skate5, R.drawable.skate5, R.drawable.card_texture_bg_5)
+        Slot(
+            "skate_basic",
+            R.id.selector_card1,
+            R.id.selector_name1,
+            R.id.selector_skate1,
+            R.drawable.skate1,
+            R.drawable.card_texture_bg_1
+        ),
+        Slot(
+            "skate_ice",
+            R.id.selector_card2,
+            R.id.selector_name2,
+            R.id.selector_skate2,
+            R.drawable.skate2,
+            R.drawable.card_texture_bg_2
+        ),
+        Slot(
+            "skate_aero",
+            R.id.selector_card3,
+            R.id.selector_name3,
+            R.id.selector_skate3,
+            R.drawable.skate3,
+            R.drawable.card_texture_bg_3
+        ),
+        Slot(
+            "skate_inferno",
+            R.id.selector_card4,
+            R.id.selector_name4,
+            R.id.selector_skate4,
+            R.drawable.skate4,
+            R.drawable.card_texture_bg_4
+        ),
+        Slot(
+            "skate_volt",
+            R.id.selector_card5,
+            R.id.selector_name5,
+            R.id.selector_skate5,
+            R.drawable.skate5,
+            R.drawable.card_texture_bg_5
+        )
     )
 
     private lateinit var playerData: PlayerData
@@ -61,6 +98,13 @@ class ShopActivity : AppCompatActivity() {
     private lateinit var priceRow: View
     private lateinit var priceLabel: TextView
     private lateinit var actionButton: Button
+
+    // Lazily initialized so sounds are allocated only when needed.
+    private val gameSoundEffectsDelegate = lazy {
+        GameSoundEffects(applicationContext)
+    }
+
+    private val gameSoundEffects by gameSoundEffectsDelegate
 
     private var selectedId = "skate_basic"
 
@@ -82,14 +126,23 @@ class ShopActivity : AppCompatActivity() {
         }
 
         // Back closes the popup first, then the screen.
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (overlay.isVisible) hideInfo() else finish()
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (overlay.isVisible) {
+                        hideInfo()
+                    } else {
+                        finish()
+                    }
+                }
             }
-        })
+        )
 
         selectedId = playerData.equippedSkateId
-        if (slots.none { it.id == selectedId }) selectedId = "skate_basic"
+        if (slots.none { it.id == selectedId }) {
+            selectedId = "skate_basic"
+        }
 
         updateCoins()
         refreshCards()
@@ -122,33 +175,56 @@ class ShopActivity : AppCompatActivity() {
     private fun setupSelector() {
         slots.forEach { slot ->
             slot.image.setImageResource(slot.skateDrawable)
-            slot.card.setOnClickListener { showInfo(slot.id) }
+            slot.card.setOnClickListener {
+                showInfo(slot.id)
+            }
         }
     }
 
     private fun setupOverlay() {
         overlay.visibility = View.GONE
+
         // Tap outside the card closes the popup.
-        overlay.setOnClickListener { hideInfo() }
+        overlay.setOnClickListener {
+            hideInfo()
+        }
+
         // Taps on the card itself must not fall through to the overlay.
         infoCard.setOnClickListener { }
     }
 
     private fun setupActionButton() {
         actionButton.setOnClickListener {
-            val item = ShopCatalog.skate(selectedId) ?: return@setOnClickListener
+            val item = ShopCatalog.skate(selectedId)
+                ?: return@setOnClickListener
 
-            if (playerData.equippedSkateId == selectedId) return@setOnClickListener
+            // Already equipped: do nothing and play no sound.
+            if (playerData.equippedSkateId == selectedId) {
+                return@setOnClickListener
+            }
 
             if (inventory.owns(selectedId)) {
+                // EQUIP an already-owned skate.
                 playerData.equippedSkateId = selectedId
+
+                gameSoundEffects.playSkateEquipped()
             } else {
+                // BUY a locked skate.
                 if (!playerData.spendCoins(item.price)) {
-                    Toast.makeText(this, "Not enough coins", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Not enough coins",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
                     return@setOnClickListener
                 }
+
                 inventory.unlock(selectedId)
                 playerData.equippedSkateId = selectedId
+
+                // Play only after the purchase succeeds.
+                gameSoundEffects.playSkatePurchased()
             }
 
             updateCoins()
@@ -166,12 +242,17 @@ class ShopActivity : AppCompatActivity() {
 
         overlay.alpha = 0f
         overlay.visibility = View.VISIBLE
-        overlay.animate().alpha(1f).setDuration(180).start()
+        overlay.animate()
+            .alpha(1f)
+            .setDuration(180)
+            .start()
 
         infoCard.scaleX = 0.9f
         infoCard.scaleY = 0.9f
+
         infoCard.animate()
-            .scaleX(1f).scaleY(1f)
+            .scaleX(1f)
+            .scaleY(1f)
             .setDuration(220)
             .setInterpolator(DecelerateInterpolator())
             .start()
@@ -181,7 +262,9 @@ class ShopActivity : AppCompatActivity() {
         overlay.animate()
             .alpha(0f)
             .setDuration(140)
-            .withEndAction { overlay.visibility = View.GONE }
+            .withEndAction {
+                overlay.visibility = View.GONE
+            }
             .start()
     }
 
@@ -198,10 +281,12 @@ class ShopActivity : AppCompatActivity() {
         infoTexture.setImageResource(slot.textureDrawable)
         infoSkate.setImageResource(slot.skateDrawable)
 
-        // The layout uses 0-100 bars; the data model uses levels.
-        // Speed: level out of 5.  Power: average of jump + control (each out of 3).
+        // Speed: level out of 5.
+        // Power: average of jump + control (each out of 3).
         val speedPct = (stats.speedLevel / 5f * 100f).toInt()
-        val powerPct = ((stats.jumpLevel + stats.controlLevel) / 6f * 100f).toInt()
+        val powerPct =
+            ((stats.jumpLevel + stats.controlLevel) / 6f * 100f).toInt()
+
         setMeter(speedMeter, speedPct, animateMeters)
         setMeter(powerMeter, powerPct, animateMeters)
 
@@ -214,11 +299,13 @@ class ShopActivity : AppCompatActivity() {
                 actionButton.isEnabled = false
                 actionButton.alpha = 0.55f
             }
+
             owned -> {
                 actionButton.text = "EQUIP"
                 actionButton.isEnabled = true
                 actionButton.alpha = 1f
             }
+
             else -> {
                 actionButton.text = "BUY NOW"
                 actionButton.isEnabled = true
@@ -226,12 +313,21 @@ class ShopActivity : AppCompatActivity() {
             }
         }
 
-        // Locked skates are shown as a black silhouette in the popup too.
-        if (owned) infoSkate.clearColorFilter() else infoSkate.setColorFilter(Color.BLACK)
+        // Locked skates are shown as black silhouettes.
+        if (owned) {
+            infoSkate.clearColorFilter()
+        } else {
+            infoSkate.setColorFilter(Color.BLACK)
+        }
     }
 
-    private fun setMeter(bar: ProgressBar, value: Int, animate: Boolean) {
+    private fun setMeter(
+        bar: ProgressBar,
+        value: Int,
+        animate: Boolean
+    ) {
         bar.max = 100
+
         if (animate) {
             ObjectAnimator.ofInt(bar, "progress", 0, value).apply {
                 duration = 450
@@ -246,8 +342,10 @@ class ShopActivity : AppCompatActivity() {
     private fun playPop() {
         infoSkate.scaleX = 0.88f
         infoSkate.scaleY = 0.88f
+
         infoSkate.animate()
-            .scaleX(1f).scaleY(1f)
+            .scaleX(1f)
+            .scaleY(1f)
             .setDuration(260)
             .setInterpolator(DecelerateInterpolator())
             .start()
@@ -255,7 +353,7 @@ class ShopActivity : AppCompatActivity() {
 
     // --------------------------------------------------------- selector
 
-    /** Updates every card: background, label text and silhouette, based on owned / equipped state. */
+    /** Refreshes each card's background, label, and silhouette. */
     private fun refreshCards() {
         val equippedId = playerData.equippedSkateId
 
@@ -265,8 +363,11 @@ class ShopActivity : AppCompatActivity() {
             val equipped = slot.id == equippedId
 
             slot.card.setBackgroundResource(
-                if (equipped) R.drawable.shop_equipped_item_card_bg
-                else R.drawable.shop_item_card_bg
+                if (equipped) {
+                    R.drawable.shop_equipped_item_card_bg
+                } else {
+                    R.drawable.shop_item_card_bg
+                }
             )
 
             slot.label.text = when {
@@ -274,17 +375,30 @@ class ShopActivity : AppCompatActivity() {
                 owned -> item?.name?.uppercase() ?: ""
                 else -> "LOCKED"
             }
+
             slot.label.setBackgroundResource(
                 if (owned) 0 else R.drawable.grey_container
             )
 
-            if (owned) slot.image.clearColorFilter()
-            else slot.image.setColorFilter(Color.BLACK)
+            if (owned) {
+                slot.image.clearColorFilter()
+            } else {
+                slot.image.setColorFilter(Color.BLACK)
+            }
         }
     }
 
     private fun updateCoins() {
-        // The coin icon is a separate ImageView in the layout, so only the number is shown here.
+        // The coin icon is a separate ImageView in the layout.
         coinsLabel.text = String.format("%,d", playerData.coins)
+    }
+
+    override fun onDestroy() {
+        // Release SoundPool only if it was initialized.
+        if (gameSoundEffectsDelegate.isInitialized()) {
+            gameSoundEffects.release()
+        }
+
+        super.onDestroy()
     }
 }
