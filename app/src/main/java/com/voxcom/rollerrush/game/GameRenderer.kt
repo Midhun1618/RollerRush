@@ -75,6 +75,8 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
     val pauseRect = RectF()
     private var margin = 0f
 
+
+
     fun onSizeChanged(w: Int, h: Int) {
         skyPaint.shader = LinearGradient(0f, 0f, 0f, h.toFloat(),
             Color.rgb(110, 198, 255), Color.rgb(232, 246, 255), Shader.TileMode.CLAMP)
@@ -97,12 +99,40 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         // Parallax background + ground
         drawTiled(canvas, assets.farBackground, AssetManager.TILE_W.toFloat(),
             Constants.GROUND_Y - 200f, 200f, scroll * 0.12f, left, right)
-        drawTiled(canvas, assets.midBackground, AssetManager.TILE_W.toFloat(),
-            Constants.GROUND_Y - 140f, 140f, scroll * 0.35f, left, right)
+
+        drawTiled(
+            canvas,
+            assets.midBackground,
+            AssetManager.TILE_W.toFloat(),
+            Constants.GROUND_Y - 140f,
+            140f,
+            scroll * 0.35f,
+            left,
+            right
+        )
+
+// NEW: decorative roadside layer, behind the road.
+        drawRoadsideScenery(canvas, scroll, left, right)
+
         fill.color = Color.rgb(74, 78, 105)
-        canvas.drawRect(left - 50f, Constants.GROUND_Y, right + 50f, Constants.GROUND_Y + 600f, fill)
-        drawTiled(canvas, assets.groundTile, 120f, Constants.GROUND_Y,
-            Constants.GROUND_THICKNESS, scroll, left, right)
+        canvas.drawRect(
+            left - 50f,
+            Constants.GROUND_Y,
+            right + 50f,
+            Constants.GROUND_Y + 600f,
+            fill
+        )
+
+        drawTiled(
+            canvas,
+            assets.groundTile,
+            120f,
+            Constants.GROUND_Y,
+            Constants.GROUND_THICKNESS,
+            scroll,
+            left,
+            right
+        )
 
         // Intro building (part of the world, scrolls left naturally)
         val introBuildingOffsetX = -100f
@@ -406,5 +436,78 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         val bottom = pauseRect.bottom - pauseRect.height() * 0.25f
         canvas.drawRect(cx - bw * 1.6f, top, cx - bw * 0.6f, bottom, fill)
         canvas.drawRect(cx + bw * 0.6f, top, cx + bw * 1.6f, bottom, fill)
+    }
+    private fun drawRoadsideScenery(
+        canvas: Canvas,
+        scroll: Float,
+        left: Float,
+        right: Float
+    ) {
+        // Each placement repeats in world space, independently of gameplay.
+        // The ground is drawn afterward, covering the lower part of scenery.
+
+        val spacing = 220f
+        var worldX = floor((left + scroll) / spacing) * spacing
+
+        while (worldX < right + scroll) {
+            val screenX = worldX - scroll
+
+            // Deterministic pattern: no random allocation during rendering.
+            val index = (floor(worldX / spacing).toInt() % 12 + 12) % 12
+
+            when (index) {
+                0, 1, 2, 3 -> {
+                    dst.set(
+                        screenX,
+                        Constants.GROUND_Y - 68f,
+                        screenX + 150f,
+                        Constants.GROUND_Y
+                    )
+                    canvas.drawBitmap(assets.roadsideDamagedGrill, null, dst, bmpPaint)
+                }
+
+                4 -> {
+                    dst.set(
+                        screenX,
+                        Constants.GROUND_Y - 58f,
+                        screenX + 115f,
+                        Constants.GROUND_Y
+                    )
+                    canvas.drawBitmap(assets.roadsideGrill, null, dst, bmpPaint)
+                }
+
+                5, 9 -> {
+                    dst.set(
+                        screenX,
+                        Constants.GROUND_Y - 42f,
+                        screenX + 55f,
+                        Constants.GROUND_Y
+                    )
+                    canvas.drawBitmap(assets.roadsideShrub, null, dst, bmpPaint)
+                }
+
+                6, 10 -> {
+                    dst.set(
+                        screenX,
+                        Constants.GROUND_Y - 46f,
+                        screenX + 62f,
+                        Constants.GROUND_Y
+                    )
+                    canvas.drawBitmap(assets.roadsideOldGrill, null, dst, bmpPaint)
+                }
+
+                7 -> {
+                    dst.set(
+                        screenX,
+                        Constants.GROUND_Y - 112f,
+                        screenX + 150f,
+                        Constants.GROUND_Y
+                    )
+                    canvas.drawBitmap(assets.roadsideShop, null, dst, bmpPaint)
+                }
+            }
+
+            worldX += spacing
+        }
     }
 }

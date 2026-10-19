@@ -38,7 +38,7 @@ class GameWorld(
     private val onRushRubyCollected: () -> Unit,
     private val onObstacleHit: () -> Unit,
     private val equippedSkateId: () -> String,
-
+    private val onBoosterActivated: () -> Unit
 ) {
 
     @Volatile
@@ -267,6 +267,7 @@ class GameWorld(
 
 
             camera.setSpeedBoost(true)
+            onBoosterActivated()
         }
     }
 

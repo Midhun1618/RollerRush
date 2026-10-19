@@ -11,6 +11,7 @@ import com.voxcom.rollerrush.audio.BgmManager
 import com.voxcom.rollerrush.audio.BoosterSoundManager
 import com.voxcom.rollerrush.audio.CoinSoundManager
 import com.voxcom.rollerrush.audio.GameSoundEffects
+import com.voxcom.rollerrush.audio.HapticFeedbackManager
 import com.voxcom.rollerrush.utils.Constants
 
 /**
@@ -35,6 +36,9 @@ class GameView(context: Context) :
     var listener: Listener? = null
 
     private val app = context.applicationContext as RollerRushApp
+
+    private val hapticFeedback =
+        HapticFeedbackManager(context)
     private val camera = Camera()
     private val renderer = GameRenderer(app.gameAssets, app.prefs)
     private val sprites = app.gameAssets.createPlayerSprites(app.playerData.character)
@@ -43,6 +47,7 @@ class GameView(context: Context) :
     private val gameSoundEffects =
         GameSoundEffects(context.applicationContext)
     private val boosterSoundManager = BoosterSoundManager(context.applicationContext)
+
 
     private val world = GameWorld(
         camera,
@@ -53,12 +58,18 @@ class GameView(context: Context) :
         {
             app.playerData.addRushRubies(1)
             gameSoundEffects.playRubyCollected()
-        },{
-            gameSoundEffects.playObstacleHit()
         },
-    ) {
-        app.playerData.equippedSkateId
-    }
+        {
+            gameSoundEffects.playObstacleHit()
+            hapticFeedback.obstacleHit()
+        },
+        {
+            app.playerData.equippedSkateId
+        },
+        onBoosterActivated = {
+            hapticFeedback.boosterActivated()
+        }
+    )
 
     private var loop: GameLoop? = null
     private var touchDownY = 0f

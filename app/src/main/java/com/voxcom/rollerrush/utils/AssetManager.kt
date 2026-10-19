@@ -44,6 +44,21 @@ class AssetManager(private val context: Context) {
         private set
     lateinit var rushRubyGlowBitmap: Bitmap
         private set
+    // Decorative roadside scenery — visual only, no collision.
+    lateinit var roadsideOldGrill: Bitmap
+        private set
+
+    lateinit var roadsideGrill: Bitmap
+        private set
+
+    lateinit var roadsideDamagedGrill: Bitmap
+        private set
+
+    lateinit var roadsideShrub: Bitmap
+        private set
+
+    lateinit var roadsideShop: Bitmap
+        private set
     private lateinit var speedBoostEffectFrames: Array<Bitmap>
 
     private var speedBoostEffectLoaded = false
@@ -120,6 +135,38 @@ class AssetManager(private val context: Context) {
         ) { _, _, _ ->
             // Transparent fallback if the lighting image is missing.
         }
+        // Transparent roadside scenery.
+// Sizes are in game-world units multiplied by BITMAP_SCALE.
+
+        roadsideDamagedGrill = make(
+            "background/roadside/old_damaged_grill.webp",
+            (150f * Constants.BITMAP_SCALE).toInt(),
+            (68f * Constants.BITMAP_SCALE).toInt()
+        ) { _, _, _ -> }
+
+        roadsideGrill = make(
+            "background/roadside/grill.webp",
+            (115f * Constants.BITMAP_SCALE).toInt(),
+            (58f * Constants.BITMAP_SCALE).toInt()
+        ) { _, _, _ -> }
+
+        roadsideShrub = make(
+            "background/roadside/shrubs.webp",
+            (55f * Constants.BITMAP_SCALE).toInt(),
+            (42f * Constants.BITMAP_SCALE).toInt()
+        ) { _, _, _ -> }
+
+        roadsideOldGrill = make(
+            "background/roadside/grill_old.webp",
+            (62f * Constants.BITMAP_SCALE).toInt(),
+            (46f * Constants.BITMAP_SCALE).toInt()
+        ) { _, _, _ -> }
+
+        roadsideShop = make(
+            "background/roadside/grill.webp",
+            (150f * Constants.BITMAP_SCALE).toInt(),
+            (112f * Constants.BITMAP_SCALE).toInt()
+        ) { _, _, _ -> }
 
         val bg = 2
         farBackground = make("background/far_bg.webp", TILE_W * bg, 200 * bg) { c, w, h -> drawHills(c, w, h) }
