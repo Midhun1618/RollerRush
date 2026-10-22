@@ -5,7 +5,7 @@ object Constants {
     const val WORLD_HEIGHT = 360f
     const val MIN_VIEW_WIDTH = 560f
     const val GROUND_Y = 300f
-    const val GROUND_THICKNESS = 60f
+    const val GROUND_THICKNESS = 90f
     const val PLAYER_X = 100f
     const val SPAWN_MARGIN = 40f
     const val BITMAP_SCALE = 4f

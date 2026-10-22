@@ -15,6 +15,7 @@ class GameSoundEffects(context: Context) {
     private val purchaseSoundId: Int
     private val equipSoundId: Int
     private val hitSoundId: Int
+    private val gotBoosterId: Int
 
 
     private val loadedSounds = mutableSetOf<Int>()
@@ -42,6 +43,7 @@ class GameSoundEffects(context: Context) {
         purchaseSoundId = soundPool.load(context, R.raw.purchased, 1)
         equipSoundId = soundPool.load(context, R.raw.skate_equip, 1)
         hitSoundId = soundPool.load(context, R.raw.player_hit, 1)
+        gotBoosterId = soundPool.load(context, R.raw.got_booster, 1)
     }
 
     private fun play(soundId: Int) {
@@ -61,6 +63,9 @@ class GameSoundEffects(context: Context) {
     fun playObstacleHit() = play(hitSoundId)
 
     fun playSkateEquipped() = play(equipSoundId)
+
+    fun playGotBooster() = play(gotBoosterId)
+
 
     fun release() {
         soundPool.setOnLoadCompleteListener(null)

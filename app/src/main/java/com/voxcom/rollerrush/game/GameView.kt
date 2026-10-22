@@ -64,6 +64,9 @@ class GameView(context: Context) :
             hapticFeedback.obstacleHit()
         },
         {
+            gameSoundEffects.playGotBooster()
+        },
+        {
             app.playerData.equippedSkateId
         },
         onBoosterActivated = {

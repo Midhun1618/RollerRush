@@ -75,7 +75,20 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
     val pauseRect = RectF()
     private var margin = 0f
 
+    // HUD pickup animation state
+    private var hudAnimationTime = 0f
+    private var coinPickupPulse = 0f
+    private var rubyPickupPulse = 0f
+    private var previousHudCoins = -1
+    private var previousHudRubies = -1
 
+    private val hudIconRect = RectF()
+    private val hudAnimationPaint = Paint(
+        Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG
+    )
+
+    private var hudAnimationDelta = 0f
+    private var hudLastFrameNs = 0L
 
     fun onSizeChanged(w: Int, h: Int) {
         skyPaint.shader = LinearGradient(0f, 0f, 0f, h.toFloat(),

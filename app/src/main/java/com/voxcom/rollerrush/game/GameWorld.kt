@@ -37,6 +37,7 @@ class GameWorld(
     private val boosterSoundManager: BoosterSoundManager,
     private val onRushRubyCollected: () -> Unit,
     private val onObstacleHit: () -> Unit,
+    private val gotBooster: () -> Unit,
     private val equippedSkateId: () -> String,
     private val onBoosterActivated: () -> Unit
 ) {
@@ -90,6 +91,8 @@ class GameWorld(
         }
 
     val rushRuby = RushRuby()
+    var runRubies: Int = 0
+        private set
 
     fun acquireRushRuby(): RushRuby? {
         return if (!rushRuby.active) rushRuby else null
@@ -660,12 +663,18 @@ class GameWorld(
         // RUSH RUBY
         // --------------------------------------------------------
 
-        if (rushRuby.active) {
-            rushRuby.update(simDt, worldSpeed)
-
-            if (rushRuby.isOffScreenLeft(camera.visibleLeft)) {
-                rushRuby.active = false
-            }
+        if (
+            rushRuby.active &&
+            CollisionSystem.playerTouchesCircle(
+                player,
+                rushRuby.centerX,
+                rushRuby.centerY,
+                Constants.COIN_PICKUP_RADIUS
+            )
+        ) {
+            rushRuby.active = false
+            runRubies++
+            onRushRubyCollected()
         }
 
         // --------------------------------------------------------
@@ -708,6 +717,7 @@ class GameWorld(
             ) {
 
                 p.collect()
+
 
                 speedBoostReady = true
             }

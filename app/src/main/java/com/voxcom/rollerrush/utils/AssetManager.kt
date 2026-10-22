@@ -187,7 +187,7 @@ class AssetManager(private val context: Context) {
 
         speedBoostFrames = arrayOf(
             make(
-                "powerups/volt_booster1.png",
+                "powerups/volt_booster1.webp",
                 boostW,
                 boostH
             ) { c, w, h ->
@@ -195,7 +195,7 @@ class AssetManager(private val context: Context) {
             },
 
             make(
-                "powerups/volt_booster2.png",
+                "powerups/volt_booster2.webp",
                 boostW,
                 boostH
             ) { c, w, h ->
@@ -203,18 +203,25 @@ class AssetManager(private val context: Context) {
             },
 
             make(
-                "powerups/volt_booster3.png",
+                "powerups/volt_booster3.webp",
                 boostW,
                 boostH
             ) { c, w, h ->
                 drawSpeedBoostFallback(c, w, h)
-            }
+            },
+            make(
+                "powerups/volt_booster4.webp",
+            boostW,
+            boostH
+        ) { c, w, h ->
+            drawSpeedBoostFallback(c, w, h)
+        }
         )
 
         speedBoostParticle = make(
             "powerups/volt_particle.png",
-            (14f * Constants.BITMAP_SCALE).toInt(),
-            (14f * Constants.BITMAP_SCALE).toInt()
+            (25f * Constants.BITMAP_SCALE).toInt(),
+            (25f * Constants.BITMAP_SCALE).toInt()
         ) { c, w, h ->
             // Fallback only if the PNG is missing.
             val p = Paint(Paint.ANTI_ALIAS_FLAG)
