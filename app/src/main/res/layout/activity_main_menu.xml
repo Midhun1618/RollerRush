@@ -4,63 +4,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_menu">
+    android:background="#D8F1FF">
 
-    <LinearLayout
-        android:id="@+id/linearLayout2"
-        android:layout_width="wrap_content"
-        android:layout_height="38dp"
-        android:layout_margin="12dp"
-        android:background="@drawable/coin_container"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingHorizontal="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginEnd="8dp"
-            android:src="@drawable/rush_coin" />
-
-        <TextView
-            android:id="@+id/coinsLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0"
-            android:textColor="#FFD34B"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/linearLayout3"
-        android:layout_width="wrap_content"
-        android:layout_height="38dp"
-        android:layout_margin="12dp"
-        android:background="@drawable/coin_container"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingHorizontal="8dp"
-        app:layout_constraintEnd_toStartOf="@+id/linearLayout2"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <ImageView
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:layout_marginEnd="8dp"
-            android:src="@drawable/rush_ruby" />
-
-        <TextView
-            android:id="@+id/rubiesLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+    <!-- Animated skyline, city and ground behind the menu -->
+    <com.voxcom.rollerrush.ui.MenuSceneView
+        android:id="@+id/menuSceneView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <LinearLayout
         android:id="@+id/linearLayout4"
@@ -90,53 +44,112 @@
             android:textStyle="bold" />
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="wrap_content"
+        android:layout_height="38dp"
+        android:layout_margin="12dp"
+        android:background="@drawable/coin_container"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
+        app:layout_constraintEnd_toStartOf="@id/linearLayout2"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/rush_ruby" />
+
+        <TextView
+            android:id="@+id/rubiesLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="wrap_content"
+        android:layout_height="38dp"
+        android:layout_margin="12dp"
+        android:background="@drawable/coin_container"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/rush_coin" />
+
+        <TextView
+            android:id="@+id/coinsLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textColor="#FFD34B"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Existing controls remain on the right -->
+    <LinearLayout
+        android:id="@+id/menuControls"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="12dp"
-        android:orientation="vertical"
         android:gravity="center"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout2">
+        app:layout_constraintTop_toBottomOf="@id/linearLayout2">
+
         <ImageView
             android:id="@+id/rushTitle"
             android:layout_width="260dp"
             android:layout_height="120dp"
-            android:layout_marginBottom="24dp"
-            android:src="@drawable/rush_title1"/>
+            android:layout_marginBottom="38dp"
+            android:src="@drawable/rush_title1" />
+
         <ImageView
             android:id="@+id/playButton"
             android:layout_width="260dp"
             android:layout_height="75dp"
-            android:src="@drawable/run_btn"/>
+            android:src="@drawable/run_btn" />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginVertical="8dp">
+            android:layout_marginVertical="8dp"
+            android:orientation="horizontal">
+
             <ImageView
                 android:id="@+id/shopButton"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:src="@drawable/achievements_btn"/>
+                android:src="@drawable/achievements_btn" />
+
             <ImageView
                 android:id="@+id/characterButton"
-                android:layout_marginHorizontal="5dp"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:src="@drawable/achievements_btn"/>
+                android:layout_marginHorizontal="5dp"
+                android:src="@drawable/achievements_btn" />
+
             <ImageView
                 android:id="@+id/settingsButton"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:src="@drawable/achievements_btn"/>
+                android:src="@drawable/achievements_btn" />
         </LinearLayout>
-
     </LinearLayout>
-
-
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

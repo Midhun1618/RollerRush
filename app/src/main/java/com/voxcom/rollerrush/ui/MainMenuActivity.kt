@@ -23,6 +23,7 @@ class MainMenuActivity : BaseActivity() {
     private lateinit var shopButton: ImageView
     private lateinit var rushTitle: ImageView
     private lateinit var settingsButton: ImageView
+    private lateinit var menuSceneView: MenuSceneView
 
     private var titleFrameIndex = 0
     private var titleAnimator: ValueAnimator? = null
@@ -49,6 +50,9 @@ class MainMenuActivity : BaseActivity() {
         shopButton = findViewById(R.id.shopButton)
         rushTitle = findViewById(R.id.rushTitle)
         settingsButton = findViewById(R.id.settingsButton)
+
+        menuSceneView = findViewById(R.id.menuSceneView)
+        menuSceneView.setCharacter(app.playerData.character)
 
         playButton.setOnClickListener {
             startActivity(Intent(this, GameActivity::class.java))
@@ -187,6 +191,10 @@ class MainMenuActivity : BaseActivity() {
         coinsLabel.text = "${app.playerData.coins}"
         highScoreLabel.text = "${app.playerData.highScore}"
         rushRubiesLabel.text = "${app.playerData.rushRubies}"
+
+        if (::menuSceneView.isInitialized) {
+            menuSceneView.setCharacter(app.playerData.character)
+        }
     }
 
     override fun onDestroy() {

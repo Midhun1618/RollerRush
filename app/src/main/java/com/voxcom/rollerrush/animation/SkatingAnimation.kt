@@ -24,7 +24,7 @@ import kotlin.math.sin
  */
 class SkatingAnimation {
 
-    /** Normalised cycle position 0..1. */
+    /* Normalised cycle position 0..1. */
     var cycle = 0f
         private set
 
@@ -32,7 +32,7 @@ class SkatingAnimation {
 
     fun reset() { cycle = 0f }
 
-    /**
+    /*
      * Advances the cycle by [dt] and writes the skating pose into [out].
      * [speedFactor] ~1 at base speed; faster world => slightly faster strokes.
      */
@@ -91,25 +91,49 @@ class SkatingAnimation {
         private fun bump(x: Float): Float { val s = sin(x * PI.toFloat()); return s * s }
         private fun lerp(a: Float, b: Float, t: Float) = a + (b - a) * t
 
+
+
         private fun legCurve(c: Float, out: FloatArray) {
             when {
-                c < PUSH_END -> {                         // PUSH: sweep back, straighten, heel lifts
+                c < PUSH_END -> {
+                    // PUSH: extend the leg backward and ease into the skate tilt.
                     val s = smooth(c / PUSH_END)
+
                     out[0] = lerp(SUP_T, PUSH_T, s)
                     out[1] = lerp(SUP_K, PUSH_K, s)
-                    out[2] = lerp(0f, 5f, s)
+
+                    val baseAngle = lerp(0f, 5f, s)
+                    val clockwiseTilt = 40f * s
+
+                    out[2] = baseAngle + clockwiseTilt
                 }
-                c < RECOVER_END -> {                      // RECOVER: fold the leg and bring it forward
+
+                c < RECOVER_END -> {
+                    // RECOVER: briefly hold the tilted skate, then ease it back.
                     val u = (c - PUSH_END) / (RECOVER_END - PUSH_END)
                     val s = smooth(u)
-                    val b = bump(u)                       // extra knee fold / lift mid-recovery
+                    val b = bump(u)
+
                     out[0] = lerp(PUSH_T, SUP_T, s) - 14f * b
                     out[1] = lerp(PUSH_K, SUP_K, s) + 38f * b
-                    out[2] = lerp(5f, 0f, s) - 8f * b    // toe up slightly while the foot is airborne
+
+                    // Hold the tilt for the first 12% of recovery.
+                    // Then smoothly remove it across the remaining recovery phase.
+                    val returnProgress = smooth(
+                        ((u - 0.12f) / 0.88f).coerceIn(0f, 1f)
+                    )
+
+                    val baseAngle = lerp(5f, 0f, s) - 8f * b
+                    val clockwiseTilt = 30f * (1f - returnProgress)
+
+                    out[2] = baseAngle + clockwiseTilt
                 }
-                else -> {                                 // SUPPORT / GLIDE: carry weight, sink during other leg's push
+
+                else -> {
+                    // SUPPORT / GLIDE: neutral skate angle, continuous with recovery.
                     val u = (c - RECOVER_END) / (1f - RECOVER_END)
                     val w = bump(min(u / 0.38f, 1f))
+
                     out[0] = SUP_T - 2f * w
                     out[1] = SUP_K + 6f * w
                     out[2] = 0f

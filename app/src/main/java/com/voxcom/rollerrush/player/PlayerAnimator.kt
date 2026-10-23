@@ -470,35 +470,29 @@ class PlayerAnimator(private val player: Player) {
         p0.rightForearm.rotation =
             p.rightForearm
 
-        val dropL =
-            SkatingAnimation.footDrop(
-                p.leftThigh,
-                p.leftKnee,
-                p.leftSkate,
-                Rig.THIGH_LEN,
-                Rig.SHIN_LEN,
-                Rig.SKATE_DROP,
-                Rig.SKATE_REACH
-            )
+        val dropL = SkatingAnimation.footDrop(
+            p.leftThigh,
+            p.leftKnee,
+            p.leftSkate,
+            Rig.THIGH_LEN,
+            Rig.SHIN_LEN,
+            Rig.SKATE_DROP,
+            Rig.SKATE_REACH
+        )
 
-        val dropR =
-            SkatingAnimation.footDrop(
-                p.rightThigh,
-                p.rightKnee,
-                p.rightSkate,
-                Rig.THIGH_LEN,
-                Rig.SHIN_LEN,
-                Rig.SKATE_DROP,
-                Rig.SKATE_REACH
-            )
+        val dropR = SkatingAnimation.footDrop(
+            p.rightThigh,
+            p.rightKnee,
+            p.rightSkate,
+            Rig.THIGH_LEN,
+            Rig.SHIN_LEN,
+            Rig.SKATE_DROP,
+            Rig.SKATE_REACH
+        )
 
-        p0.torso.x =
-            p0.x + p.hipOffsetX
+        p0.torso.y = p0.bottomY - max(dropL, dropR) + p.bodyOffsetY
+        p0.torso.x = p0.x + p.hipOffsetX
 
-        p0.torso.y =
-            p0.bottomY -
-                    max(dropL, dropR) +
-                    p.bodyOffsetY
     }
 
     private fun smooth(x: Float): Float {
