@@ -416,40 +416,140 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
     }
 
     /** HUD in screen space so it is independent of the world scale. */
+
+    /** HUD in screen space so it is independent of the world scale. */
     private fun drawHud(canvas: Canvas, world: GameWorld, camera: Camera) {
         val h = camera.screenHeight
-        val leftX = margin + h * 0.04f   // a little extra to stay clear of display cut-outs
+        val leftX = margin + h * 0.04f
 
+        // Advance animations using real frame time.
+        val now = System.nanoTime()
+        val dt = if (hudLastFrameNs == 0L) {
+            0f
+        } else {
+            ((now - hudLastFrameNs) / 1_000_000_000f)
+                .coerceIn(0f, 0.05f)
+        }
+
+        hudLastFrameNs = now
+        hudAnimationTime += dt
+        coinPickupPulse = (coinPickupPulse - dt).coerceAtLeast(0f)
+        rubyPickupPulse = (rubyPickupPulse - dt).coerceAtLeast(0f)
+
+        val coins = world.runCoins
+        val rubies = world.runRubies
+
+        if (previousHudCoins >= 0 && coins > previousHudCoins) {
+            coinPickupPulse = 0.24f
+        }
+
+        if (previousHudRubies >= 0 && rubies > previousHudRubies) {
+            rubyPickupPulse = 0.34f
+        }
+
+        previousHudCoins = coins
+        previousHudRubies = rubies
+
+        // Score and distance.
         textPaint.textAlign = Paint.Align.LEFT
         textPaint.textSize = h * 0.07f
-        sb.setLength(0); sb.append("Score: ").append(world.score)
-        canvas.drawText(sb, 0, sb.length, leftX, margin + textPaint.textSize, textPaint)
+
+        sb.setLength(0)
+        sb.append("Score: ").append(world.score)
+        canvas.drawText(
+            sb, 0, sb.length,
+            leftX, margin + textPaint.textSize, textPaint
+        )
+
         textPaint.textSize = h * 0.045f
-        sb.setLength(0); sb.append("Distance: ").append(world.distanceMeters).append(" m")
-        canvas.drawText(sb, 0, sb.length, leftX, margin + h * 0.07f + textPaint.textSize * 1.3f, textPaint)
+        sb.setLength(0)
+        sb.append("Distance: ").append(world.distanceMeters).append(" m")
+        canvas.drawText(
+            sb, 0, sb.length,
+            leftX,
+            margin + h * 0.07f + textPaint.textSize * 1.3f,
+            textPaint
+        )
 
-        // Coins: gold dot + number, right-aligned just left of the pause button.
-        textPaint.textSize = h * 0.07f
-        textPaint.textAlign = Paint.Align.RIGHT
-        sb.setLength(0); sb.append(world.runCoins)
+        // Coin and Ruby counters, stacked beside the pause button.
         val rightX = pauseRect.left - margin * 0.7f
-        canvas.drawText(sb, 0, sb.length, rightX, margin + textPaint.textSize, textPaint)
-        val tw = textPaint.measureText(sb, 0, sb.length)
-        fill.color = Color.rgb(255, 193, 7)
-        val r = h * 0.03f
-        canvas.drawCircle(rightX - tw - r * 1.6f, margin + textPaint.textSize * 0.62f, r, fill)
+        val rowGap = h * 0.075f
+        val iconSize = h * 0.052f
+        val topY = margin + h * 0.045f
 
-        // Pause button "||"
+        drawHudCounter(
+            canvas, coins, rightX, topY,
+            iconSize, assets.coinBitmap, coinPickupPulse
+        )
+
+        drawHudCounter(
+            canvas, rubies, rightX, topY + rowGap,
+            iconSize, assets.rushRubyBitmap, rubyPickupPulse
+        )
+
+        // Pause button.
         fill.color = Color.argb(120, 0, 0, 0)
         canvas.drawRoundRect(pauseRect, 12f, 12f, fill)
+
         fill.color = Color.WHITE
         val bw = pauseRect.width() * 0.14f
         val cx = pauseRect.centerX()
         val top = pauseRect.top + pauseRect.height() * 0.25f
         val bottom = pauseRect.bottom - pauseRect.height() * 0.25f
+
         canvas.drawRect(cx - bw * 1.6f, top, cx - bw * 0.6f, bottom, fill)
         canvas.drawRect(cx + bw * 0.6f, top, cx + bw * 1.6f, bottom, fill)
     }
+
+    private fun drawHudCounter(
+        canvas: Canvas,
+        count: Int,
+        rightX: Float,
+        baselineY: Float,
+        iconSize: Float,
+        bitmap: Bitmap,
+        pulse: Float
+    ) {
+        textPaint.textSize = iconSize * 1.02f
+        textPaint.textAlign = Paint.Align.RIGHT
+
+        sb.setLength(0)
+        sb.append(count)
+        canvas.drawText(sb, 0, sb.length, rightX, baselineY, textPaint)
+
+        val textWidth = textPaint.measureText(sb, 0, sb.length)
+        val progress = (pulse / 0.34f).coerceIn(0f, 1f)
+        val pulseScale =
+            1f + 0.48f * kotlin.math.sin(progress * Math.PI).toFloat()
+
+        val size = iconSize * pulseScale
+        val gap = iconSize * 0.22f
+        val centerX = rightX - textWidth - gap - size * 0.5f
+        val centerY = baselineY - iconSize * 0.36f
+
+        hudIconRect.set(
+            centerX - size * 0.5f,
+            centerY - size * 0.5f,
+            centerX + size * 0.5f,
+            centerY + size * 0.5f
+        )
+
+        hudAnimationPaint.alpha = 255
+        canvas.drawBitmap(bitmap, null, hudIconRect, hudAnimationPaint)
+
+        if (pulse > 0f) {
+            val alpha = (150f * (pulse / 0.34f).coerceIn(0f, 1f)).toInt()
+
+            fill.style = Paint.Style.STROKE
+            fill.strokeWidth = (iconSize * 0.055f).coerceAtLeast(1f)
+            fill.color = Color.argb(alpha, 255, 235, 150)
+
+            canvas.drawCircle(centerX, centerY, size * 0.58f, fill)
+
+            fill.style = Paint.Style.FILL
+        }
+    }
+
     private fun drawRoadsideScenery(
         canvas: Canvas,
         scroll: Float,

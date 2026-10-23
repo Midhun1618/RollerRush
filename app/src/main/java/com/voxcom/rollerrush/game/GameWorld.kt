@@ -179,7 +179,7 @@ class GameWorld(
             powerUps[i].active = false
         }
         rushRuby.active = false
-
+        runRubies = 0
         scrollX = 0f
 
         worldSpeed =
@@ -716,9 +716,9 @@ class GameWorld(
                 )
             ) {
 
+                // Play the SFX only when the player collects the booster.
                 p.collect()
-
-
+                gotBooster()
                 speedBoostReady = true
             }
         }
