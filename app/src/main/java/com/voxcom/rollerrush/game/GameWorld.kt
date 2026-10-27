@@ -1,6 +1,5 @@
 package com.voxcom.rollerrush.game
 
-import com.voxcom.rollerrush.audio.BoosterSoundManager
 import com.voxcom.rollerrush.data.SkateStats
 import com.voxcom.rollerrush.entities.Coin
 import com.voxcom.rollerrush.entities.Obstacle
@@ -36,12 +35,13 @@ class GameWorld(
     sprites: PlayerSprites,
     stats: SkateStats,
     coinSoundManager: CoinSoundManager,
-    private val boosterSoundManager: BoosterSoundManager,
+    private val playBoosterSound: (String) -> Unit,
     private val onRushRubyCollected: () -> Unit,
     private val onObstacleHit: () -> Unit,
     private val gotBooster: () -> Unit,
     private val equippedSkateId: () -> String,
-    private val onBoosterActivated: () -> Unit
+    private val onBoosterActivated: () -> Unit,
+    private val onMysteryBubbleCollected: () -> Unit
 ) {
 
     @Volatile
@@ -127,6 +127,9 @@ class GameWorld(
         val reward = mysteryRewards.random()
         mysteryRewardType = reward.first
         mysteryRewardAmount = reward.second
+
+        // Play the mystery sound exactly when the bubble is collected.
+        onMysteryBubbleCollected()
     }
 
     fun acquireRushRuby(): RushRuby? {
@@ -305,8 +308,7 @@ class GameWorld(
             speedBoostReady = false
             speedBoostTimer = Constants.SPEED_BOOST_DURATION
 
-            boosterSoundManager.playForSkate(equippedSkateId())
-
+            playBoosterSound(equippedSkateId())
 
             camera.setSpeedBoost(true)
             onBoosterActivated()

@@ -8,7 +8,6 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.voxcom.rollerrush.RollerRushApp
 import com.voxcom.rollerrush.audio.BgmManager
-import com.voxcom.rollerrush.audio.BoosterSoundManager
 import com.voxcom.rollerrush.audio.CoinSoundManager
 import com.voxcom.rollerrush.audio.GameSoundEffects
 import com.voxcom.rollerrush.audio.HapticFeedbackManager
@@ -53,7 +52,6 @@ class GameView(context: Context) :
     private val coinSoundManager = CoinSoundManager(context.applicationContext)
     private val gameSoundEffects =
         GameSoundEffects(context.applicationContext)
-    private val boosterSoundManager = BoosterSoundManager(context.applicationContext)
 
 
     private val world = GameWorld(
@@ -61,7 +59,9 @@ class GameView(context: Context) :
         sprites,
         app.playerData.skateStats,
         coinSoundManager,
-        boosterSoundManager,
+        { skateId ->
+            gameSoundEffects.playBoosterForSkate(skateId)
+        },
         {
             app.playerData.addRushRubies(1)
             gameSoundEffects.playRubyCollected()
@@ -78,6 +78,9 @@ class GameView(context: Context) :
         },
         onBoosterActivated = {
             hapticFeedback.boosterActivated()
+        },
+        onMysteryBubbleCollected = {
+            gameSoundEffects.playMysteryBubbleCollected()
         }
     )
 
@@ -125,7 +128,8 @@ class GameView(context: Context) :
         stopLoop()
         bgmManager.release()
         sprites.recycle()
-        boosterSoundManager.release()
+        gameSoundEffects.release()
+        coinSoundManager.release()
     }
 
     // ---- Surface lifecycle ---------------------------------------------------
