@@ -741,8 +741,6 @@ class GameWorld(
             if (!p.active) {
                 continue
             }
-
-
             if (
                 p.type == com.voxcom.rollerrush.entities.PowerUpType.SPEED &&
                 CollisionSystem.playerTouchesCircle(
