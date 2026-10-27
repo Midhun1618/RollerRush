@@ -35,7 +35,7 @@ class SpawnSystem {
         powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN
         nextRushRubyDistance = rng.nextInt(1000, 2001)
         mysteryBubbleSpawned = false
-        nextMysteryBubbleDistance = rng.nextInt(350, 701)
+        nextMysteryBubbleDistance = rng.nextInt(2222, 3333)
     }
 
     fun update(dt: Float, world: GameWorld) {
@@ -44,10 +44,12 @@ class SpawnSystem {
 
         // Spawn just past the right edge the camera can actually see (zoom / pan / tilt aware).
         val right = maxOf(world.camera.viewWidth, world.camera.visibleRight)
+
         // ------------------------------------------------------------
-// REPEATING RUSH RUBY SPAWNING
-// Spawn a ruby every random 1,000–2,000 meters.
-// ------------------------------------------------------------
+        // REPEATING RUSH RUBY SPAWNING
+        // First ruby appears between 1,000 and 2,000 meters.
+        // Subsequent rubies appear at random 1,000–2,000 meter intervals.
+        // ------------------------------------------------------------
 
         if (world.scoreSystem.distanceMeters >= nextRushRubyDistance) {
             val ruby = world.acquireRushRuby()
@@ -58,8 +60,9 @@ class SpawnSystem {
                     Constants.GROUND_Y - 72f
                 )
 
-                // Schedule the next ruby relative to the previous target.
-                nextRushRubyDistance += rng.nextInt(1000, 2001)
+                // Schedule the next ruby from the current distance.
+                nextRushRubyDistance =
+                    world.scoreSystem.distanceMeters + rng.nextInt(1000, 2001)
             }
         }
 

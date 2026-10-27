@@ -701,21 +701,28 @@ class GameWorld(
         }
 
         // --------------------------------------------------------
-        // RUSH RUBY
+        // RUSH RUBY MOVEMENT AND PICKUP
         // --------------------------------------------------------
 
-        if (
-            rushRuby.active &&
-            CollisionSystem.playerTouchesCircle(
-                player,
-                rushRuby.centerX,
-                rushRuby.centerY,
-                Constants.COIN_PICKUP_RADIUS
-            )
-        ) {
-            rushRuby.active = false
-            runRubies++
-            onRushRubyCollected()
+        if (rushRuby.active) {
+            // Move the ruby toward the player with the scrolling world.
+            rushRuby.update(simDt, worldSpeed)
+
+            // Remove it after it passes the visible left edge.
+            if (rushRuby.isOffScreenLeft(camera.visibleLeft)) {
+                rushRuby.active = false
+            } else if (
+                CollisionSystem.playerTouchesCircle(
+                    player,
+                    rushRuby.centerX,
+                    rushRuby.centerY,
+                    Constants.COIN_PICKUP_RADIUS
+                )
+            ) {
+                rushRuby.active = false
+                runRubies++
+                onRushRubyCollected()
+            }
         }
 
         // --------------------------------------------------------

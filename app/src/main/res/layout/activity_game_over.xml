@@ -280,7 +280,7 @@
         android:orientation="horizontal"
         android:padding="14dp"
         android:background="@drawable/mystery_overlay_bg"
-        android:visibility="gon"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -297,13 +297,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:layout_margin="28dp"
             android:paddingStart="12dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="LUCKY FIND"
-                android:textColor="#D5B8FF"
+                android:fontFamily="@font/new_font"
+                android:textColor="#E8D9FF"
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
@@ -326,7 +328,8 @@
                 android:text="+100 COINS"
                 android:fontFamily="@font/new_font"
                 android:textColor="#FFD66B"
-                android:textSize="21sp"
+                android:padding="12dp"
+                android:textSize="36sp"
                 android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>

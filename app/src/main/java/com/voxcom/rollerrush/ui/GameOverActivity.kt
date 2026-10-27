@@ -77,6 +77,8 @@ class GameOverActivity : BaseActivity() {
 
         val rewardValue =
             findViewById<TextView>(R.id.mysteryRewardValue)
+        val rushRubiesLabel =
+            findViewById<TextView>(R.id.rubiesLabel)
 
         // Initial result values.
         distanceView.text = "0 m"
@@ -85,6 +87,7 @@ class GameOverActivity : BaseActivity() {
 
         runCoinsView.text = "+0 COINS THIS RUN"
         walletView.text = "${app.playerData.coins}"
+        rushRubiesLabel.text = "${app.playerData.rushRubies}"
 
         // Hide results until their animations begin.
         title.alpha = 0f
