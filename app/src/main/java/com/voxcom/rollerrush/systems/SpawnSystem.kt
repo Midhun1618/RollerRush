@@ -35,7 +35,7 @@ class SpawnSystem {
         powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN
         nextRushRubyDistance = rng.nextInt(1000, 2001)
         mysteryBubbleSpawned = false
-        nextMysteryBubbleDistance = rng.nextInt(2222, 3333)
+        nextMysteryBubbleDistance = rng.nextInt(202, 303)
     }
 
     fun update(dt: Float, world: GameWorld) {

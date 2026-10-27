@@ -242,7 +242,7 @@
 
                         <LinearLayout
                             android:layout_width="wrap_content"
-                            android:layout_height="22dp"
+                            android:layout_height="28dp"
                             android:gravity="center"
                             android:orientation="horizontal"
                             android:padding="3dp"
@@ -259,8 +259,8 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
-                                android:text="12999"
+                                android:fontFamily="@font/count_font"
+                                android:text="12,999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
                                 android:textStyle="bold" />
@@ -280,7 +280,7 @@
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/new_font"
-                    android:text="Ready Speedsters"
+                    android:text="Starter Skates"
                     android:textSize="32sp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -367,8 +367,9 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
+
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
                                 android:textStyle="bold" />
@@ -428,7 +429,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
@@ -489,7 +490,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
@@ -550,7 +551,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
@@ -658,7 +659,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
@@ -719,7 +720,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
@@ -780,7 +781,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
@@ -841,7 +842,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
@@ -948,7 +949,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
@@ -1009,7 +1010,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
@@ -1070,7 +1071,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
@@ -1131,7 +1132,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
@@ -1238,7 +1239,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
@@ -1299,7 +1300,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"
@@ -1360,7 +1361,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="@font/new_font"
+                                android:fontFamily="@font/count_font"
                                 android:text="12999"
                                 android:textColor="#FFD34B"
                                 android:textSize="16sp"

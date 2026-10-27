@@ -37,6 +37,9 @@ class GameView(context: Context) :
 
         /** Called on the UI thread. */
         fun onPauseRequested()
+        fun onBoosterAvailabilityChanged(available: Boolean)
+        fun onBoosterActivated()
+        fun onMysteryRewardCollected()
     }
 
     var listener: Listener? = null
@@ -89,6 +92,10 @@ class GameView(context: Context) :
     private var touchMoved = false
     private var lastTapTime = 0L
 
+    private var lastBoosterAvailable = false
+    private var lastBoosterActive = false
+    private var lastMysteryCollected = false
+
     private val bgmManager = BgmManager(context.applicationContext)
 
     val state: GameState
@@ -115,10 +122,20 @@ class GameView(context: Context) :
         }
     }
 
+
     fun restartGame() {
-        world.start()
+        synchronized(world) {
+            world.start()
+        }
+
+        lastBoosterAvailable = false
+        lastBoosterActive = false
+        lastMysteryCollected = false
+
+        listener?.onBoosterAvailabilityChanged(false)
         bgmManager.resume()
     }
+
 
     /**
      * Stop the game thread and release resources.
@@ -171,13 +188,35 @@ class GameView(context: Context) :
 
     // ---- GameLoop callbacks --------------------------------------------------
 
+
     override fun onUpdate(dt: Float) {
         var over = false
+        var boosterAvailable = false
+        var boosterActive = false
+        var mysteryCollected = false
 
         synchronized(world) {
             world.update(dt)
             over = world.consumeGameOverEvent()
+            boosterAvailable = world.speedBoostAvailable
+            boosterActive = world.speedBoostActive
+            mysteryCollected = world.mysteryRewardCollected
         }
+
+        if (boosterAvailable != lastBoosterAvailable) {
+            lastBoosterAvailable = boosterAvailable
+            listener?.onBoosterAvailabilityChanged(boosterAvailable)
+        }
+
+        if (boosterActive && !lastBoosterActive) {
+            listener?.onBoosterActivated()
+        }
+        lastBoosterActive = boosterActive
+
+        if (mysteryCollected && !lastMysteryCollected) {
+            listener?.onMysteryRewardCollected()
+        }
+        lastMysteryCollected = mysteryCollected
 
         if (over) {
             bgmManager.pause()
@@ -191,6 +230,7 @@ class GameView(context: Context) :
             )
         }
     }
+
 
     override fun onRender(canvas: Canvas) {
         synchronized(world) {
