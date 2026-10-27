@@ -102,8 +102,9 @@ class PowerUp : GameEntity() {
     // COLLECT
     // ------------------------------------------------------------
 
-    fun collect() {
-        if (!active || collected) return
+
+    fun collect(): Boolean {
+        if (!active || collected) return false
 
         collected = true
         effectTime = 0f
@@ -112,7 +113,10 @@ class PowerUp : GameEntity() {
         effectY = y + height / 2f
 
         setupParticles()
+
+        return true
     }
+
 
     // ------------------------------------------------------------
     // PARTICLE SETUP

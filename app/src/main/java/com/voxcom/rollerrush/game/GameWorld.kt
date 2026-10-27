@@ -742,26 +742,23 @@ class GameWorld(
                 continue
             }
 
+
             if (
-                p.type ==
-                com.voxcom.rollerrush.entities.PowerUpType.SPEED &&
+                p.type == com.voxcom.rollerrush.entities.PowerUpType.SPEED &&
                 CollisionSystem.playerTouchesCircle(
                     player,
-                    p.x +
-                            p.width *
-                            0.5f,
-                    p.y +
-                            p.height *
-                            0.5f,
+                    p.x + p.width * 0.5f,
+                    p.y + p.height * 0.5f,
                     12f
                 )
             ) {
-
-                // Play the SFX only when the player collects the booster.
-                p.collect()
-                gotBooster()
-                speedBoostReady = true
+                // Process pickup effects only once per booster.
+                if (p.collect()) {
+                    gotBooster()
+                    speedBoostReady = true
+                }
             }
+
         }
         // --------------------------------------------------------
         // RUSH RUBY PICKUP
