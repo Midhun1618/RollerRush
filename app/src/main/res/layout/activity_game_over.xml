@@ -115,9 +115,9 @@
         android:textSize="12sp"
         android:layout_marginTop="12dp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="@+id/imageView3"
-        app:layout_constraintStart_toStartOf="@+id/imageView3"
-        app:layout_constraintTop_toTopOf="@+id/imageView3" />
+        app:layout_constraintEnd_toEndOf="@+id/gameOverTitle"
+        app:layout_constraintStart_toStartOf="@+id/gameOverTitle"
+        app:layout_constraintTop_toTopOf="@+id/gameOverTitle" />
 
     <TextView
         android:id="@+id/textView"
@@ -129,8 +129,8 @@
         android:textColor="#485064"
         android:textSize="13sp"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout11"
-        app:layout_constraintEnd_toEndOf="@+id/imageView3"
-        app:layout_constraintStart_toStartOf="@+id/imageView3" />
+        app:layout_constraintEnd_toEndOf="@+id/gameOverTitle"
+        app:layout_constraintStart_toStartOf="@+id/gameOverTitle" />
 
     <ImageView
         android:id="@+id/gameOverTitle"
@@ -195,7 +195,10 @@
         android:gravity="center"
         android:text="+0 COINS THIS RUN"
         android:textColor="#FFD66B"
-        android:textSize="14sp"
+        android:shadowRadius="5"
+        android:layout_marginTop="12dp"
+        android:fontFamily="@font/new_font"
+        android:textSize="28sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="@+id/linearLayout12"
         app:layout_constraintStart_toStartOf="@+id/linearLayout12"
@@ -276,16 +279,16 @@
         android:gravity="center"
         android:orientation="horizontal"
         android:padding="14dp"
-        android:background="#BA000000"
-        android:visibility="gone"
+        android:background="@drawable/mystery_overlay_bg"
+        android:visibility="gon"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/mysteryBubbleImage"
-            android:layout_width="82dp"
-            android:layout_height="82dp"
+            android:layout_width="160dp"
+            android:layout_height="250dp"
             android:contentDescription="Mystery reward bubble"
             android:scaleType="fitCenter"
             android:src="@drawable/mystery_bubble" />
@@ -309,6 +312,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
+                android:fontFamily="@font/new_font"
                 android:text="MYSTERY REWARD!"
                 android:textColor="#FFFFFF"
                 android:textSize="17sp"
@@ -320,6 +324,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:text="+100 COINS"
+                android:fontFamily="@font/new_font"
                 android:textColor="#FFD66B"
                 android:textSize="21sp"
                 android:textStyle="bold" />
