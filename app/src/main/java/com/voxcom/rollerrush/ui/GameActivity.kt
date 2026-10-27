@@ -47,19 +47,49 @@ class GameActivity : BaseActivity(), GameView.Listener {
         if (!pauseScreenOpen) openPauseScreen()
     }
 
-    override fun onGameOver(score: Int, distanceMeters: Int, coins: Int) = runOnUiThread {
+
+    override fun onGameOver(
+        score: Int,
+        distanceMeters: Int,
+        coins: Int,
+        mysteryCollected: Boolean,
+        mysteryType: String,
+        mysteryAmount: Int
+    ) = runOnUiThread {
         if (gameOverHandled) return@runOnUiThread
         gameOverHandled = true
+
         val pd = app.playerData
-        pd.addCoins(coins)                                 // bank this run's coins exactly once
-        if (score > pd.highScore) pd.highScore = score
-        startActivity(Intent(this, GameOverActivity::class.java)
-            .putExtra(Constants.EXTRA_SCORE, score)
-            .putExtra(Constants.EXTRA_DISTANCE, distanceMeters)
-            .putExtra(Constants.EXTRA_COINS, coins)
-            .putExtra(Constants.EXTRA_HIGH_SCORE, pd.highScore))
+
+        // Bank ordinary run coins exactly once.
+        pd.addCoins(coins)
+
+        // Grant the mystery reward exactly once.
+        if (mysteryCollected) {
+            when (mysteryType) {
+                "coins" -> pd.addCoins(mysteryAmount)
+                "rubies" -> pd.addRushRubies(mysteryAmount)
+            }
+        }
+
+        if (score > pd.highScore) {
+            pd.highScore = score
+        }
+
+        startActivity(
+            Intent(this, GameOverActivity::class.java)
+                .putExtra(Constants.EXTRA_SCORE, score)
+                .putExtra(Constants.EXTRA_DISTANCE, distanceMeters)
+                .putExtra(Constants.EXTRA_COINS, coins)
+                .putExtra(Constants.EXTRA_HIGH_SCORE, pd.highScore)
+                .putExtra("mystery_collected", mysteryCollected)
+                .putExtra("mystery_type", mysteryType)
+                .putExtra("mystery_amount", mysteryAmount)
+        )
+
         finish()
     }
+
 
     // ---- Pause screen -----------------------------------------------------------
     private fun openPauseScreen() {

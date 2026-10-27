@@ -17,6 +17,8 @@ import com.voxcom.rollerrush.systems.SpawnSystem
 import com.voxcom.rollerrush.utils.Constants
 import com.voxcom.rollerrush.audio.CoinSoundManager
 import com.voxcom.rollerrush.entities.RushRuby
+import com.voxcom.rollerrush.entities.MysteryBubble
+import kotlin.random.Random
 
 /**
  * Owns ALL simulation state and runs one update step.
@@ -94,6 +96,39 @@ class GameWorld(
     var runRubies: Int = 0
         private set
 
+    val mysteryBubble = MysteryBubble()
+
+    var mysteryRewardType: String = ""
+        private set
+
+    var mysteryRewardAmount: Int = 0
+        private set
+
+    val mysteryRewardCollected: Boolean
+        get() = mysteryRewardType.isNotEmpty()
+
+    private val mysteryRewards = listOf(
+        "coins" to 30,
+        "coins" to 100,
+        "coins" to 200,
+        "coins" to 20,
+        "coins" to 150,
+        "coins" to 50,
+        "rubies" to 3,
+        "rubies" to 5,
+        "rubies" to 10
+    )
+
+    private fun collectMysteryBubble() {
+        if (!mysteryBubble.active || mysteryRewardCollected) return
+
+        mysteryBubble.active = false
+
+        val reward = mysteryRewards.random()
+        mysteryRewardType = reward.first
+        mysteryRewardAmount = reward.second
+    }
+
     fun acquireRushRuby(): RushRuby? {
         return if (!rushRuby.active) rushRuby else null
     }
@@ -166,6 +201,10 @@ class GameWorld(
         scoreSystem.reset()
         coinSystem.reset()
         spawner.reset()
+
+        mysteryBubble.active = false
+        mysteryRewardType = ""
+        mysteryRewardAmount = 0
 
         for (i in 0 until obstacles.size) {
             obstacles[i].active = false
@@ -776,6 +815,23 @@ class GameWorld(
 
             state = GameState.GAME_OVER
             gameOverTimer = 0f
+        }
+
+        if (mysteryBubble.active) {
+            mysteryBubble.update(simDt, worldSpeed)
+
+            if (mysteryBubble.isOffScreenLeft(camera.visibleLeft)) {
+                mysteryBubble.active = false
+            } else if (
+                CollisionSystem.playerTouchesCircle(
+                    player,
+                    mysteryBubble.centerX,
+                    mysteryBubble.centerY,
+                    Constants.COIN_PICKUP_RADIUS * 2f
+                )
+            ) {
+                collectMysteryBubble()
+            }
         }
     }
 

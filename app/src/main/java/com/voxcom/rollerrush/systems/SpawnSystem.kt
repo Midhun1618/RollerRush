@@ -27,10 +27,15 @@ class SpawnSystem {
     private var powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN
     private var nextRushRubyDistance = 0
 
+    private var mysteryBubbleSpawned = false
+    private var nextMysteryBubbleDistance = 0
+
     fun reset() {
         timer = Constants.FIRST_SPAWN_DELAY;
         powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN
         nextRushRubyDistance = rng.nextInt(1000, 2001)
+        mysteryBubbleSpawned = false
+        nextMysteryBubbleDistance = rng.nextInt(350, 701)
     }
 
     fun update(dt: Float, world: GameWorld) {
@@ -100,6 +105,18 @@ class SpawnSystem {
         } else {
             // Midway between this obstacle and the next one (they are speed * interval apart).
             spawnCoinLine(world, spawnX + 0.5f * world.worldSpeed * interval)
+        }
+
+        if (
+            !mysteryBubbleSpawned &&
+            world.scoreSystem.distanceMeters >= nextMysteryBubbleDistance
+        ) {
+            world.mysteryBubble.init(
+                right + Constants.SPAWN_MARGIN + 80f,
+                Constants.GROUND_Y - 65f
+            )
+
+            mysteryBubbleSpawned = true
         }
     }
 

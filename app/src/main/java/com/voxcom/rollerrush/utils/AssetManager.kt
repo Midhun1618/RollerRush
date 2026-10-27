@@ -59,6 +59,9 @@ class AssetManager(private val context: Context) {
 
     lateinit var roadsideShop: Bitmap
         private set
+
+    lateinit var mysteryBubbleBitmap: Bitmap
+        private set
     private lateinit var speedBoostEffectFrames: Array<Bitmap>
 
     private var speedBoostEffectLoaded = false
@@ -127,6 +130,12 @@ class AssetManager(private val context: Context) {
 
             canvas.drawPath(highlight, highlightPaint)
         }
+
+        mysteryBubbleBitmap = make(
+            "collectibles/mystery_bubble.webp",
+            (54f * Constants.BITMAP_SCALE).toInt(),
+            (54f * Constants.BITMAP_SCALE).toInt()
+        ) { _, _, _ -> }
 
         rushRubyGlowBitmap = make(
             "coins/rush_ruby_glow.webp",
@@ -402,6 +411,12 @@ class AssetManager(private val context: Context) {
 
         if (!speedBoostParticle.isRecycled) {
             speedBoostParticle.recycle()
+        }
+
+        if (::mysteryBubbleBitmap.isInitialized &&
+            !mysteryBubbleBitmap.isRecycled
+        ) {
+            mysteryBubbleBitmap.recycle()
         }
     }
 

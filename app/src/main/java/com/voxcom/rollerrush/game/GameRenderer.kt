@@ -185,8 +185,17 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         world.player.draw(canvas, bmpPaint)
         drawForeground(canvas, scroll, left, right)
         if (prefs.debugHitboxes) drawDebug(canvas, world)
+        // Draw the mystery bubble in world space, using the same camera
+        // transformation as the road, booster, coins and other entities.
+        if (world.mysteryBubble.active) {
+            world.mysteryBubble.drawBubble(
+                canvas,
+                assets.mysteryBubbleBitmap,
+                bmpPaint
+            )
+        }
         canvas.restore()
-
+        // HUD must remain in screen space.
         drawHud(canvas, world, camera)
     }
 

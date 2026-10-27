@@ -26,10 +26,17 @@ class GameView(context: Context) :
     GameLoop.Callbacks {
 
     interface Listener {
-        /** Called on the game thread. */
-        fun onGameOver(score: Int, distanceMeters: Int, coins: Int)
+        /** Called on the game thread after the crash animation. */
+        fun onGameOver(
+            score: Int,
+            distanceMeters: Int,
+            coins: Int,
+            mysteryCollected: Boolean,
+            mysteryType: String,
+            mysteryAmount: Int
+        )
 
-        /** Called on the UI thread (touch). */
+        /** Called on the UI thread. */
         fun onPauseRequested()
     }
 
@@ -173,7 +180,10 @@ class GameView(context: Context) :
             listener?.onGameOver(
                 world.score,
                 world.distanceMeters,
-                world.runCoins
+                world.runCoins,
+                world.mysteryRewardCollected,
+                world.mysteryRewardType,
+                world.mysteryRewardAmount
             )
         }
     }
