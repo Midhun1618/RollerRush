@@ -59,7 +59,7 @@ class GameActivity : BaseActivity(), GameView.Listener {
 
         // Booster burst overlay.
         boosterBurst = createOverlay(
-            R.drawable.booster_alert_bursts
+            R.drawable.booster_alert_burst
         ).apply {
             visibility = View.GONE
             alpha = 0f
@@ -166,6 +166,67 @@ class GameActivity : BaseActivity(), GameView.Listener {
         boosterAlert.animate().cancel()
         boosterBurst.animate().cancel()
 
+        // Full-screen burst image.
+        boosterBurst.scaleType = ImageView.ScaleType.FIT_XY
+        boosterBurst.visibility = View.VISIBLE
+        boosterBurst.alpha = 0.8f
+        boosterBurst.scaleX = 1f
+        boosterBurst.scaleY = 1f
+        boosterBurst.translationX = 0f
+        boosterBurst.translationY = 0f
+
+        val burstParams =
+            boosterBurst.layoutParams as FrameLayout.LayoutParams
+
+        burstParams.width = FrameLayout.LayoutParams.MATCH_PARENT
+        burstParams.height = FrameLayout.LayoutParams.MATCH_PARENT
+        burstParams.gravity = Gravity.TOP or Gravity.START
+        burstParams.leftMargin = 0
+        burstParams.topMargin = 0
+        boosterBurst.layoutParams = burstParams
+
+        boosterBurst.bringToFront()
+        boosterAlert.bringToFront()
+
+        // Zoom pulse: the image starts full-screen and grows beyond
+        // the screen edges, then returns to full-screen scale.
+        val burstZoomX = ObjectAnimator.ofFloat(
+            boosterBurst,
+            View.SCALE_X,
+            1f,
+            1.18f,
+            1f
+        ).apply {
+            duration = 850L
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.RESTART
+        }
+
+        val burstZoomY = ObjectAnimator.ofFloat(
+            boosterBurst,
+            View.SCALE_Y,
+            1f,
+            1.18f,
+            1f
+        ).apply {
+            duration = 850L
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.RESTART
+        }
+
+        val burstAlpha = ObjectAnimator.ofFloat(
+            boosterBurst,
+            View.ALPHA,
+            0.65f,
+            1f,
+            0.65f
+        ).apply {
+            duration = 850L
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.RESTART
+        }
+
+        // Pulsing double-tap prompt.
         boosterAlert.visibility = View.VISIBLE
         boosterAlert.alpha = 1f
         boosterAlert.scaleX = 1f
@@ -173,17 +234,11 @@ class GameActivity : BaseActivity(), GameView.Listener {
         boosterAlert.translationX = 0f
         boosterAlert.translationY = 0f
 
-        // Keep the burst independent of the alert image.
-        boosterBurst.visibility = View.GONE
-        boosterBurst.alpha = 0f
-        boosterBurst.scaleX = 1f
-        boosterBurst.scaleY = 1f
-
-        val pulse = ObjectAnimator.ofFloat(
+        val alertPulse = ObjectAnimator.ofFloat(
             boosterAlert,
             View.ALPHA,
             1f,
-            0.65f,
+            0.6f,
             1f
         ).apply {
             duration = 450L
@@ -191,11 +246,15 @@ class GameActivity : BaseActivity(), GameView.Listener {
         }
 
         boosterAlertAnimator = AnimatorSet().apply {
-            playTogether(pulse)
+            playTogether(
+                burstZoomX,
+                burstZoomY,
+                burstAlpha,
+                alertPulse
+            )
             start()
         }
     }
-
 
     private fun hideBoosterAlert() {
         boosterAlertAnimator?.cancel()
@@ -204,55 +263,25 @@ class GameActivity : BaseActivity(), GameView.Listener {
         boosterAlert.animate().cancel()
         boosterBurst.animate().cancel()
 
-        boosterAlert.animate()
-            .alpha(0f)
-            .setDuration(100L)
-            .withEndAction {
-                boosterAlert.visibility = View.GONE
-                boosterAlert.alpha = 0f
-                boosterAlert.scaleX = 1f
-                boosterAlert.scaleY = 1f
-                boosterAlert.translationX = 0f
-            }
-            .start()
+        boosterAlert.visibility = View.GONE
+        boosterAlert.alpha = 0f
+        boosterAlert.scaleX = 1f
+        boosterAlert.scaleY = 1f
+        boosterAlert.translationX = 0f
+        boosterAlert.translationY = 0f
 
-        boosterBurst.animate()
-            .alpha(0f)
-            .setDuration(100L)
-            .withEndAction {
-                boosterBurst.visibility = View.GONE
-                boosterBurst.alpha = 0f
-                boosterBurst.scaleX = 1f
-                boosterBurst.scaleY = 1f
-            }
-            .start()
+        boosterBurst.visibility = View.GONE
+        boosterBurst.alpha = 0f
+        boosterBurst.scaleX = 1f
+        boosterBurst.scaleY = 1f
+        boosterBurst.translationX = 0f
+        boosterBurst.translationY = 0f
     }
 
     override fun onBoosterActivated() {
         runOnUiThread {
             boosterIsAvailable = false
             hideBoosterAlert()
-
-            // Quick burst when the double-tap activates the boost.
-            boosterBurst.animate().cancel()
-
-            boosterBurst.visibility = View.VISIBLE
-            boosterBurst.alpha = 0.9f
-            boosterBurst.scaleX = 0.8f
-            boosterBurst.scaleY = 0.8f
-
-            boosterBurst.animate()
-                .alpha(0f)
-                .scaleX(1.45f)
-                .scaleY(1.45f)
-                .setDuration(240L)
-                .withEndAction {
-                    boosterBurst.visibility = View.GONE
-                    boosterBurst.alpha = 0f
-                    boosterBurst.scaleX = 1f
-                    boosterBurst.scaleY = 1f
-                }
-                .start()
         }
     }
 
