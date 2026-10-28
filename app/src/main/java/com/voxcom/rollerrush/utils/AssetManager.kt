@@ -309,6 +309,77 @@ class AssetManager(private val context: Context) {
         fun skateFarBmp(): Bitmap = skateBmp()
 
 
+        // Load the particle PNG belonging to the selected skate.
+        // If it is missing, generate a visible energy particle instead.
+        val particleFile = ShopCatalog.skate(ch.skateSkin)
+            ?.particleName
+            ?.takeIf { it.isNotBlank() }
+            ?: "particle_redstreet.png"
+
+        val particleColor = when (ch.skateSkin) {
+            "skate_ice" -> Color.rgb(100, 225, 255)
+            "skate_sunset_rush" -> Color.rgb(255, 115, 65)
+            "skate_pixel_pop" -> Color.rgb(255, 65, 220)
+            "skate_night_shift" -> Color.rgb(175, 185, 220)
+            "skate_aero" -> Color.rgb(65, 170, 255)
+            "skate_nitro_edge" -> Color.rgb(255, 75, 45)
+            "skate_sonic_wave" -> Color.rgb(80, 255, 230)
+            "skate_gold_standard" -> Color.rgb(255, 195, 55)
+            "skate_drift_king" -> Color.rgb(190, 205, 220)
+            "skate_cross_rider" -> Color.rgb(255, 140, 45)
+            "skate_volt" -> Color.rgb(100, 255, 70)
+            "skate_street_tox" -> Color.rgb(80, 255, 100)
+            "skate_inferno" -> Color.rgb(255, 65, 25)
+            "skate_thunderbolt" -> Color.rgb(255, 235, 90)
+            "skate_titanium_x" -> Color.rgb(160, 210, 230)
+            "skate_neon_phantom" -> Color.rgb(210, 70, 255)
+            "skate_skull_ride" -> Color.rgb(200, 240, 255)
+            "skate_cosmic_drift" -> Color.rgb(165, 100, 255)
+            "skate_solar_flare" -> Color.rgb(255, 150, 35)
+            "skate_void_reaper" -> Color.rgb(235, 35, 80)
+            "skate_infinity" -> Color.rgb(120, 255, 220)
+            else -> Color.rgb(255, 65, 85)
+        }
+
+        val skateParticleBitmap = make(
+            "powerups/skate_particles/$particleFile",
+            128,
+            128
+        ) { canvas, width, height ->
+            // Fallback artwork used automatically when the selected PNG is absent.
+            val cx = width / 2f
+            val cy = height / 2f
+
+            val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = particleColor
+                alpha = 45
+            }
+            canvas.drawCircle(cx, cy, width * 0.43f, glowPaint)
+
+            glowPaint.alpha = 100
+            canvas.drawCircle(cx, cy, width * 0.27f, glowPaint)
+
+            val corePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.WHITE
+                alpha = 235
+            }
+
+            val spark = Path().apply {
+                moveTo(cx, height * 0.06f)
+                lineTo(width * 0.61f, height * 0.40f)
+                lineTo(width * 0.94f, cy)
+                lineTo(width * 0.61f, height * 0.60f)
+                lineTo(cx, height * 0.94f)
+                lineTo(width * 0.39f, height * 0.60f)
+                lineTo(width * 0.06f, cy)
+                lineTo(width * 0.39f, height * 0.40f)
+                close()
+            }
+            canvas.drawPath(spark, corePaint)
+        }
+
+
+
         val far = 0.72f // far-side limbs are darker to suggest depth
         return PlayerSprites(
             head = part(ch.headSkin, "head", Rig.HEAD_W, Rig.HEAD_H) { c, w, h -> drawHead(c, w, h, skin) },
@@ -325,7 +396,8 @@ class AssetManager(private val context: Context) {
             handFar = handBmp(ch.headSkin, darken(skin, far)),
             thighFar = limb(ch.legSkin, "thigh_far", Rig.THIGH_LEN, Rig.THIGH_THICK, darken(pants, far)),
             shinFar = limb(ch.legSkin, "shin_far", Rig.SHIN_LEN, Rig.SHIN_THICK, darken(pants, far)),
-            skateFar = skateFarBmp()
+            skateFar = skateFarBmp(),
+            skateParticle = skateParticleBitmap
         )
     }
     private fun loadSpeedBoostEffects(skateSkin: String) {

@@ -9,6 +9,7 @@ import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.Typeface
 import com.voxcom.rollerrush.data.GamePreferences
+import com.voxcom.rollerrush.player.BodyPart
 import com.voxcom.rollerrush.utils.AssetManager
 import com.voxcom.rollerrush.utils.Constants
 import kotlin.math.floor
@@ -63,6 +64,34 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
 
     private var boostParticleIndex = 0
     private var boostRandomState = 9371
+
+
+    // Custom PNG particles emitted from both animated skates.
+    private val skateParticleCount = 120
+    private val skateParticleX = FloatArray(skateParticleCount)
+    private val skateParticleY = FloatArray(skateParticleCount)
+    private val skateParticleVX = FloatArray(skateParticleCount)
+    private val skateParticleVY = FloatArray(skateParticleCount)
+    private val skateParticleLife = FloatArray(skateParticleCount)
+    private val skateParticleMaxLife = FloatArray(skateParticleCount)
+    private val skateParticleStartSize = FloatArray(skateParticleCount)
+    private val skateParticleGrowth = FloatArray(skateParticleCount)
+    private val skateParticleRotation = FloatArray(skateParticleCount)
+    private val skateParticleRotationSpeed = FloatArray(skateParticleCount)
+    private val skateParticleJitter = FloatArray(skateParticleCount)
+    private val skateParticlePhase = FloatArray(skateParticleCount)
+
+    private var skateParticleIndex = 0
+    private var skateEmissionAccumulator = 0f
+
+    private val skateParticlePaint = Paint(
+        Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG
+    )
+
+    private val skateParticleRect = RectF()
+    private val leftSkatePoint = FloatArray(2)
+    private val rightSkatePoint = FloatArray(2)
+
 
     private fun boostRandom(): Float {
         boostRandomState =
@@ -199,197 +228,213 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         drawHud(canvas, world, camera)
     }
 
+
     private fun drawSpeedBoostEffect(
         canvas: Canvas,
         world: GameWorld
     ) {
         val now = System.nanoTime()
-
         val dt = if (boostLastNs == 0L) {
             0f
         } else {
-            ((now - boostLastNs) / 1_000_000_000f)
-                .coerceIn(0f, 0.05f)
+            ((now - boostLastNs) / 1_000_000_000f).coerceIn(0f, 0.05f)
         }
-
         boostLastNs = now
 
         val boosting = world.speedBoostActive
         val player = world.player
 
-        // Animate the afterimage trail.
         if (boosting) {
             boostTrailPhase += dt * 11f
+            if (boostTrailPhase > 1000f) boostTrailPhase -= 1000f
 
-            if (boostTrailPhase > 1000f) {
-                boostTrailPhase -= 1000f
-            }
+            skateEmissionAccumulator += dt
 
-            // Spawn speed particles.
-            boostParticleAccumulator += dt
+            // Emit from each skate at regular intervals.
+            while (skateEmissionAccumulator >= 0.025f) {
+                skateEmissionAccumulator -= 0.025f
 
-            while (boostParticleAccumulator >= 0.035f) {
-                boostParticleAccumulator -= 0.035f
-                spawnBoostParticle(player.x, player.bottomY)
+                getBodyPartWorldPoint(
+                    player.leftSkate,
+                    player.leftSkate.width / 2f - player.leftSkate.pivotX,
+                    player.leftSkate.height / 2f - player.leftSkate.pivotY,
+                    leftSkatePoint
+                )
+                spawnSkateParticle(leftSkatePoint[0], leftSkatePoint[1])
+
+                getBodyPartWorldPoint(
+                    player.rightSkate,
+                    player.rightSkate.width / 2f - player.rightSkate.pivotX,
+                    player.rightSkate.height / 2f - player.rightSkate.pivotY,
+                    rightSkatePoint
+                )
+                spawnSkateParticle(rightSkatePoint[0], rightSkatePoint[1])
             }
         } else {
-            boostParticleAccumulator = 0f
+            // Stop new emissions, but allow existing particles to fade naturally.
+            skateEmissionAccumulator = 0f
         }
 
-        // ========================================================
-        // 1. CHARACTER AFTERIMAGES
-        // ========================================================
+        // Keep the existing character afterimage effect.
         if (boosting) {
             for (i in boostTrailOffsets.indices) {
                 val wave =
                     kotlin.math.sin(boostTrailPhase - i * 0.8f) * 2.5f
 
                 canvas.save()
-
-                // Move each copy progressively farther backwards.
                 canvas.translate(
                     -boostTrailOffsets[i] - wave,
                     wave * 0.45f
                 )
 
-                // Older copies are more transparent.
                 bmpPaint.alpha = boostTrailAlphas[i]
-
                 player.draw(canvas, bmpPaint)
-
                 canvas.restore()
             }
         }
 
-        // Restore full opacity before drawing particles or the real player.
         bmpPaint.alpha = 255
 
-        // ========================================================
-        // 2. SPEED PARTICLES
-        // ========================================================
-        for (i in 0 until boostParticleCount) {
-            if (boostParticleLife[i] <= 0f) continue
+        // Update and draw the custom PNG particles.
+        val particleBitmap = player.skateParticleBitmap
 
-            boostParticleX[i] -= boostParticleSpeed[i] * dt
-            boostParticleLife[i] -= dt
+        if (!particleBitmap.isRecycled) {
+            for (i in 0 until skateParticleCount) {
+                if (skateParticleLife[i] <= 0f) continue
 
-            val life = boostParticleLife[i]
+                skateParticleLife[i] -= dt
 
-            if (life <= 0f) {
-                boostParticleLife[i] = 0f
-                continue
-            }
+                if (skateParticleLife[i] <= 0f) {
+                    skateParticleLife[i] = 0f
+                    continue
+                }
 
-            val progress = (
-                    1f - life / boostParticleMaxLife[i]
-                    ).coerceIn(0f, 1f)
+                val progress = (
+                        1f - skateParticleLife[i] /
+                                skateParticleMaxLife[i]
+                        ).coerceIn(0f, 1f)
 
-            val alpha = (
-                    210f * (1f - progress) *
-                            (1f - progress * 0.35f)
-                    ).toInt().coerceIn(0, 210)
+                // Backward drift plus a little upward lift.
+                skateParticleX[i] += skateParticleVX[i] * dt
+                skateParticleY[i] += skateParticleVY[i] * dt
 
-            if (alpha <= 0) continue
+                // Smooth, small jitter so the trail doesn't look mechanical.
+                skateParticlePhase[i] += dt * 9f
+                val jitterX = kotlin.math.sin(
+                    skateParticlePhase[i] + i * 0.7f
+                ) * skateParticleJitter[i]
+                val jitterY = kotlin.math.cos(
+                    skateParticlePhase[i] * 1.3f + i
+                ) * skateParticleJitter[i]
 
-            val x = boostParticleX[i]
-            val y = boostParticleY[i]
-            val length = boostParticleLength[i]
+                skateParticleRotation[i] +=
+                    skateParticleRotationSpeed[i] * dt
 
-            boostParticlePaint.color = Color.argb(
-                alpha, 70, 220, 255
-            )
+                val alpha = (
+                        255f * (1f - progress) * (1f - progress * 0.2f)
+                        ).toInt().coerceIn(0, 255)
 
-            boostParticlePaint.strokeWidth =
-                1.2f + (1f - progress) * 2.2f
+                if (alpha <= 0) continue
 
-            canvas.drawLine(
-                x,
-                y,
-                x - length,
-                y + boostParticleSlant[i],
-                boostParticlePaint
-            )
+                val size = (
+                        skateParticleStartSize[i] +
+                                skateParticleGrowth[i] * progress
+                        ).coerceAtLeast(1f)
 
-            // Occasional brighter streaks.
-            if (i % 5 == 0 && progress < 0.7f) {
-                boostParticlePaint.color = Color.argb(
-                    (alpha * 0.65f).toInt(),
-                    220, 250, 255
+                val x = skateParticleX[i] + jitterX
+                val y = skateParticleY[i] + jitterY
+
+                skateParticleRect.set(
+                    -size / 2f,
+                    -size / 2f,
+                    size / 2f,
+                    size / 2f
                 )
 
-                boostParticlePaint.strokeWidth = 1.4f
+                skateParticlePaint.alpha = alpha
 
-                canvas.drawLine(
-                    x,
-                    y,
-                    x - length * 0.55f,
-                    y + boostParticleSlant[i] * 0.5f,
-                    boostParticlePaint
+                canvas.save()
+                canvas.translate(x, y)
+                canvas.rotate(skateParticleRotation[i])
+                canvas.drawBitmap(
+                    particleBitmap,
+                    null,
+                    skateParticleRect,
+                    skateParticlePaint
                 )
+                canvas.restore()
             }
         }
 
-        // ========================================================
-        // 3. SUBTLE ACCENT NEAR THE SKATES
-        // ========================================================
-        if (boosting) {
-            val pulse = 0.5f +
-                    0.5f * kotlin.math.sin(boostTrailPhase * 1.7f)
-
-            boostParticlePaint.color = Color.argb(
-                (45f + pulse * 45f).toInt(),
-                60, 210, 255
-            )
-
-            boostParticlePaint.strokeWidth = 2.2f
-
-            val playerCenterX = player.x + 18f
-            val groundY = player.bottomY - 5f
-
-            canvas.drawLine(
-                playerCenterX - 4f,
-                groundY,
-                playerCenterX - 24f - pulse * 8f,
-                groundY + 2f,
-                boostParticlePaint
-            )
-        }
-
-        // Keep shared Paint opacity safe for subsequent drawing.
+        skateParticlePaint.alpha = 255
         bmpPaint.alpha = 255
     }
 
-    private fun spawnBoostParticle(
-        playerX: Float,
-        playerBottomY: Float
+    private fun spawnSkateParticle(
+        skateX: Float,
+        skateY: Float
     ) {
-        val i = boostParticleIndex
+        val i = skateParticleIndex
+        skateParticleIndex = (skateParticleIndex + 1) % skateParticleCount
 
-        boostParticleIndex =
-            (boostParticleIndex + 1) % boostParticleCount
+        val randomA = boostRandom()
+        val randomB = boostRandom()
+        val randomC = boostRandom()
 
-        // Spawn in the region just behind and around the skater.
-        boostParticleX[i] =
-            playerX + 5f + boostRandom() * 32f
+        skateParticleX[i] = skateX + (randomA - 0.5f) * 5f
+        skateParticleY[i] = skateY + (randomB - 0.5f) * 4f
 
-        boostParticleY[i] =
-            playerBottomY - 8f - boostRandom() * 68f
+        // The skater faces right, so particles trail towards the left.
+        skateParticleVX[i] = -(45f + randomA * 100f)
+        skateParticleVY[i] = -(8f + randomB * 50f)
 
-        boostParticleLength[i] =
-            12f + boostRandom() * 38f
+        val life = 0.24f + randomC * 0.32f
+        skateParticleLife[i] = life
+        skateParticleMaxLife[i] = life
 
-        val life =
-            0.20f + boostRandom() * 0.22f
+        skateParticleStartSize[i] = 7f + randomA * 9f
+        skateParticleGrowth[i] = 12f + randomB * 18f
 
-        boostParticleLife[i] = life
-        boostParticleMaxLife[i] = life
-
-        boostParticleSpeed[i] =
-            320f + boostRandom() * 480f
-
-        boostParticleSlant[i] =
-            (boostRandom() - 0.5f) * 12f
+        skateParticleRotation[i] = randomC * 360f
+        skateParticleRotationSpeed[i] = (randomA - 0.5f) * 420f
+        skateParticleJitter[i] = 0.5f + randomB * 2.5f
+        skateParticlePhase[i] = randomC * 6.28f
     }
+
+    /**
+     * Converts a point in a BodyPart's local coordinates into world coordinates,
+     * applying the part and all of its parent transforms.
+     */
+    private fun getBodyPartWorldPoint(
+        part: BodyPart,
+        localX: Float,
+        localY: Float,
+        out: FloatArray
+    ) {
+        var x = localX
+        var y = localY
+        var current: BodyPart? = part
+
+        while (current != null) {
+            val scaledX = x * current.scaleX
+            val scaledY = y * current.scaleY
+
+            val radians = Math.toRadians(
+                current.rotation.toDouble()
+            )
+            val cosAngle = kotlin.math.cos(radians).toFloat()
+            val sinAngle = kotlin.math.sin(radians).toFloat()
+
+            x = scaledX * cosAngle - scaledY * sinAngle + current.x
+            y = scaledX * sinAngle + scaledY * cosAngle + current.y
+
+            current = current.parent
+        }
+
+        out[0] = x
+        out[1] = y
+    }
+
 
     /** Tiles [bmp] horizontally, scrolling by [scroll]. Slight overlap hides seams. */
     /** Tiles [bmp] across the whole visible range [left, right]. Slight overlap hides seams. */

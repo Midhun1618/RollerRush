@@ -6,19 +6,38 @@ import android.graphics.Paint
 import android.graphics.RectF
 import com.voxcom.rollerrush.utils.Constants
 
+
 class PlayerSprites(
-    val head: Bitmap, val hair: Bitmap, val torso: Bitmap,
-    val upperArm: Bitmap, val forearm: Bitmap, val hand: Bitmap,
-    val thigh: Bitmap, val shin: Bitmap, val skate: Bitmap,
-    val upperArmFar: Bitmap, val forearmFar: Bitmap, val handFar: Bitmap,
-    val thighFar: Bitmap, val shinFar: Bitmap, val skateFar: Bitmap
+    val head: Bitmap,
+    val hair: Bitmap,
+    val torso: Bitmap,
+    val upperArm: Bitmap,
+    val forearm: Bitmap,
+    val hand: Bitmap,
+    val thigh: Bitmap,
+    val shin: Bitmap,
+    val skate: Bitmap,
+    val upperArmFar: Bitmap,
+    val forearmFar: Bitmap,
+    val handFar: Bitmap,
+    val thighFar: Bitmap,
+    val shinFar: Bitmap,
+    val skateFar: Bitmap,
+    val skateParticle: Bitmap
 ) {
     fun recycle() {
-        listOf(head, hair, torso, upperArm, forearm, hand, thigh, shin, skate,
-            upperArmFar, forearmFar, handFar, thighFar, shinFar, skateFar)
-            .forEach { if (!it.isRecycled) it.recycle() }
+        listOf(
+            head, hair, torso, upperArm, forearm, hand,
+            thigh, shin, skate,
+            upperArmFar, forearmFar, handFar,
+            thighFar, shinFar, skateFar,
+            skateParticle
+        ).forEach {
+            if (!it.isRecycled) it.recycle()
+        }
     }
 }
+
 
 /**
  * The skater: physics state + the body-part rig.
@@ -36,6 +55,9 @@ class PlayerSprites(
  * lowest wheel point (where the skates touch the ground). y grows downward.
  */
 class Player(private val sprites: PlayerSprites) {
+
+    val skateParticleBitmap: Bitmap
+        get() = sprites.skateParticle
 
     var x = Constants.PLAYER_X
     var bottomY = Constants.GROUND_Y
@@ -78,6 +100,7 @@ class Player(private val sprites: PlayerSprites) {
     val rightThigh = limb("rightThigh", sprites.thigh, Rig.THIGH_LEN, Rig.THIGH_THICK)
     val rightShin = limb("rightShin", sprites.shin, Rig.SHIN_LEN, Rig.SHIN_THICK)
     val rightSkate = skate("rightSkate", sprites.skate)
+
 
     init {
         torso.addChild(head, 0f, Rig.NECK_Y)
