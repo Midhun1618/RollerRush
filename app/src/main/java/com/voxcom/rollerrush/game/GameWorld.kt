@@ -222,7 +222,10 @@ class GameWorld(
         }
         rushRuby.active = false
         runRubies = 0
-        scrollX = 0f
+
+        // Player stays at PLAYER_X during the intro, so the background is
+        // staged INTRO_START_X - PLAYER_X units further along.
+        scrollX = Constants.INTRO_START_X - Constants.PLAYER_X
 
         worldSpeed =
             Constants.BASE_SPEED *
@@ -248,7 +251,7 @@ class GameWorld(
         introTimer = 0f
 
         player.x =
-            Constants.INTRO_START_X
+            Constants.PLAYER_X
 
         player.bottomY =
             Constants.INTRO_START_Y
@@ -413,24 +416,13 @@ class GameWorld(
         // Camera effects continue during the cinematic.
         camera.update(dt)
 
-        // Keep the world at the beginning of the scene during the intro.
-        // The intro image is a real part of the world and starts moving left
-        // naturally once PLAYING begins.
-        worldSpeed = Constants.BASE_SPEED * speedMultiplier
-        scrollX = 0f
-
         animator.updateIntro(
             introTimer,
             dt
         )
 
-        // Once the first skating push begins, start advancing the world
-        // underneath the player. This makes intro.png travel LEFT as the
-        // skater starts moving, instead of appearing to drift right when
-        // the cinematic camera hands control back to gameplay.
-        val introScrollStart =
-            Constants.INTRO_START_X - Constants.PLAYER_X
-
+        // World is still while falling/landing, then accelerates smoothly
+        // from 0 to the normal gameplay speed during the first push.
         val introSkateRaw =
             ((introTimer - Constants.INTRO_SKATE_START) /
                     (Constants.INTRO_DURATION - Constants.INTRO_SKATE_START))
@@ -439,7 +431,11 @@ class GameWorld(
         val introSkateBlend =
             introSkateRaw * introSkateRaw * (3f - 2f * introSkateRaw)
 
-        scrollX = introScrollStart * introSkateBlend
+        val gameplaySpeed =
+            Constants.BASE_SPEED * speedMultiplier
+
+        worldSpeed = gameplaySpeed * introSkateBlend
+        scrollX += worldSpeed * dt
 
         player.updateHitboxes()
 

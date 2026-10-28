@@ -60,7 +60,7 @@ class PlayerAnimator(private val player: Player) {
                 // Keep the player away from the very beginning of the
                 // background. Horizontal movement toward normal gameplay
                 // position happens only after the landing.
-                player.x = Constants.INTRO_START_X
+                player.x = Constants.PLAYER_X
 
                 player.bottomY = lerp(
                     Constants.INTRO_START_Y,
@@ -121,7 +121,7 @@ class PlayerAnimator(private val player: Player) {
                     (landingTime / Constants.INTRO_LANDING_DURATION)
                         .coerceIn(0f, 1f)
 
-                player.x = Constants.INTRO_START_X
+                player.x = Constants.PLAYER_X
                 player.bottomY = Constants.GROUND_Y
                 player.grounded = true
                 player.crashed = false
@@ -182,12 +182,7 @@ class PlayerAnimator(private val player: Player) {
 
                 // Smoothly move from the cinematic position to the normal
                 // gameplay position. No horizontal teleport at the end.
-                player.x = lerp(
-                    Constants.INTRO_START_X,
-                    Constants.PLAYER_X,
-                    skateBlend
-                )
-
+                player.x = Constants.PLAYER_X
                 player.setIntroRotation(0f)
 
                 // Start the normal skating cycle underneath the cinematic

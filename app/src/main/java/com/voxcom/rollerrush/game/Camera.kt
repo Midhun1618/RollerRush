@@ -509,6 +509,10 @@ class Camera {
             sin(shakePhase * 1.37f) *
                     shakeStrength * 0.72f * envelope
 
+        // Ease the intro -> gameplay camera hand-off (smoothstep).
+        val introBlend =
+            this.introBlend * this.introBlend * (3f - 2f * this.introBlend)
+
         // Intro zoom is layered on top of normal cinematic zoom.
         val introZoom =
             1f +

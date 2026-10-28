@@ -183,7 +183,7 @@ class AssetManager(private val context: Context) {
         groundTile = make("background/ground_bg.webp", 280 * 3, Constants.GROUND_THICKNESS.toInt() * 3) { c, w, h -> drawGround(c, w, h) }
 
         introBackground = make(
-            "background/building_intro.png",
+            "background/building_intro_latest.png",
             Constants.INTRO_BACKGROUND_WORLD_WIDTH.toInt(),
             Constants.INTRO_BACKGROUND_WORLD_HEIGHT.toInt()
         ) { c, w, h -> drawIntroFallback(c, w, h) }
