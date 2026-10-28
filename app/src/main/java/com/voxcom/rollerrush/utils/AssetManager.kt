@@ -17,6 +17,7 @@ import java.io.IOException
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.random.Random
+import com.voxcom.rollerrush.data.ShopCatalog
 
 /**
  * Loads / generates every bitmap ONCE.
@@ -281,46 +282,32 @@ class AssetManager(private val context: Context) {
             paint(color).let { c.drawOval(0f, 0f, w, h, it) }
         }
 
-        fun skateBmp(): Bitmap {
-            val file = when (ch.skateSkin) {
-                "skate_basic" -> "skate1.png"
-                "skate_ice" -> "skate2.png"
-                "skate_aero" -> "skate3.png"
-                "skate_inferno" -> "skate4.png"
-                "skate_volt" -> "skate5.png"
-                "skate_default" -> "skate1.png"
-                "skate_2" -> "skate3.png"
-                else -> null
-            }
-            return if (file != null) {
-                loadFromAssets("shop/skates/$file", (Rig.SKATE_W * Constants.BITMAP_SCALE).toInt(), (Rig.SKATE_H * Constants.BITMAP_SCALE).toInt())
-                    ?: part(ch.skateSkin, "skate", Rig.SKATE_W, Rig.SKATE_H) { c, w, h -> drawSkate(c, w, h, skate) }
-            } else {
-                part(ch.skateSkin, "skate", Rig.SKATE_W, Rig.SKATE_H) { c, w, h -> drawSkate(c, w, h, skate) }
-            }
-        }
-        fun skateFarBmp(): Bitmap {
-            val file = when (ch.skateSkin) {
-                "skate_basic" -> "skate1_far.png"
-                "skate_ice" -> "skate2_far.png"
-                "skate_aero" -> "skate3_far.png"
-                "skate_inferno9o" -> "skate4_far.png"
-                "skate_volt" -> "skate5_far.png"
-                "skate_default" -> "skate1_far.png"
-                "skate_2" -> "skate3_far.png"
-                else -> null
-            }
 
-            return if (file != null) {
+        fun skateBmp(): Bitmap {
+            val file = ShopCatalog.skate(ch.skateSkin)
+                ?.assetName
+                ?.takeIf { it.isNotBlank() }
+
+            if (file != null) {
                 loadFromAssets(
                     "shop/skates/$file",
                     (Rig.SKATE_W * Constants.BITMAP_SCALE).toInt(),
                     (Rig.SKATE_H * Constants.BITMAP_SCALE).toInt()
-                ) ?: skateBmp()
-            } else {
-                skateBmp()
+                )?.let { return it }
+            }
+
+            return part(
+                ch.skateSkin,
+                "skate",
+                Rig.SKATE_W,
+                Rig.SKATE_H
+            ) { c, w, h ->
+                drawSkate(c, w, h, skate)
             }
         }
+
+        fun skateFarBmp(): Bitmap = skateBmp()
+
 
         val far = 0.72f // far-side limbs are darker to suggest depth
         return PlayerSprites(
