@@ -107,33 +107,6 @@
     <!-- LEFT: RUN STATS -->
 
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/new_font"
-        android:letterSpacing="0.15"
-        android:text="RUN COMPLETE"
-        android:textColor="#367DB1"
-        android:textSize="12sp"
-        android:layout_marginTop="12dp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="@+id/gameOverTitle"
-        app:layout_constraintStart_toStartOf="@+id/gameOverTitle"
-        app:layout_constraintTop_toTopOf="@+id/gameOverTitle" />
-
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        android:fontFamily="@font/new_font"
-        android:text="Every run makes you faster."
-        android:textColor="#485064"
-        android:textSize="13sp"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout11"
-        app:layout_constraintEnd_toEndOf="@+id/gameOverTitle"
-        app:layout_constraintStart_toStartOf="@+id/gameOverTitle" />
-
     <ImageView
         android:id="@+id/gameOverTitle"
         android:layout_width="400dp"
@@ -183,6 +156,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="0"
+            android:fontFamily="@font/count_font"
             android:textColor="#FFFFFF"
             android:textSize="32sp"
             android:textStyle="bold" />
