@@ -3,6 +3,7 @@ package com.voxcom.rollerrush.audio
 
 import android.content.Context
 import android.media.MediaPlayer
+import android.util.Log
 import com.voxcom.rollerrush.R
 
 class BgmManager(context: Context) {
@@ -41,9 +42,31 @@ class BgmManager(context: Context) {
     }
 
     private fun createPlayer(resourceId: Int): MediaPlayer? {
-        return MediaPlayer.create(appContext, resourceId)?.apply {
-            isLooping = true
-            setVolume(0.65f, 0.65f)
+        return try {
+            val player = MediaPlayer.create(appContext, resourceId)
+
+            if (player == null) {
+                Log.e("RollerRushBGM", "MediaPlayer.create returned null. Resource ID: $resourceId")
+                return null
+            }
+
+            player.apply {
+                isLooping = true
+                setVolume(0.65f, 0.65f)
+
+                setOnErrorListener { _, what, extra ->
+                    Log.e(
+                        "RollerRushBGM",
+                        "MediaPlayer error: what=$what, extra=$extra"
+                    )
+                    true
+                }
+            }.also {
+                Log.d("RollerRushBGM", "MediaPlayer created successfully. Resource ID: $resourceId")
+            }
+        } catch (e: Exception) {
+            Log.e("RollerRushBGM", "Failed to create MediaPlayer", e)
+            null
         }
     }
 
@@ -72,7 +95,15 @@ class BgmManager(context: Context) {
 
     @Synchronized
     fun playLobby() {
+        Log.d("RollerRushBGM", "playLobby() called")
         switchTo(Track.LOBBY)
+
+        Log.d(
+            "RollerRushBGM",
+            "Lobby player exists=${lobbyPlayer != null}, " +
+                    "playing=${lobbyPlayer?.isPlaying}, " +
+                    "currentTrack=$currentTrack"
+        )
     }
 
     @Synchronized

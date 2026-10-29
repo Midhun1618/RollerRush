@@ -230,6 +230,7 @@ class MainMenuActivity : BaseActivity() {
 
     override fun onStart() {
         super.onStart()
+        android.util.Log.d("RollerRushBGM", "MainMenuActivity onStart")
         app.bgmManager.playLobby()
     }
 }
