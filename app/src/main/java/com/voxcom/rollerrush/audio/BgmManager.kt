@@ -90,7 +90,14 @@ class BgmManager(context: Context) {
             if (it.isPlaying) it.pause()
         }
     }
-
+    @Synchronized
+    fun pauseGameplay() {
+        gameplayPlayer?.let {
+            if (it.isPlaying) {
+                it.pause()
+            }
+        }
+    }
     @Synchronized
     fun resume() {
         when (currentTrack) {

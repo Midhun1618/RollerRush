@@ -113,7 +113,7 @@ class GameView(context: Context) :
 
     fun pauseGame() {
         world.pause()
-        bgmManager.pause()
+        bgmManager.pauseGameplay()
     }
 
     fun resumeGame() {
@@ -182,7 +182,7 @@ class GameView(context: Context) :
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
         stopLoop()
-        bgmManager.pause()
+        bgmManager.pauseGameplay()
     }
 
     private fun stopLoop() {
@@ -223,7 +223,7 @@ class GameView(context: Context) :
         lastMysteryCollected = mysteryCollected
 
         if (over) {
-            bgmManager.pause()
+            bgmManager.pauseGameplay()
 
             listener?.onGameOver(
                 world.score,

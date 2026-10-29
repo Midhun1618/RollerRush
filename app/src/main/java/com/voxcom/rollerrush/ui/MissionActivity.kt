@@ -174,6 +174,6 @@ class MissionActivity : BaseActivity() {
     }
     override fun onStart() {
         super.onStart()
-        app.bgmManager.resume()
+        app.bgmManager.playLobby()
     }
 }
