@@ -30,4 +30,9 @@ class SettingsActivity : BaseActivity() {
             UiKit.button(this, "BACK", 160) { finish() }
         ))
     }
+
+    override fun onStart() {
+        super.onStart()
+        app.bgmManager.resume()
+    }
 }

@@ -43,6 +43,8 @@ class GameActivity : BaseActivity(), GameView.Listener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        app.bgmManager.pause()
+
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         app.gameAssets.ensureLoaded()
 

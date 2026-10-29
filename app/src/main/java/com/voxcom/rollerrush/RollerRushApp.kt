@@ -1,6 +1,7 @@
 package com.voxcom.rollerrush
 
 import android.app.Application
+import com.voxcom.rollerrush.audio.BgmManager
 import com.voxcom.rollerrush.data.GamePreferences
 import com.voxcom.rollerrush.data.InventoryData
 import com.voxcom.rollerrush.data.PlayerData
@@ -20,6 +21,8 @@ class RollerRushApp : Application() {
     // Not called "assets": that name already exists on every Context.
     lateinit var gameAssets: AssetManager
         private set
+    lateinit var bgmManager: BgmManager
+        private set
 
     override fun onCreate() {
         super.onCreate()
@@ -27,5 +30,6 @@ class RollerRushApp : Application() {
         playerData = PlayerData(prefs)
         inventory = InventoryData(prefs)
         gameAssets = AssetManager(this)
+        bgmManager = BgmManager(this)
     }
 }

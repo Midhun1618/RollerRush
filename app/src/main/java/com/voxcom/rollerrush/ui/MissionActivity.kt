@@ -172,4 +172,8 @@ class MissionActivity : BaseActivity() {
                 "$claimedCount / ${missions.size} rewards collected"
         }
     }
+    override fun onStart() {
+        super.onStart()
+        app.bgmManager.resume()
+    }
 }

@@ -56,6 +56,9 @@ class GameView(context: Context) :
     private val gameSoundEffects =
         GameSoundEffects(context.applicationContext)
 
+    private val bgmManager: BgmManager
+        get() = (context.applicationContext as RollerRushApp).bgmManager
+
 
     private val world = GameWorld(
         camera,
@@ -96,7 +99,6 @@ class GameView(context: Context) :
     private var lastBoosterActive = false
     private var lastMysteryCollected = false
 
-    private val bgmManager = BgmManager(context.applicationContext)
 
     val state: GameState
         get() = world.state
@@ -117,8 +119,10 @@ class GameView(context: Context) :
     fun resumeGame() {
         world.resume()
 
-        if (world.state == GameState.PLAYING) {
-            bgmManager.resume()
+        if (world.state == GameState.PLAYING ||
+            world.state == GameState.INTRO
+        ) {
+            bgmManager.playGameplay()
         }
     }
 
@@ -132,8 +136,9 @@ class GameView(context: Context) :
         lastBoosterActive = false
         lastMysteryCollected = false
 
+        bgmManager.playGameplay()
+
         listener?.onBoosterAvailabilityChanged(false)
-        bgmManager.resume()
     }
 
 
@@ -143,7 +148,6 @@ class GameView(context: Context) :
      */
     fun release() {
         stopLoop()
-        bgmManager.release()
         sprites.recycle()
         gameSoundEffects.release()
         coinSoundManager.release()
@@ -156,7 +160,7 @@ class GameView(context: Context) :
             world.state == GameState.INTRO ||
             world.state == GameState.PLAYING
         ) {
-            bgmManager.resume()
+            bgmManager.playGameplay()
         }
     }
 
@@ -220,6 +224,7 @@ class GameView(context: Context) :
 
         if (over) {
             bgmManager.pause()
+
             listener?.onGameOver(
                 world.score,
                 world.distanceMeters,

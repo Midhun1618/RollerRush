@@ -21,6 +21,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import com.voxcom.rollerrush.R
+import com.voxcom.rollerrush.RollerRushApp
 import com.voxcom.rollerrush.audio.GameSoundEffects
 import com.voxcom.rollerrush.data.GamePreferences
 import com.voxcom.rollerrush.data.InventoryData
@@ -658,6 +659,11 @@ class ShopActivity : AppCompatActivity() {
     override fun onDestroy() {
         sounds.release()
         super.onDestroy()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        (application as RollerRushApp).bgmManager.playLobby()
     }
 
 }

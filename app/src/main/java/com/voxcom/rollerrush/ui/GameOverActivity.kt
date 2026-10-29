@@ -656,4 +656,9 @@ class GameOverActivity : BaseActivity() {
 
         super.onDestroy()
     }
+
+    override fun onStart() {
+        super.onStart()
+        app.bgmManager.resume()
+    }
 }

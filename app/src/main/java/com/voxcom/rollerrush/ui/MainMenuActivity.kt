@@ -227,4 +227,9 @@ class MainMenuActivity : BaseActivity() {
 
         super.onDestroy()
     }
+
+    override fun onStart() {
+        super.onStart()
+        app.bgmManager.resume()
+    }
 }
