@@ -43,7 +43,6 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
 
     private var boostLastNs = 0L
     private var boostTrailPhase = 0f
-    private var boostParticleAccumulator = 0f
 
     private val boostParticlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
@@ -54,15 +53,6 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
     // Fixed-size particle pool: no particle objects created per frame.
     private val boostParticleCount = 36
 
-    private val boostParticleX = FloatArray(boostParticleCount)
-    private val boostParticleY = FloatArray(boostParticleCount)
-    private val boostParticleLength = FloatArray(boostParticleCount)
-    private val boostParticleLife = FloatArray(boostParticleCount)
-    private val boostParticleMaxLife = FloatArray(boostParticleCount)
-    private val boostParticleSpeed = FloatArray(boostParticleCount)
-    private val boostParticleSlant = FloatArray(boostParticleCount)
-
-    private var boostParticleIndex = 0
     private var boostRandomState = 9371
 
 
@@ -251,7 +241,7 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
             skateEmissionAccumulator += dt
 
             // Emit from each skate at regular intervals.
-            while (skateEmissionAccumulator >= 0.025f) {
+            while (skateEmissionAccumulator >= 0.015f) {
                 skateEmissionAccumulator -= 0.025f
 
                 getBodyPartWorldPoint(
@@ -385,8 +375,8 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         skateParticleY[i] = skateY + (randomB - 0.5f) * 4f
 
         // The skater faces right, so particles trail towards the left.
-        skateParticleVX[i] = -(45f + randomA * 100f)
-        skateParticleVY[i] = -(8f + randomB * 50f)
+        skateParticleVX[i] = -(250f + randomA * 350f)
+        skateParticleVY[i] = -(20f + randomB * 80f)
 
         val life = 0.24f + randomC * 0.32f
         skateParticleLife[i] = life
