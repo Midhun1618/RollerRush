@@ -14,6 +14,7 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import com.voxcom.rollerrush.R
+import com.voxcom.rollerrush.data.MissionSystem
 import com.voxcom.rollerrush.game.GameState
 import com.voxcom.rollerrush.game.GameView
 import com.voxcom.rollerrush.utils.Constants
@@ -514,6 +515,12 @@ class GameActivity : BaseActivity(), GameView.Listener {
                 "rubies" -> pd.addRushRubies(mysteryAmount)
             }
         }
+        // Update mission progress and grant newly earned mission rewards.
+        MissionSystem(app.prefs, pd).recordCompletedRun(
+            score = score,
+            distanceMeters = distanceMeters,
+            coins = coins
+        )
 
         if (score > pd.highScore) {
             pd.highScore = score

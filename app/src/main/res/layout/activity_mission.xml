@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#496CA2"
+    android:padding="18dp">
+
+    <TextView
+        android:id="@+id/missionsTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="MISSIONS"
+        android:textColor="#FFFFFF"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/new_font"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/careerLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CAREER SCORE: 0"
+        android:fontFamily="@font/count_font"
+        android:textColor="#FFD34B"
+        android:textSize="15sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/missionsTitle"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/levelLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="LEVEL 1"
+        android:fontFamily="@font/count_font"
+        android:textColor="#65D8FF"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/levelProgress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="180dp"
+        android:layout_height="10dp"
+        android:max="1000"
+        android:progress="0"
+        android:progressTint="#65D8FF"
+        android:progressBackgroundTint="#34465E"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/levelLabel"
+        android:layout_marginTop="6dp" />
+
+    <TextView
+        android:id="@+id/nextLevelLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0 / 500 XP"
+        android:textColor="#B9C9DD"
+        android:fontFamily="@font/count_font"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/levelProgress"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/missionHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/new_font"
+        android:text="Complete objectives to earn coins and Rush Rubies"
+        android:textColor="#B9C9DD"
+        android:textSize="13sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/careerLabel"
+        android:layout_marginTop="12dp" />
+
+    <ScrollView
+        android:id="@+id/missionsScroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        app:layout_constraintTop_toBottomOf="@id/missionHint"
+        app:layout_constraintBottom_toTopOf="@id/backButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:id="@+id/missionList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+    <Button
+        android:id="@+id/backButton"
+        android:layout_width="140dp"
+        android:layout_height="48dp"
+        android:text="BACK"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#2D4968"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <TextView
+        android:id="@+id/missionStatus"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Progress saves automatically"
+        android:textColor="#91A9C5"
+        android:textSize="12sp"
+        android:gravity="end"
+        app:layout_constraintStart_toEndOf="@id/backButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/backButton"
+        app:layout_constraintBottom_toBottomOf="@id/backButton" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

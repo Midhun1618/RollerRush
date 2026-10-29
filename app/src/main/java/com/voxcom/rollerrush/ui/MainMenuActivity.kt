@@ -19,7 +19,7 @@ class MainMenuActivity : BaseActivity() {
     private lateinit var rushRubiesLabel: TextView
     private lateinit var highScoreLabel: TextView
     private lateinit var playButton: ImageView
-    private lateinit var characterButton: ImageView
+    private lateinit var missionButton: ImageView
     private lateinit var shopButton: ImageView
     private lateinit var rushTitle: ImageView
     private lateinit var settingsButton: ImageView
@@ -48,7 +48,7 @@ class MainMenuActivity : BaseActivity() {
         highScoreLabel = findViewById(R.id.scoreLabel)
         levelLabel = findViewById(R.id.levelLabel)
         playButton = findViewById(R.id.playButton)
-        characterButton = findViewById(R.id.characterButton)
+        missionButton = findViewById(R.id.characterButton)
         shopButton = findViewById(R.id.shopButton)
         rushTitle = findViewById(R.id.rushTitle)
         settingsButton = findViewById(R.id.settingsButton)
@@ -60,8 +60,8 @@ class MainMenuActivity : BaseActivity() {
             startActivity(Intent(this, GameActivity::class.java))
         }
 
-        characterButton.setOnClickListener {
-            startActivity(Intent(this, CharacterActivity::class.java))
+        missionButton.setOnClickListener {
+            startActivity(Intent(this, MissionActivity::class.java))
         }
 
         shopButton.setOnClickListener {

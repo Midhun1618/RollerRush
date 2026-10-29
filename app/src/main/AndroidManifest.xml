@@ -37,5 +37,9 @@
         <activity android:name=".ui.PauseActivity" android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.RollerRush.Pause"
             android:configChanges="orientation|screenSize|keyboardHidden" />
+        <activity
+            android:name=".ui.MissionActivity"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
     </application>
 </manifest>
