@@ -12,6 +12,7 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import com.voxcom.rollerrush.R
+import com.voxcom.rollerrush.data.MissionSystem
 
 class MainMenuActivity : BaseActivity() {
 
@@ -25,6 +26,7 @@ class MainMenuActivity : BaseActivity() {
     private lateinit var settingsButton: ImageView
     private lateinit var menuSceneView: MenuSceneView
     private lateinit var levelLabel: TextView
+    private lateinit var missionBadge: TextView
 
     private var titleFrameIndex = 0
     private var titleAnimator: ValueAnimator? = null
@@ -52,6 +54,7 @@ class MainMenuActivity : BaseActivity() {
         shopButton = findViewById(R.id.shopButton)
         rushTitle = findViewById(R.id.rushTitle)
         settingsButton = findViewById(R.id.settingsButton)
+        missionBadge = findViewById(R.id.missionBadge)
 
         menuSceneView = findViewById(R.id.menuSceneView)
         menuSceneView.setCharacter(app.playerData.character)
@@ -197,6 +200,18 @@ class MainMenuActivity : BaseActivity() {
 
         if (::menuSceneView.isInitialized) {
             menuSceneView.setCharacter(app.playerData.character)
+        }
+
+        if (::missionBadge.isInitialized) {
+            val pending = MissionSystem(
+                app.prefs,
+                app.playerData
+            ).getPendingClaimCount()
+
+            missionBadge.text = if (pending > 99) "99+" else pending.toString()
+            missionBadge.visibility =
+                if (pending > 0) android.view.View.VISIBLE
+                else android.view.View.GONE
         }
     }
 

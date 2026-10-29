@@ -516,11 +516,14 @@ class GameActivity : BaseActivity(), GameView.Listener {
             }
         }
         // Update mission progress and grant newly earned mission rewards.
-        MissionSystem(app.prefs, pd).recordCompletedRun(
-            score = score,
-            distanceMeters = distanceMeters,
-            coins = coins
-        )
+        // Record progress and capture missions newly completed this run.
+// Mission rewards are NOT granted here.
+        val newlyCompletedMissionIds =
+            MissionSystem(app.prefs, pd).recordCompletedRun(
+                score = score,
+                distanceMeters = distanceMeters,
+                coins = coins
+            )
 
         if (score > pd.highScore) {
             pd.highScore = score
@@ -535,6 +538,10 @@ class GameActivity : BaseActivity(), GameView.Listener {
                 .putExtra("mystery_collected", mysteryCollected)
                 .putExtra("mystery_type", mysteryType)
                 .putExtra("mystery_amount", mysteryAmount)
+                .putStringArrayListExtra(
+                    "missions_completed_this_run",
+                    ArrayList(newlyCompletedMissionIds)
+                )
         )
 
         finish()

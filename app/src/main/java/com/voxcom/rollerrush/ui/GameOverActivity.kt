@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -14,8 +15,10 @@ import android.view.animation.OvershootInterpolator
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import com.voxcom.rollerrush.R
+import com.voxcom.rollerrush.data.MissionSystem
 import com.voxcom.rollerrush.utils.Constants
 import kotlin.math.cos
 import kotlin.math.sin
@@ -79,6 +82,12 @@ class GameOverActivity : BaseActivity() {
             findViewById<TextView>(R.id.mysteryRewardValue)
         val rushRubiesLabel =
             findViewById<TextView>(R.id.rubiesLabel)
+
+        displayCompletedMissions(
+            intent.getStringArrayListExtra(
+                "missions_completed_this_run"
+            ).orEmpty()
+        )
 
         // Initial result values.
         distanceView.text = "0 m"
@@ -257,6 +266,60 @@ class GameOverActivity : BaseActivity() {
                 goHome()
             }
     }
+
+
+    private fun displayCompletedMissions(missionIds: List<String>) {
+        val panel = findViewById<View>(R.id.completedMissionsPanel)
+        val title = findViewById<ImageView>(R.id.gameOverTitle)
+        val list = findViewById<LinearLayout>(R.id.completedMissionsList)
+
+        if (missionIds.isEmpty()) {
+            panel.visibility = View.GONE
+            title.visibility = View.VISIBLE
+            return
+        }
+
+        val missions = MissionSystem(
+            app.prefs,
+            app.playerData
+        ).getMissions().filter { it.id in missionIds }
+
+        if (missions.isEmpty()) {
+            panel.visibility = View.GONE
+            title.visibility = View.VISIBLE
+            return
+        }
+
+        list.removeAllViews()
+
+        val inflater = LayoutInflater.from(this)
+
+        missions.forEach { mission ->
+            val row = inflater.inflate(
+                R.layout.item_completed_mission,
+                list,
+                false
+            )
+
+            row.findViewById<TextView>(
+                R.id.completedMissionName
+            ).text = mission.title
+
+            row.findViewById<TextView>(
+                R.id.completedMissionDescription
+            ).text = mission.description
+
+            row.findViewById<TextView>(
+                R.id.completedMissionRewardHint
+            ).text = "REWARD READY TO CLAIM"
+
+            list.addView(row)
+        }
+
+        title.visibility = View.GONE
+        panel.visibility = View.VISIBLE
+    }
+
 
     private fun flipRewardCard(
         bubble: ImageView,

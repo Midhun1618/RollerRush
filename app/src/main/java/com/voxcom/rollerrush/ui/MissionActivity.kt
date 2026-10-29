@@ -1,8 +1,12 @@
+
 package com.voxcom.rollerrush.ui
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -43,10 +47,10 @@ class MissionActivity : BaseActivity() {
         val player = app.playerData
         val careerScore = player.careerScore
 
-        careerLabel.text = "CAREER SCORE: ${careerScore}"
+        careerLabel.text = "CAREER SCORE: $careerScore"
         levelLabel.text = "LEVEL ${player.level}"
-
-        levelProgress.progress = (player.levelProgress * 1000f).toInt()
+        levelProgress.progress =
+            (player.levelProgress * 1000f).toInt()
 
         val nextLevel = player.scoreForNextLevel
         nextLevelLabel.text = if (nextLevel == null) {
@@ -55,8 +59,16 @@ class MissionActivity : BaseActivity() {
             "$careerScore / $nextLevel XP"
         }
 
-        val missionSystem = MissionSystem(app.prefs, player)
-        val missions = missionSystem.getMissions()
+        val system = MissionSystem(app.prefs, player)
+
+        // Pending rewards first, unfinished missions second,
+        // already claimed missions last.
+        val missions = system.getMissions().sortedWith(
+            compareBy(
+                { if (it.readyToClaim) 0 else if (!it.completed) 1 else 2 },
+                { it.title }
+            )
+        )
 
         missionList.removeAllViews()
         val inflater = LayoutInflater.from(this)
@@ -85,7 +97,11 @@ class MissionActivity : BaseActivity() {
             }
 
             card.findViewById<TextView>(R.id.missionReward).text =
-                if (mission.rewardGranted) "REWARDED" else rewardText
+                when {
+                    mission.rewardClaimed -> "REWARDED"
+                    mission.readyToClaim -> "REWARD READY"
+                    else -> rewardText
+                }
 
             val progressBar =
                 card.findViewById<ProgressBar>(R.id.missionProgressBar)
@@ -94,29 +110,66 @@ class MissionActivity : BaseActivity() {
             progressBar.progress =
                 mission.progress.coerceIn(0, progressBar.max)
 
+            if (mission.completed) {
+                progressBar.progressTintList = ColorStateList.valueOf(
+                    Color.rgb(82, 210, 139)
+                )
+            }
+
             val progressText =
                 card.findViewById<TextView>(R.id.missionProgressText)
 
             progressText.text = when {
-                mission.rewardGranted ->
-                    "COMPLETED • REWARD RECEIVED"
-                mission.completed ->
-                    "COMPLETED"
+                mission.rewardClaimed -> "COMPLETED • REWARD RECEIVED"
+                mission.readyToClaim -> "COMPLETED • CLAIM YOUR REWARD"
+                mission.completed -> "COMPLETED"
                 else ->
                     "${mission.progress.coerceAtMost(mission.target)} / ${mission.target}"
             }
 
-            if (mission.completed) {
-                progressBar.progressTintList =
-                    android.content.res.ColorStateList.valueOf(
-                        android.graphics.Color.rgb(82, 210, 139)
-                    )
+            val claimButton =
+                card.findViewById<Button>(R.id.missionClaimButton)
+
+            when {
+                mission.readyToClaim -> {
+                    claimButton.visibility = View.VISIBLE
+                    claimButton.isEnabled = true
+                    claimButton.text = "CLAIM"
+                    claimButton.backgroundTintList =
+                        ColorStateList.valueOf(Color.rgb(40, 174, 103))
+
+                    claimButton.setOnClickListener {
+                        val claimed = system.claimReward(mission.id)
+                        if (claimed) {
+                            refreshScreen()
+                        }
+                    }
+                }
+
+                mission.rewardClaimed -> {
+                    claimButton.visibility = View.VISIBLE
+                    claimButton.isEnabled = false
+                    claimButton.text = "CLAIMED"
+                    claimButton.backgroundTintList =
+                        ColorStateList.valueOf(Color.rgb(75, 91, 105))
+                }
+
+                else -> {
+                    claimButton.visibility = View.GONE
+                }
             }
 
             missionList.addView(card)
         }
 
-        missionStatus.text =
-            "${missions.count { it.rewardGranted }} / ${missions.size} rewards earned"
+        val pendingCount = system.getPendingClaimCount()
+        val claimedCount = system.getMissions().count { it.rewardClaimed }
+
+        missionStatus.text = when {
+            pendingCount > 0 ->
+                "$pendingCount reward(s) ready to claim"
+            else ->
+                "$claimedCount / ${missions.size} rewards collected"
+        }
     }
 }
