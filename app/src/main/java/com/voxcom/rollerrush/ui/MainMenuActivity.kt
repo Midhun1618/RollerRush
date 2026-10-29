@@ -24,6 +24,7 @@ class MainMenuActivity : BaseActivity() {
     private lateinit var rushTitle: ImageView
     private lateinit var settingsButton: ImageView
     private lateinit var menuSceneView: MenuSceneView
+    private lateinit var levelLabel: TextView
 
     private var titleFrameIndex = 0
     private var titleAnimator: ValueAnimator? = null
@@ -45,6 +46,7 @@ class MainMenuActivity : BaseActivity() {
         coinsLabel = findViewById(R.id.coinsLabel)
         rushRubiesLabel = findViewById(R.id.rubiesLabel)
         highScoreLabel = findViewById(R.id.scoreLabel)
+        levelLabel = findViewById(R.id.levelLabel)
         playButton = findViewById(R.id.playButton)
         characterButton = findViewById(R.id.characterButton)
         shopButton = findViewById(R.id.shopButton)
@@ -190,6 +192,7 @@ class MainMenuActivity : BaseActivity() {
 
         coinsLabel.text = "${app.playerData.coins}"
         highScoreLabel.text = "${app.playerData.highScore}"
+        levelLabel.text = "LEVEL ${app.playerData.level}"
         rushRubiesLabel.text = "${app.playerData.rushRubies}"
 
         if (::menuSceneView.isInitialized) {

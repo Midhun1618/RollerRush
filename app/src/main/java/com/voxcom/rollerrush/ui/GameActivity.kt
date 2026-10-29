@@ -500,7 +500,11 @@ class GameActivity : BaseActivity(), GameView.Listener {
 
         val pd = app.playerData
 
-        // Bank ordinary run coins exactly once.
+// Add this completed run's score to career progression.
+// gameOverHandled prevents duplicate additions from repeated callbacks.
+        pd.addCareerScore(score)
+
+// Bank ordinary run coins exactly once.
         pd.addCoins(coins)
 
         // Grant the mystery reward exactly once.
