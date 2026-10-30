@@ -564,6 +564,10 @@ class GameWorld(
         controller.update(
             simDt
         )
+        // Start the crouch animation before actual takeoff.
+        if (controller.consumeJumpAnticipationStarted()) {
+            animator.requestJumpAnticipation()
+        }
 
         // --------------------------------------------------------
         // CAMERA EVENTS
@@ -574,7 +578,7 @@ class GameWorld(
             !player.grounded &&
             !player.sliding
         ) {
-
+            // Camera effect happens only when the player actually takes off.
             camera.triggerJump()
         }
 

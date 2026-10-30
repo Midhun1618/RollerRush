@@ -133,7 +133,7 @@ object ShopCatalog {
         ),
         ShopItem(
             "skate_thunderbolt", "Thunderbolt", 45, ShopItemType.SKATE,
-            "skate_thunderbolt.png",
+            "skate_thunderbolt.webp",
             particleName = "particle_thunderbolt.png",
             description = "An electric lightning design.",
             rarity = SkateRarity.APEX
