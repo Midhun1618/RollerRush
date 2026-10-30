@@ -88,18 +88,18 @@ class MissionActivity : BaseActivity() {
 
             val rewardText = buildString {
                 if (mission.rewardCoins > 0) {
-                    append("+${mission.rewardCoins} coins")
+                    append("+${mission.rewardCoins}")
                 }
                 if (mission.rewardRubies > 0) {
                     if (isNotEmpty()) append("  ")
-                    append("+${mission.rewardRubies} rubies")
+                    append("+${mission.rewardRubies}")
                 }
             }
 
             card.findViewById<TextView>(R.id.missionReward).text =
                 when {
                     mission.rewardClaimed -> "REWARDED"
-                    mission.readyToClaim -> "REWARD READY"
+                    mission.readyToClaim -> "READY"
                     else -> rewardText
                 }
 

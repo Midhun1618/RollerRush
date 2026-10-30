@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
-    android:backgroundTint="#1D2D45"
-    app:cardCornerRadius="12dp"
     app:cardElevation="2dp">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="160dp"
         android:orientation="vertical"
-        android:padding="14dp">
+        android:gravity="center"
+        android:background="@drawable/mission_panel_bg"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="18dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -25,6 +26,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:layout_marginStart="18dp"
                 android:orientation="vertical">
 
                 <TextView
@@ -33,8 +35,8 @@
                     android:layout_height="wrap_content"
                     android:text="First Ride"
                     android:fontFamily="@font/new_font"
-                    android:textColor="#FFFFFF"
-                    android:textSize="17sp"
+                    android:textColor="#3C2D59"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -46,52 +48,74 @@
                     android:fontFamily="@font/count_font"
                     android:textColor="#B9C9DD"
                     android:textSize="13sp" />
+                <ProgressBar
+                    android:id="@+id/missionProgressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginRight="12dp"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressTint="#F6B214"
+                    android:progressBackgroundTint="#FFF6A0" />
+
+                <TextView
+                    android:id="@+id/missionProgressText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="0 / 1"
+                    android:textColor="#D5E2F2"
+                    android:fontFamily="@font/count_font"
+                    android:textSize="12sp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="120dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+                <LinearLayout
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="4dp">
+                <TextView
+                    android:id="@+id/missionReward"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="+50"
+                    android:layout_marginRight="6dp"
+                    android:fontFamily="@font/count_font"
+                    android:textColor="#FFD34B"
+                    android:textSize="18sp" />
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/rush_coin"/>
+                </LinearLayout>
+                <Button
+                    android:id="@+id/missionClaimButton"
+                    android:layout_width="120dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="end"
+                    android:fontFamily="@font/new_font"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/green_claim_button_bg"
+                    android:text="CLAIM"
+                    android:textColor="#A8FFA8"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/missionReward"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:text="+50 coins"
-                android:fontFamily="@font/count_font"
-                android:textColor="#FFD34B"
-                android:textSize="14sp" />
+
         </LinearLayout>
 
-        <ProgressBar
-            android:id="@+id/missionProgressBar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="8dp"
-            android:layout_marginTop="12dp"
-            android:max="100"
-            android:progress="0"
-            android:progressTint="#65D8FF"
-            android:progressBackgroundTint="#34465E" />
 
-        <TextView
-            android:id="@+id/missionProgressText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:text="0 / 1"
-            android:textColor="#D5E2F2"
-            android:fontFamily="@font/count_font"
-            android:textSize="12sp" />
 
-        <Button
-            android:id="@+id/missionClaimButton"
-            android:layout_width="120dp"
-            android:layout_height="42dp"
-            android:layout_gravity="end"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="#28AE67"
-            android:text="CLAIM"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
-            android:visibility="gone" />
+
 
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</LinearLayout>
