@@ -99,6 +99,9 @@ class GameView(context: Context) :
     private var lastBoosterActive = false
     private var lastMysteryCollected = false
 
+    private val tutorialManager = TutorialManager(context)
+
+
 
     val state: GameState
         get() = world.state
@@ -148,6 +151,7 @@ class GameView(context: Context) :
      */
     fun release() {
         stopLoop()
+        tutorialManager.release()
         sprites.recycle()
         gameSoundEffects.release()
         coinSoundManager.release()
@@ -199,8 +203,46 @@ class GameView(context: Context) :
         var boosterActive = false
         var mysteryCollected = false
 
+        val stateBeforeUpdate = world.state
+
         synchronized(world) {
             world.update(dt)
+
+            if (
+                !tutorialManager.active &&
+                !app.prefs.tutorialCompleted &&
+                stateBeforeUpdate == GameState.INTRO &&
+                world.state == GameState.PLAYING
+            ) {
+                tutorialManager.start()
+
+                synchronized(world) {
+                    world.pause()
+                }
+            }
+
+            if (tutorialManager.active) {
+                tutorialManager.update(dt)
+
+                synchronized(world) {
+                    if (
+                        tutorialManager.shouldPauseWorld &&
+                        world.state == GameState.PLAYING
+                    ) {
+                        world.pause()
+                    } else if (
+                        !tutorialManager.shouldPauseWorld &&
+                        world.state == GameState.PAUSED
+                    ) {
+                        world.resume()
+                    }
+                }
+
+                if (tutorialManager.consumeCompletionEvent()) {
+                    app.prefs.tutorialCompleted = true
+                }
+            }
+
             over = world.consumeGameOverEvent()
             boosterAvailable = world.speedBoostAvailable
             boosterActive = world.speedBoostActive
@@ -237,13 +279,25 @@ class GameView(context: Context) :
     }
 
 
+
     override fun onRender(canvas: Canvas) {
         synchronized(world) {
             renderer.render(canvas, world, camera)
         }
+
+        if (tutorialManager.active) {
+            tutorialManager.draw(
+                canvas,
+                canvas.width,
+                canvas.height
+            )
+        }
     }
 
-    override fun isIdle(): Boolean = world.state == GameState.PAUSED
+
+
+    override fun isIdle(): Boolean = world.state == GameState.PAUSED && !tutorialManager.active
+
 
     // ---- Input ---------------------------------------------------------------
 
@@ -276,6 +330,35 @@ class GameView(context: Context) :
                 if (renderer.pauseRect.contains(e.x, e.y)) {
                     return true
                 }
+
+                if (tutorialManager.active) {
+                    val tutorialDy = e.y - touchDownY
+
+                    if (
+                        kotlin.math.abs(tutorialDy) >
+                        Constants.JUMP_SWIPE_DISTANCE
+                    ) {
+                        val action = tutorialManager.handleSwipe(tutorialDy)
+
+                        if (action != null) {
+                            synchronized(world) {
+                                world.resume()
+
+                                when (action) {
+                                    TutorialManager.Action.JUMP ->
+                                        world.requestJump()
+
+                                    TutorialManager.Action.SLIDE ->
+                                        world.requestSlide()
+                                }
+                            }
+                        }
+                    }
+
+                    performClick()
+                    return true
+                }
+
 
                 if (world.state == GameState.PLAYING) {
                     val dy = e.y - touchDownY

@@ -33,4 +33,10 @@ class GamePreferences(context: Context) {
         set(v) = putBoolean("settings_debug_hitboxes", v)
 
 
+    var tutorialCompleted: Boolean
+        get() = getBoolean("tutorial_completed", false)
+        set(value) = putBoolean("tutorial_completed", value)
+
+
+
 }
