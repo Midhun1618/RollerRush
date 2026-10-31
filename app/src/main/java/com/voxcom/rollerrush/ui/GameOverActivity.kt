@@ -98,7 +98,190 @@ class GameOverActivity : BaseActivity() {
         walletView.text = "${app.playerData.coins}"
         rushRubiesLabel.text = "${app.playerData.rushRubies}"
 
-        // Hide results until their animations begin.
+        // Prepare the screen for a staged arcade-style entrance.
+        val scoreCard = findViewById<View>(R.id.imageView4)
+        val scoreStats = findViewById<View>(R.id.scoreStats)
+        val buttons = findViewById<View>(R.id.linearLayout11)
+        val coinsCounter = findViewById<View>(R.id.linearLayout2)
+        val rubiesCounter = findViewById<View>(R.id.linearLayout3)
+        val missionsPanel = findViewById<View>(R.id.completedMissionsPanel)
+
+        title.alpha = 0f
+        title.translationY = -90f
+        title.rotation = -5f
+        title.scaleX = 0.82f
+        title.scaleY = 0.82f
+
+        scoreCard.alpha = 0f
+        scoreCard.translationX = -100f
+        scoreCard.scaleX = 0.92f
+        scoreCard.scaleY = 0.92f
+
+        scoreStats.alpha = 0f
+        scoreStats.translationX = -80f
+
+        runCoinsView.alpha = 0f
+        runCoinsView.translationY = 25f
+
+        buttons.alpha = 0f
+        buttons.translationY = 70f
+
+        coinsCounter.alpha = 0f
+        coinsCounter.translationY = -35f
+
+        rubiesCounter.alpha = 0f
+        rubiesCounter.translationY = -35f
+
+        rewardCard.visibility = View.GONE
+
+// 1. Game-over artwork slams into the scene.
+        animateEntrance(
+            view = title,
+            delay = 100L,
+            duration = 650L,
+            fromX = 0f,
+            fromY = -90f,
+            fromScale = 0.82f,
+            rotation = -5f
+        )
+
+// 2. Distance card slides in from the left.
+        animateEntrance(
+            view = scoreCard,
+            delay = 420L,
+            duration = 600L,
+            fromX = -100f,
+            fromY = 0f,
+            fromScale = 0.92f
+        )
+
+// 3. Score appears after the distance card.
+        animateEntrance(
+            view = scoreStats,
+            delay = 760L,
+            duration = 480L,
+            fromX = -80f,
+            fromY = 0f
+        )
+
+// 4. Currency counters drop into place.
+        animateEntrance(
+            view = rubiesCounter,
+            delay = 520L,
+            duration = 420L,
+            fromX = 0f,
+            fromY = -35f
+        )
+
+        animateEntrance(
+            view = coinsCounter,
+            delay = 650L,
+            duration = 420L,
+            fromX = 0f,
+            fromY = -35f
+        )
+
+// 5. Coins earned this run pop in.
+        animateEntrance(
+            view = runCoinsView,
+            delay = 1050L,
+            duration = 420L,
+            fromX = 0f,
+            fromY = 25f,
+            fromScale = 0.85f
+        )
+
+// 6. Action buttons arrive last.
+        animateEntrance(
+            view = buttons,
+            delay = 1250L,
+            duration = 550L,
+            fromX = 0f,
+            fromY = 70f
+        )
+
+// Count the values in the same order as their visual entrance.
+        title.postDelayed({
+            if (!canAnimate()) return@postDelayed
+
+            animateNumber(0, distance, 900) {
+                distanceView.text = "$it m"
+            }
+
+            scoreView.postDelayed({
+                if (!canAnimate()) return@postDelayed
+
+                animateNumber(0, score, 1050) {
+                    scoreView.text = it.toString()
+                }
+            }, 180)
+
+            bestView.postDelayed({
+                if (!canAnimate()) return@postDelayed
+
+                animateNumber(0, best, 1100) {
+                    bestView.text = it.toString()
+                }
+            }, 380)
+
+            runCoinsView.postDelayed({
+                if (!canAnimate()) return@postDelayed
+
+                animateNumber(0, coins, 950) {
+                    runCoinsView.text = "+$it COINS THIS RUN"
+                }
+            }, 550)
+
+        }, 650L)
+
+// Completed mission panel enters from the right.
+        if (missionsPanel.visibility == View.VISIBLE) {
+            missionsPanel.alpha = 0f
+            missionsPanel.translationX = 110f
+
+            animateEntrance(
+                view = missionsPanel,
+                delay = 850L,
+                duration = 600L,
+                fromX = 110f,
+                fromY = 0f
+            )
+        }
+
+// Small continuous movement so the buttons do not feel static.
+        buttons.postDelayed({
+            if (!canAnimate()) return@postDelayed
+
+            val retryButton = findViewById<Button>(R.id.playAgainButton)
+
+            retryButton.animate()
+                .scaleX(1.035f)
+                .scaleY(1.035f)
+                .setDuration(650L)
+                .withEndAction {
+                    if (canAnimate()) {
+                        retryButton.animate()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(650L)
+                            .withEndAction {
+                                if (canAnimate()) {
+                                    retryButton.postDelayed({
+                                        if (canAnimate()) {
+                                            retryButton.animate()
+                                                .scaleX(1.035f)
+                                                .scaleY(1.035f)
+                                                .setDuration(650L)
+                                                .start()
+                                        }
+                                    }, 300L)
+                                }
+                            }
+                            .start()
+                    }
+                }
+                .start()
+        }, 1900L)
         title.alpha = 0f
         title.translationY = -24f
 
@@ -316,10 +499,73 @@ class GameOverActivity : BaseActivity() {
             list.addView(row)
         }
 
-        title.visibility = View.GONE
+        missions.forEach { mission ->
+            val row = inflater.inflate(
+                R.layout.item_completed_mission,
+                list,
+                false
+            )
+
+            row.findViewById<TextView>(
+                R.id.completedMissionName
+            ).text = mission.title
+
+            row.findViewById<TextView>(
+                R.id.completedMissionDescription
+            ).text = mission.description
+
+            row.findViewById<TextView>(
+                R.id.completedMissionRewardHint
+            ).text = "REWARD READY TO CLAIM"
+
+            row.alpha = 0f
+            row.translationX = 70f
+
+            list.addView(row)
+
+            row.animate()
+                .alpha(1f)
+                .translationX(0f)
+                .setStartDelay(list.childCount * 130L)
+                .setDuration(420L)
+                .setInterpolator(OvershootInterpolator(1.1f))
+                .start()
+        }
+
+        title.visibility = View.VISIBLE
         panel.visibility = View.VISIBLE
     }
 
+    private fun animateEntrance(
+        view: View,
+        delay: Long,
+        duration: Long,
+        fromX: Float = 0f,
+        fromY: Float = 0f,
+        fromScale: Float = 1f,
+        rotation: Float = 0f
+    ) {
+        view.animate().cancel()
+
+        view.alpha = 0f
+        view.translationX = fromX
+        view.translationY = fromY
+        view.scaleX = fromScale
+        view.scaleY = fromScale
+        view.rotation = rotation
+
+        view.animate()
+            .alpha(1f)
+            .translationX(0f)
+            .translationY(0f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .rotation(0f)
+            .setStartDelay(delay)
+            .setDuration(duration)
+            .setInterpolator(OvershootInterpolator(1.15f))
+            .start()
+    }
 
     private fun flipRewardCard(
         bubble: ImageView,

@@ -6,25 +6,179 @@
     android:id="@+id/gameOverRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg02">
+    android:background="@drawable/gameover_bg_img"
+    android:clipChildren="false"
+    android:clipToPadding="false">
 
-    <!-- TOP-RIGHT: RUSH RUBIES -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/gameOverSplit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.48" />
+
+    <!-- Left-side results section -->
+    <LinearLayout
+        android:id="@+id/linearLayout12"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="14dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/gameOverSplit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/gameOverTitle"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.05"
+            android:layout_marginBottom="8dp"
+            android:contentDescription="Game Over"
+            android:scaleType="fitCenter"
+            android:src="@drawable/game_over_img" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/imageView4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/mission_panel_bg"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/new_font"
+                android:text="DISTANCE COVERED"
+                android:textColor="#42355C"
+                android:textSize="13sp"
+                android:layout_marginStart="12dp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toTopOf="@id/distanceValue"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/distanceValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/count_font"
+                android:shadowColor="#42355C"
+                android:shadowDx="0"
+                android:shadowDy="0"
+                android:layout_marginStart="12dp"
+                android:shadowRadius="12"
+                android:text="0 m"
+                android:textColor="#FFFFFF"
+                android:textSize="38sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textView2" />
+
+            <LinearLayout
+                android:id="@+id/linearLayout14"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp"
+                android:gravity="end"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/new_font"
+                    android:text="BEST"
+                    android:textColor="#FDC123"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:id="@+id/bestValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/count_font"
+                    android:text="0"
+                    android:textColor="#FFD45C"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <LinearLayout
+            android:id="@+id/scoreStats"
+            android:layout_width="match_parent"
+            android:layout_height="90dp"
+            android:layout_marginTop="9dp"
+            android:background="@drawable/golden_button_bg"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingVertical="7dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/new_font"
+                android:text="FINAL SCORE"
+                android:textColor="#BF872D"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/scoreValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/count_font"
+                android:shadowColor="#E3AD37"
+                android:shadowRadius="10"
+                android:text="0"
+                android:textColor="#FFFFFF"
+                android:textSize="34sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/runCoinsValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:fontFamily="@font/new_font"
+            android:gravity="center"
+            android:shadowColor="#FFFFB52E"
+            android:shadowRadius="8"
+            android:text="+0 COINS THIS RUN"
+            android:textColor="#FFD66B"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <!-- Right-side currency counters -->
     <LinearLayout
         android:id="@+id/linearLayout3"
         android:layout_width="wrap_content"
         android:layout_height="38dp"
-        android:layout_margin="12dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="8dp"
         android:background="@drawable/coin_container"
         android:gravity="center"
         android:orientation="horizontal"
-        android:paddingHorizontal="8dp"
+        android:paddingHorizontal="10dp"
         app:layout_constraintEnd_toStartOf="@id/linearLayout2"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:layout_marginEnd="8dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:contentDescription="Rush Rubies"
             android:src="@drawable/rush_ruby" />
 
@@ -32,6 +186,7 @@
             android:id="@+id/rubiesLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
             android:fontFamily="@font/count_font"
             android:text="0"
             android:textColor="#FFFFFF"
@@ -39,23 +194,22 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- TOP-RIGHT: COINS -->
     <LinearLayout
         android:id="@+id/linearLayout2"
         android:layout_width="wrap_content"
         android:layout_height="38dp"
-        android:layout_margin="12dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
         android:background="@drawable/coin_container"
         android:gravity="center"
         android:orientation="horizontal"
-        android:paddingHorizontal="8dp"
+        android:paddingHorizontal="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginEnd="8dp"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
             android:contentDescription="Rush Coins"
             android:src="@drawable/rush_coin" />
 
@@ -63,6 +217,7 @@
             android:id="@+id/totalCoinsValue"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
             android:fontFamily="@font/count_font"
             android:text="0"
             android:textColor="#FFD34B"
@@ -70,217 +225,23 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- BOTTOM-RIGHT: NAVIGATION BUTTONS -->
-    <LinearLayout
-        android:id="@+id/linearLayout11"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <Button
-            android:id="@+id/homeButton"
-            android:layout_width="120dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/blue_button_bg"
-            android:fontFamily="@font/new_font"
-            android:text="HOME"
-            android:textColor="#1A6690"
-            android:textSize="19sp"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/playAgainButton"
-            android:layout_width="170dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/retry_button_bg"
-            android:fontFamily="@font/new_font"
-            android:text="PLAY AGAIN"
-            android:textColor="#0E6D33"
-            android:textSize="19sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- LEFT: STATS AREA -->
-    <LinearLayout
-        android:id="@+id/linearLayout12"
-        android:layout_width="400dp"
-        android:layout_height="0dp"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/imageView4"
-        android:layout_width="300dp"
-        android:layout_height="90dp"
-        android:contentDescription="Score board"
-        android:src="@drawable/golden_button_bg"
-        app:layout_constraintBottom_toBottomOf="@id/linearLayout12"
-        app:layout_constraintEnd_toEndOf="@id/linearLayout12"
-        app:layout_constraintStart_toStartOf="@id/linearLayout12"
-        app:layout_constraintTop_toTopOf="@id/linearLayout12" />
-
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/new_font"
-        android:text="DISTANCE"
-        android:textColor="#6B5A4F"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@id/imageView4"
-        app:layout_constraintEnd_toEndOf="@id/linearLayout12"
-        app:layout_constraintStart_toStartOf="@id/linearLayout12" />
-
-    <TextView
-        android:id="@+id/distanceValue"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/new_font"
-        android:paddingHorizontal="40dp"
-        android:paddingVertical="8dp"
-        android:text="0 m"
-        android:textColor="#FFFFFF"
-        android:textSize="32sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/linearLayout12"
-        app:layout_constraintEnd_toEndOf="@id/linearLayout12"
-        app:layout_constraintStart_toStartOf="@id/linearLayout12"
-        app:layout_constraintTop_toTopOf="@id/linearLayout12" />
-
-    <LinearLayout
-        android:id="@+id/linearLayout14"
-        android:layout_width="250dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="18dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@id/textView2"
-        app:layout_constraintStart_toStartOf="@id/imageView4">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/new_font"
-            android:text="BEST SCORE"
-            android:textColor="#3C4456"
-            android:textSize="11sp" />
-
-        <TextView
-            android:id="@+id/bestValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/new_font"
-            android:text="0"
-            android:textColor="#FFCC57"
-            android:textSize="23sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/runCoinsValue"
-        android:layout_width="300dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:fontFamily="@font/new_font"
-        android:gravity="center"
-        android:shadowRadius="5"
-        android:text="+0 COINS THIS RUN"
-        android:textColor="#FFD66B"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="@id/linearLayout12"
-        app:layout_constraintStart_toStartOf="@id/linearLayout12"
-        app:layout_constraintTop_toBottomOf="@id/imageView4" />
-
-    <LinearLayout
-        android:id="@+id/scoreStats"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintEnd_toEndOf="@id/linearLayout12"
-        app:layout_constraintStart_toStartOf="@id/linearLayout12"
-        app:layout_constraintTop_toBottomOf="@id/runCoinsValue">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/new_font"
-            android:text="SCORE"
-            android:textColor="#9AFFCD"
-            android:textSize="18sp" />
-
-        <TextView
-            android:id="@+id/scoreValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/count_font"
-            android:text="0"
-            android:textColor="#FFFFFF"
-            android:textSize="32sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- RIGHT: DEFAULT GAME OVER IMAGE -->
-
-    <ScrollView
-        android:id="@+id/completedMissionsScroll"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="false"
-        android:overScrollMode="never"
-        app:layout_constraintBottom_toTopOf="@+id/linearLayout11"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/linearLayout12"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout3">
-
-        <LinearLayout
-            android:id="@+id/completedMissionsList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
-    </ScrollView>
-
-    <ImageView
-        android:id="@+id/gameOverTitle"
-        android:layout_width="0dp"
-        android:layout_height="150dp"
-        android:contentDescription="Game Over"
-        android:scaleType="fitCenter"
-        android:src="@drawable/game_over_img"
-        app:layout_constraintEnd_toEndOf="@+id/linearLayout12"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-
-    <!-- RIGHT: COMPLETED MISSIONS PANEL -->
+    <!-- Completed missions -->
     <LinearLayout
         android:id="@+id/completedMissionsPanel"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="10dp"
+        android:layout_marginStart="6dp"
+        android:layout_marginTop="60dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="12dp"
-        android:orientation="vertical"
-        android:padding="16dp"
+        android:layout_marginBottom="76dp"
         android:background="@drawable/mission_panel"
+        android:orientation="vertical"
+        android:padding="12dp"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/linearLayout11"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/linearLayout12"
-        app:layout_constraintTop_toBottomOf="@id/linearLayout3">
+        app:layout_constraintStart_toEndOf="@id/gameOverSplit"
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/completedMissionsTitle"
@@ -288,10 +249,9 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/new_font"
             android:gravity="center"
-            android:paddingBottom="8dp"
             android:text="MISSIONS COMPLETED!"
-            android:textColor="#FFD34B"
-            android:textSize="22sp"
+            android:textColor="#646464"
+            android:textSize="21sp"
             android:textStyle="bold" />
 
         <TextView
@@ -300,33 +260,88 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/count_font"
             android:gravity="center"
-            android:paddingBottom="10dp"
+            android:paddingBottom="8dp"
             android:text="Great ride! You've unlocked new rewards."
-            android:textColor="#B9C9DD"
-            android:textSize="13sp" />
+            android:textColor="#697380"
+            android:textSize="12sp" />
 
+        <ScrollView
+            android:id="@+id/completedMissionsScroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:clipToPadding="false"
+            android:fillViewport="false"
+            android:overScrollMode="never">
+
+            <LinearLayout
+                android:id="@+id/completedMissionsList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
 
         <TextView
             android:id="@+id/completedMissionsHint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:fontFamily="@font/count_font"
             android:gravity="center"
+            android:padding="7dp"
+            android:fontFamily="@font/count_font"
             android:text="Visit MISSIONS from the main menu to claim your rewards."
-            android:textColor="#65D8FF"
-            android:textSize="12sp" />
+            android:textColor="#686A68"
+            android:textSize="11sp" />
+
     </LinearLayout>
 
-    <!-- MYSTERY REWARD OVERLAY -->
+    <!-- Bottom action buttons -->
     <LinearLayout
+        android:id="@+id/linearLayout11"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="18dp"
+        android:layout_marginBottom="14dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <Button
+            android:id="@+id/homeButton"
+            android:layout_width="112dp"
+            android:layout_height="46dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/blue_button_bg"
+            android:fontFamily="@font/new_font"
+            android:text="HOME"
+            android:textAllCaps="true"
+            android:textColor="#2272BD"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/playAgainButton"
+            android:layout_width="158dp"
+            android:layout_height="46dp"
+            android:background="@drawable/retry_button_bg"
+            android:fontFamily="@font/new_font"
+            android:text="PLAY AGAIN"
+            android:textAllCaps="true"
+            android:textColor="#0A6442"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Mystery reward cinematic overlay -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/mysteryRewardCard"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
+        android:background="@drawable/mystery_overlay_bg"
         android:gravity="center"
         android:orientation="horizontal"
         android:padding="14dp"
-        android:background="@drawable/mystery_overlay_bg"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -336,50 +351,57 @@
         <ImageView
             android:id="@+id/mysteryBubbleImage"
             android:layout_width="160dp"
-            android:layout_height="250dp"
+            android:layout_height="230dp"
             android:contentDescription="Mystery reward bubble"
             android:scaleType="fitCenter"
-            android:src="@drawable/mystery_bubble" />
+            android:src="@drawable/mystery_bubble"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <LinearLayout
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="28dp"
-            android:orientation="vertical"
-            android:paddingStart="12dp">
+            android:fontFamily="@font/new_font"
+            android:text="LUCKY FIND"
+            android:textColor="#E8D9FF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@+id/mysteryBubbleImage"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/new_font"
-                android:text="LUCKY FIND"
-                android:textColor="#E8D9FF"
-                android:textSize="11sp"
-                android:textStyle="bold" />
+        <TextView
+            android:id="@+id/mysteryRewardTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/new_font"
+            android:text="MYSTERY REWARD!"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/mysteryBubbleImage"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <TextView
-                android:id="@+id/mysteryRewardTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:fontFamily="@font/new_font"
-                android:text="MYSTERY REWARD!"
-                android:textColor="#FFFFFF"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/mysteryRewardValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:fontFamily="@font/new_font"
-                android:padding="12dp"
-                android:text="+100 COINS"
-                android:textColor="#FFD66B"
-                android:textSize="36sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-    </LinearLayout>
+        <TextView
+            android:id="@+id/mysteryRewardValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/new_font"
+            android:padding="12dp"
+            android:text="+100 COINS"
+            android:textColor="#FFD66B"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/mysteryBubbleImage"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
