@@ -6,15 +6,25 @@
     android:layout_height="match_parent"
     android:background="#D8F1FF">
 
-    <!-- Animated skyline, city and ground behind the menu -->
-    <com.voxcom.rollerrush.ui.MenuSceneView
-        android:id="@+id/menuSceneView"
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_constraintTop_toTopOf="parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/gen_menu_bg_img"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Animated skyline, city and ground behind the menu -->
+<!--    <com.voxcom.rollerrush.ui.MenuSceneView-->
+<!--        android:id="@+id/menuSceneView"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent" />-->
+
 
     <LinearLayout
         android:id="@+id/linearLayout4"

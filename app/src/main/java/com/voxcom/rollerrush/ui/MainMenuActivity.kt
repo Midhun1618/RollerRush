@@ -24,7 +24,6 @@ class MainMenuActivity : BaseActivity() {
     private lateinit var shopButton: ImageView
     private lateinit var rushTitle: ImageView
     private lateinit var settingsButton: ImageView
-    private lateinit var menuSceneView: MenuSceneView
     private lateinit var levelLabel: TextView
     private lateinit var missionBadge: TextView
 
@@ -56,8 +55,6 @@ class MainMenuActivity : BaseActivity() {
         settingsButton = findViewById(R.id.settingsButton)
         missionBadge = findViewById(R.id.missionBadge)
 
-        menuSceneView = findViewById(R.id.menuSceneView)
-        menuSceneView.setCharacter(app.playerData.character)
 
         playButton.setOnClickListener {
             startActivity(Intent(this, GameActivity::class.java))
@@ -198,9 +195,7 @@ class MainMenuActivity : BaseActivity() {
         levelLabel.text = "LEVEL ${app.playerData.level}"
         rushRubiesLabel.text = "${app.playerData.rushRubies}"
 
-        if (::menuSceneView.isInitialized) {
-            menuSceneView.setCharacter(app.playerData.character)
-        }
+
 
         if (::missionBadge.isInitialized) {
             val pending = MissionSystem(
