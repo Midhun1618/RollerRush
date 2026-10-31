@@ -647,7 +647,7 @@ class PlayerAnimator(private val player: Player) {
         const val AIR_TAKEOFF_BLEND_RATE = 4.5f
         const val AIR_LANDING_BLEND_RATE = 7.5f
 
-        const val JUMP_CROUCH_DURATION = 0.12f
+        const val JUMP_CROUCH_DURATION = 0.10f
         const val JUMP_EXTENSION_DURATION = 0.18f
 
         const val JUMP_TOTAL_TRANSITION =

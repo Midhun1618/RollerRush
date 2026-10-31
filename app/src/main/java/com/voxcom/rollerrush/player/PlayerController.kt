@@ -6,11 +6,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.max
 import kotlin.math.sqrt
 
-/**
- * Player movement: gravity, jumping, ground detection, landing.
- * Reads every tunable from [SkateStats], so upgrades never require changes here.
- * All motion is deltaTime based.
- */
 class PlayerController(private val player: Player, var stats: SkateStats) {
 
     // Touch events arrive on the UI thread, the game loop runs on its own thread.
@@ -22,7 +17,7 @@ class PlayerController(private val player: Player, var stats: SkateStats) {
     private var jumpAnticipationStarted = false
 
     companion object {
-        private const val JUMP_CROUCH_DELAY = 0.12f
+        private const val JUMP_CROUCH_DELAY = 0.10f
     }
 
     fun requestJump() = jumpRequested.set(true)

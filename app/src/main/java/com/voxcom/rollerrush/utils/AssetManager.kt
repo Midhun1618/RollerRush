@@ -314,7 +314,7 @@ class AssetManager(private val context: Context) {
         val particleFile = ShopCatalog.skate(ch.skateSkin)
             ?.particleName
             ?.takeIf { it.isNotBlank() }
-            ?: "particle_redstreet.png"
+            ?: "particle_cross_rider.png"
 
         val particleColor = when (ch.skateSkin) {
             "skate_ice" -> Color.rgb(100, 225, 255)
