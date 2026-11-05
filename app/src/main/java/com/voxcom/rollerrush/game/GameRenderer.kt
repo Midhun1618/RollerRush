@@ -28,6 +28,24 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         color = Color.WHITE; typeface = Typeface.DEFAULT_BOLD; setShadowLayer(4f, 0f, 2f, Color.BLACK)
     }
     private val dst = RectF()
+    // ------------------------------------------------------------
+    // MYSTERY REWARD BURST
+    // ------------------------------------------------------------
+
+    private val mysteryBurstPaint =
+        Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+
+    private val mysteryBurstDst = RectF()
+
+    private var mysteryBurstActive = false
+    private var mysteryBurstElapsed = 0f
+    private var mysteryBurstLastNs = 0L
+
+    private var mysteryBurstCenterX = 0f
+    private var mysteryBurstCenterY = 0f
+
+    private val mysteryBurstDuration = 0.45f
+    private val mysteryBurstBaseSize = 110f
     private val boostTrailOffsets = floatArrayOf(
         13f, 27f, 42f, 58f
     )
@@ -117,6 +135,89 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         val btn = h * 0.13f
         pauseRect.set(w - margin - btn, margin, w - margin, margin + btn)
     }
+    fun triggerMysteryBurst(
+        centerX: Float,
+        centerY: Float
+    ) {
+        mysteryBurstCenterX = centerX
+        mysteryBurstCenterY = centerY
+
+        mysteryBurstElapsed = 0f
+        mysteryBurstLastNs = System.nanoTime()
+        mysteryBurstActive = true
+    }
+
+    fun clearMysteryBurst() {
+        mysteryBurstActive = false
+        mysteryBurstElapsed = 0f
+        mysteryBurstLastNs = 0L
+        mysteryBurstPaint.alpha = 255
+    }
+    private fun drawMysteryBurst(canvas: Canvas) {
+
+        if (!mysteryBurstActive) return
+
+        val now = System.nanoTime()
+
+        val dt = if (mysteryBurstLastNs == 0L) {
+            0f
+        } else {
+            ((now - mysteryBurstLastNs) / 1_000_000_000f)
+                .coerceIn(0f, 0.05f)
+        }
+
+        mysteryBurstLastNs = now
+        mysteryBurstElapsed += dt
+
+        if (mysteryBurstElapsed >= mysteryBurstDuration) {
+            clearMysteryBurst()
+            return
+        }
+
+        val progress = (
+                mysteryBurstElapsed / mysteryBurstDuration
+                ).coerceIn(0f, 1f)
+
+        // Play all four animation frames across the burst duration.
+        val frames = assets.mysteryBurstFrames
+
+        val frameIndex = (
+                progress * frames.size
+                ).toInt().coerceIn(0, frames.lastIndex)
+
+        val frame = frames[frameIndex]
+
+        if (frame.isRecycled) return
+
+        // Expand from 1x to 5x.
+        val scale = 1f + 4f * progress
+        val size = mysteryBurstBaseSize * scale
+
+        // Keep the burst centred at the collection position.
+        val halfSize = size * 0.5f
+
+        mysteryBurstDst.set(
+            mysteryBurstCenterX - halfSize,
+            mysteryBurstCenterY - halfSize,
+            mysteryBurstCenterX + halfSize,
+            mysteryBurstCenterY + halfSize
+        )
+
+        // Fast quadratic fade-out.
+        val remaining = 1f - progress
+        mysteryBurstPaint.alpha = (
+                255f * remaining * remaining
+                ).toInt().coerceIn(0, 255)
+
+        canvas.drawBitmap(
+            frame,
+            null,
+            mysteryBurstDst,
+            mysteryBurstPaint
+        )
+
+        mysteryBurstPaint.alpha = 255
+    }
 
     fun render(canvas: Canvas, world: GameWorld, camera: Camera) {
         // Sky is drawn in screen space so it fills letterboxed areas on tall tablets too.
@@ -199,8 +300,11 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
             if (p.active) p.draw(canvas, assets, fill)
         }
 
-        // Booster trails must appear behind the actual skater.
+        // Effects behind the actual skater.
         drawSpeedBoostEffect(canvas, world)
+        drawMysteryBurst(canvas)
+
+        // Draw player above the mystery burst.
         world.player.draw(canvas, bmpPaint)
         drawForeground(canvas, scroll, left, right)
         if (prefs.debugHitboxes) drawDebug(canvas, world)

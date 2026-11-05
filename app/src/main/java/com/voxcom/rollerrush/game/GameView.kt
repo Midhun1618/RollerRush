@@ -138,6 +138,7 @@ class GameView(context: Context) :
         lastBoosterAvailable = false
         lastBoosterActive = false
         lastMysteryCollected = false
+        renderer.clearMysteryBurst()
 
         bgmManager.playGameplay()
 
@@ -202,6 +203,8 @@ class GameView(context: Context) :
         var boosterAvailable = false
         var boosterActive = false
         var mysteryCollected = false
+        var mysteryBurstX = 0f
+        var mysteryBurstY = 0f
 
         val stateBeforeUpdate = world.state
 
@@ -247,6 +250,8 @@ class GameView(context: Context) :
             boosterAvailable = world.speedBoostAvailable
             boosterActive = world.speedBoostActive
             mysteryCollected = world.mysteryRewardCollected
+            mysteryBurstX = world.player.x
+            mysteryBurstY = world.player.bodyHitbox.centerY()
         }
 
         if (boosterAvailable != lastBoosterAvailable) {
@@ -260,8 +265,17 @@ class GameView(context: Context) :
         lastBoosterActive = boosterActive
 
         if (mysteryCollected && !lastMysteryCollected) {
+
+            // Start the world-space burst at the player's collection position.
+            renderer.triggerMysteryBurst(
+                mysteryBurstX,
+                mysteryBurstY
+            )
+
+            // Keep the existing Activity callback for hiding the booster alert.
             listener?.onMysteryRewardCollected()
         }
+
         lastMysteryCollected = mysteryCollected
 
         if (over) {

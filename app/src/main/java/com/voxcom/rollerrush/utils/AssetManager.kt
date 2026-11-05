@@ -63,6 +63,8 @@ class AssetManager(private val context: Context) {
 
     lateinit var mysteryBubbleBitmap: Bitmap
         private set
+    lateinit var mysteryBurstFrames: Array<Bitmap>
+        private set
     private lateinit var speedBoostEffectFrames: Array<Bitmap>
 
     private var speedBoostEffectLoaded = false
@@ -137,6 +139,19 @@ class AssetManager(private val context: Context) {
             (54f * Constants.BITMAP_SCALE).toInt(),
             (54f * Constants.BITMAP_SCALE).toInt()
         ) { _, _, _ -> }
+        // Mystery reward burst animation frames.
+        val mysteryBurstSize =
+            (128f * Constants.BITMAP_SCALE).toInt().coerceAtLeast(1)
+
+        mysteryBurstFrames = Array(4) { index ->
+            make(
+                "collectibles/mystery_overlay${index + 1}.webp",
+                mysteryBurstSize,
+                mysteryBurstSize
+            ) { _, _, _ ->
+                // Transparent fallback if an image is missing.
+            }
+        }
 
         rushRubyGlowBitmap = make(
             "coins/rush_ruby_glow.webp",
@@ -221,11 +236,11 @@ class AssetManager(private val context: Context) {
             },
             make(
                 "powerups/volt_booster4.webp",
-            boostW,
-            boostH
-        ) { c, w, h ->
-            drawSpeedBoostFallback(c, w, h)
-        }
+                boostW,
+                boostH
+            ) { c, w, h ->
+                drawSpeedBoostFallback(c, w, h)
+            }
         )
 
         speedBoostParticle = make(
@@ -458,6 +473,14 @@ class AssetManager(private val context: Context) {
                 }
             }
             speedBoostEffectLoaded = false
+        }
+
+        if (::mysteryBurstFrames.isInitialized) {
+            mysteryBurstFrames.forEach { bitmap ->
+                if (!bitmap.isRecycled) {
+                    bitmap.recycle()
+                }
+            }
         }
 
         loaded = false
