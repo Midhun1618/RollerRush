@@ -139,11 +139,11 @@ class ShopActivity : AppCompatActivity() {
         updateCategoryButtons()
 
         if (category != Category.SKATES) {
-            Toast.makeText(
+            RollerRushNotification.show(
                 this,
-                "${category.name.lowercase(Locale.getDefault())} collection coming soon",
-                Toast.LENGTH_SHORT
-            ).show()
+                "${category.name.lowercase(Locale.getDefault())} collection coming soon!",
+                RollerRushNotification.Type.INFO
+            )
             return
         }
 
@@ -571,11 +571,12 @@ class ShopActivity : AppCompatActivity() {
                 sounds.playSkateEquipped()
             } else {
                 if (item.price > 0 && !playerData.spendCoins(item.price)) {
-                    Toast.makeText(
+                    RollerRushNotification.show(
                         this,
-                        "Not enough coins!",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                        "Not enough coins! Keep skating to earn more.",
+                        RollerRushNotification.Type.WARNING
+                    )
+
                     updateCurrency()
                     return@setOnClickListener
                 }

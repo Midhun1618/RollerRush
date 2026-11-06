@@ -25,7 +25,12 @@ class SettingsActivity : BaseActivity() {
             sound, debug,
             UiKit.button(this, "RESET PROGRESS", 240) {
                 app.playerData.resetAll()
-                Toast.makeText(this, "Progress reset", Toast.LENGTH_SHORT).show()
+
+                RollerRushNotification.show(
+                    this,
+                    "Your progress has been reset!",
+                    RollerRushNotification.Type.SUCCESS
+                )
             },
             UiKit.button(this, "BACK", 160) { finish() }
         ))
