@@ -13,17 +13,36 @@ object Constants {
     const val GRAVITY = 1700f
     const val JUMP_HEIGHT_BASE = 95f
 
-    // Intro / cinematic entrance
-    const val INTRO_DURATION = 1.2f
-    const val INTRO_FALL_DURATION = 0.45f
-    const val INTRO_LANDING_DURATION = 0.20f
-    const val INTRO_SKATE_START = 0.65f
+    // Intro / cinematic entrance (all times in seconds from run start)
+    //   0.00-0.15  reveal: tight scene shot, skater waits above the frame
+    //   0.15-0.77  drop + half flip, tuck -> reach (landing anticipation)
+    //   0.77       IMPACT: deep superhero lunge, dust, shake, punch-in
+    //   0.77-1.27  hero beat: settle, look up, camera slowly pushes in
+    //   1.27-1.63  rise into the skating stance
+    //   1.35-2.55  2-3 power strokes, world accelerates, camera pulls out
+    //   2.55       hand-off to PLAYING (camera already back to normal)
+    const val INTRO_REVEAL = 0.15f
+    const val INTRO_FALL_DURATION = 0.62f
+    const val INTRO_IMPACT_TIME = INTRO_REVEAL + INTRO_FALL_DURATION
+    const val INTRO_ROTATION_START = 0.40f      // flip happens while the skater is on screen
+    const val INTRO_ROTATION_DURATION = 0.30f
+    const val INTRO_COMPRESS_DURATION = 0.07f
+    const val INTRO_LANDING_HOLD = 0.50f        // hero beat (seconds after impact)
+    const val INTRO_RECOVER_DURATION = 0.36f
+    const val INTRO_SKATE_START = 1.35f
+    const val INTRO_DURATION = 2.55f
+    const val INTRO_STROKE_RATE = 2.0f
     const val INTRO_START_X = 250f
-    const val INTRO_START_Y = 125f
-    const val INTRO_CAMERA_ZOOM = 1.35f
-    const val INTRO_CAMERA_PAN_X = 0f
-    const val INTRO_START_ROTATION = -180f
+    const val INTRO_START_Y = 20f               // feet start above the zoomed frame
+    const val INTRO_START_ROTATION = -200f
     const val INTRO_LANDING_ROTATION = 0f
+    const val INTRO_LANDING_SHAKE = 0.7f
+    const val INTRO_CAMERA_ZOOM = 1.6f
+    const val INTRO_CAMERA_PAN_X = 0f
+    const val INTRO_CAMERA_START_BLEND = 0.6f
+    const val INTRO_CAMERA_IMPACT_BLEND = 0.92f
+    const val INTRO_CAMERA_RELEASE = 1.25f
+
     const val INTRO_BACKGROUND_WORLD_WIDTH = 1000f
     const val INTRO_BACKGROUND_WORLD_HEIGHT = 360f
 

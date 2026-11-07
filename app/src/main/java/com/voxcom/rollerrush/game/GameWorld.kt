@@ -176,12 +176,24 @@ class GameWorld(
     private var speedBoostTimer =
         0f
 
-    // ------------------------------------------------------------
-    // INTRO
-    // ------------------------------------------------------------
-
     private var introTimer =
         0f
+
+    // True when the intro was interrupted by pause(); resume() returns to INTRO.
+    private var pausedFromIntro =
+        false
+
+    // One-shot: set at the intro touchdown, consumed by the renderer (dust).
+    private var introImpactPending =
+        false
+
+    /** Returns true exactly once per intro landing. */
+    @Synchronized
+    fun consumeIntroImpact(): Boolean {
+        val v = introImpactPending
+        introImpactPending = false
+        return v
+    }
 
     // ------------------------------------------------------------
     // STATE CONTROL
@@ -249,6 +261,8 @@ class GameWorld(
         // --------------------------------------------------------
 
         introTimer = 0f
+        pausedFromIntro = false
+        introImpactPending = false
 
         player.x =
             Constants.PLAYER_X
@@ -261,7 +275,11 @@ class GameWorld(
         player.vy = 0f
         player.setIntroRotation(Constants.INTRO_START_ROTATION)
 
-        camera.startIntro()
+        camera.setIntroBlend(Constants.INTRO_CAMERA_START_BLEND)
+
+        // Pose the skater at t=0 now, so no stale (e.g. crashed) pose is
+        // drawn for a frame before the first intro update.
+        animator.updateIntro(0f, 0f)
 
         state =
             GameState.INTRO
@@ -270,24 +288,23 @@ class GameWorld(
     @Synchronized
     fun pause() {
 
-        if (
-            state ==
-            GameState.PLAYING
-        ) {
-            state =
-                GameState.PAUSED
+        if (state == GameState.PLAYING) {
+            pausedFromIntro = false
+            state = GameState.PAUSED
+        } else if (state == GameState.INTRO) {
+            // Freeze the intro; introTimer only advances in updateIntro().
+            pausedFromIntro = true
+            state = GameState.PAUSED
         }
     }
 
     @Synchronized
     fun resume() {
 
-        if (
-            state ==
-            GameState.PAUSED
-        ) {
+        if (state == GameState.PAUSED) {
             state =
-                GameState.PLAYING
+                if (pausedFromIntro) GameState.INTRO else GameState.PLAYING
+            pausedFromIntro = false
         }
     }
 
@@ -295,11 +312,13 @@ class GameWorld(
     // INPUT
     // ------------------------------------------------------------
 
-    fun requestJump() =
-        controller.requestJump()
+    fun requestJump() {
+        if (state != GameState.INTRO) controller.requestJump()
+    }
 
-    fun requestSlide() =
-        controller.requestSlide()
+    fun requestSlide() {
+        if (state != GameState.INTRO) controller.requestSlide()
+    }
 
     /** Double-tap activates a collected speed boost. */
     fun requestSpeedBoost() {
@@ -411,9 +430,19 @@ class GameWorld(
 
     private fun updateIntro(dt: Float) {
 
+        val prevTimer = introTimer
         introTimer += dt
 
-        // Camera effects continue during the cinematic.
+        // Touchdown event: light shake + dust, exactly once.
+        if (
+            prevTimer < Constants.INTRO_IMPACT_TIME &&
+            introTimer >= Constants.INTRO_IMPACT_TIME
+        ) {
+            camera.triggerLanding(Constants.INTRO_LANDING_SHAKE)
+            introImpactPending = true
+        }
+
+        camera.setIntroBlend(introCameraBlend(introTimer))
         camera.update(dt)
 
         animator.updateIntro(
@@ -421,26 +450,24 @@ class GameWorld(
             dt
         )
 
-        // World is still while falling/landing, then accelerates smoothly
-        // from 0 to the normal gameplay speed during the first push.
-        val introSkateRaw =
+        // World is still until the first push, then eases out to the normal
+        // gameplay speed (zero acceleration at the hand-off).
+        val pushRaw =
             ((introTimer - Constants.INTRO_SKATE_START) /
                     (Constants.INTRO_DURATION - Constants.INTRO_SKATE_START))
                 .coerceIn(0f, 1f)
 
-        val introSkateBlend =
-            introSkateRaw * introSkateRaw * (3f - 2f * introSkateRaw)
+        val inv = 1f - pushRaw
+        val speedBlend = 1f - inv * inv
 
-        val gameplaySpeed =
-            Constants.BASE_SPEED * speedMultiplier
-
-        worldSpeed = gameplaySpeed * introSkateBlend
+        worldSpeed =
+            Constants.BASE_SPEED * speedMultiplier * speedBlend
         scrollX += worldSpeed * dt
 
         player.updateHitboxes()
 
         // -------------------------------------------------------------
-        // Finish cinematic
+        // Hand-off (runs once: state leaves INTRO immediately)
         // -------------------------------------------------------------
         if (introTimer >= Constants.INTRO_DURATION) {
             player.x = Constants.PLAYER_X
@@ -450,10 +477,38 @@ class GameWorld(
             player.vy = 0f
             player.setIntroRotation(0f)
 
-            // Do NOT reset the animator here. The intro skating pose flows
-            // directly into gameplay.
-            camera.endIntro()
+            // The animator is NOT reset: its skating cycle continues.
+            camera.setIntroBlend(0f)
             state = GameState.PLAYING
+        }
+    }
+
+    /** Push in toward the landing, hold through impact, then ease back to normal. */
+    /** Tight push-in during the drop, slow push through the hero beat, long pull-out. */
+    private fun introCameraBlend(t: Float): Float {
+        return when {
+            t < Constants.INTRO_IMPACT_TIME -> {
+                val x = (t / Constants.INTRO_IMPACT_TIME).coerceIn(0f, 1f)
+                val s = x * x * (3f - 2f * x)
+                Constants.INTRO_CAMERA_START_BLEND +
+                        (Constants.INTRO_CAMERA_IMPACT_BLEND -
+                                Constants.INTRO_CAMERA_START_BLEND) * s
+            }
+            t < Constants.INTRO_CAMERA_RELEASE -> {
+                // Slow push-in during the hero beat.
+                val x = ((t - Constants.INTRO_IMPACT_TIME) /
+                        (Constants.INTRO_CAMERA_RELEASE - Constants.INTRO_IMPACT_TIME))
+                    .coerceIn(0f, 1f)
+                val s = x * x * (3f - 2f * x)
+                Constants.INTRO_CAMERA_IMPACT_BLEND +
+                        (1f - Constants.INTRO_CAMERA_IMPACT_BLEND) * s
+            }
+            else -> {
+                val x = ((t - Constants.INTRO_CAMERA_RELEASE) /
+                        (Constants.INTRO_DURATION - Constants.INTRO_CAMERA_RELEASE))
+                    .coerceIn(0f, 1f)
+                1f - x * x * (3f - 2f * x)
+            }
         }
     }
 

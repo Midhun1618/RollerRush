@@ -95,8 +95,9 @@ class Camera {
     // INTRO CAMERA
     // ------------------------------------------------------------
 
-    private var introActive = false
-    private var introExiting = false
+    // 0 = normal gameplay framing, 1 = full intro framing. Driven (and eased)
+    // by GameWorld from the intro timeline, so the camera is already back to
+    // normal when gameplay starts.
     private var introBlend = 0f
     // ------------------------------------------------------------
     // CRASH CAMERA
@@ -105,15 +106,8 @@ class Camera {
     private var crashTiltTime = 1f
     private var crashTilt = 0f
 
-    fun startIntro() {
-        introActive = true
-        introExiting = false
-        introBlend = 1f
-    }
-
-    fun endIntro() {
-        introActive = false
-        introExiting = true
+    fun setIntroBlend(blend: Float) {
+        introBlend = blend.coerceIn(0f, 1f)
     }
 
     // ------------------------------------------------------------
@@ -259,20 +253,6 @@ class Camera {
             slideTilt = 0f
         }
 
-        // --------------------------------------------------------
-        // INTRO CAMERA BLEND
-        // --------------------------------------------------------
-
-        if (introActive) {
-            introBlend = 1f
-        } else if (introExiting) {
-            introBlend = max(0f, introBlend - dt * 1.35f)
-            if (introBlend <= 0f) {
-                introBlend = 0f
-                introExiting = false
-            }
-        }
-
  // ------------------------------------------------------------
 // CRASH TILT: sharp reaction, then controlled settle
 // ------------------------------------------------------------
@@ -324,8 +304,6 @@ class Camera {
 
         slideSeed = 0f
 
-        introActive = false
-        introExiting = false
         introBlend = 0f
 
         crashTiltTime = 1f
@@ -510,8 +488,7 @@ class Camera {
                     shakeStrength * 0.72f * envelope
 
         // Ease the intro -> gameplay camera hand-off (smoothstep).
-        val introBlend =
-            this.introBlend * this.introBlend * (3f - 2f * this.introBlend)
+        val introBlend = this.introBlend
 
         // Intro zoom is layered on top of normal cinematic zoom.
         val introZoom =

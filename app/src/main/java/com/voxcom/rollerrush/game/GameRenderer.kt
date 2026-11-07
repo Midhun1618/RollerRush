@@ -101,6 +101,100 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
     private val rightSkatePoint = FloatArray(2)
 
 
+    // ============================================================
+    // INTRO LANDING DUST
+    // Small fixed pool of procedural puffs (no bitmaps, no allocation).
+    // ============================================================
+
+    private val dustCount = 16
+    private val dustX = FloatArray(dustCount)
+    private val dustY = FloatArray(dustCount)
+    private val dustVX = FloatArray(dustCount)
+    private val dustVY = FloatArray(dustCount)
+    private val dustLife = FloatArray(dustCount)
+    private val dustMaxLife = FloatArray(dustCount)
+    private val dustRadius = FloatArray(dustCount)
+    private val dustGrowth = FloatArray(dustCount)
+    private var dustActive = 0
+    private var dustLastNs = 0L
+
+    private val dustFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = Color.rgb(248, 244, 236)
+    }
+
+    // Darker outline so the puffs read on both light and dark ground.
+    private val dustRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 1.6f
+        color = Color.rgb(110, 104, 118)
+    }
+
+    private fun spawnLandingDust(x: Float, groundY: Float) {
+        for (i in 0 until dustCount) {
+            val dir = if (i % 2 == 0) -1f else 1f
+            val r1 = boostRandom()
+            val r2 = boostRandom()
+
+            dustX[i] = x + dir * (6f + r1 * 14f)
+            dustY[i] = groundY - 4f
+            dustVX[i] = dir * (70f + r2 * 120f)
+            dustVY[i] = -(15f + r1 * 35f)
+
+            dustMaxLife[i] = 0.50f + r2 * 0.30f
+            dustLife[i] = dustMaxLife[i]          // <-- required, otherwise nothing is drawn
+
+            dustRadius[i] = 5f + r1 * 3f
+            dustGrowth[i] = 12f + r2 * 8f
+        }
+        dustActive = dustCount
+        dustLastNs = 0L
+    }
+
+    private fun drawLandingDust(canvas: Canvas) {
+        if (dustActive == 0) return
+
+        val now = System.nanoTime()
+        val dt = if (dustLastNs == 0L) {
+            0f
+        } else {
+            ((now - dustLastNs) / 1_000_000_000f).coerceIn(0f, 0.05f)
+        }
+        dustLastNs = now
+
+        var alive = 0
+        for (i in 0 until dustCount) {
+            if (dustLife[i] <= 0f) continue
+
+            dustLife[i] -= dt
+            if (dustLife[i] <= 0f) {
+                dustLife[i] = 0f
+                continue
+            }
+            alive++
+
+            val p = 1f - dustLife[i] / dustMaxLife[i]
+
+            dustX[i] += dustVX[i] * dt
+            dustY[i] += dustVY[i] * dt
+            dustVX[i] *= 1f - 3f * dt
+
+            val fade = (1f - p) * (1f - p * 0.5f)
+            val a = (215f * fade).toInt()
+            if (a <= 0) continue
+
+            val r = dustRadius[i] + dustGrowth[i] * p
+
+            dustFillPaint.alpha = a
+            dustRingPaint.alpha = (a * 0.7f).toInt()
+
+            canvas.drawCircle(dustX[i], dustY[i], r, dustFillPaint)
+            canvas.drawCircle(dustX[i], dustY[i], r, dustRingPaint)
+        }
+
+        if (alive == 0) dustActive = 0
+    }
+
     private fun boostRandom(): Float {
         boostRandomState =
             (boostRandomState * 1103515245 + 12345) and 0x7fffffff
@@ -300,12 +394,21 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
             if (p.active) p.draw(canvas, assets, fill)
         }
 
+        // Intro landing: spawn the dust once at touchdown (drawn after the skater below).
+        if (world.consumeIntroImpact()) {
+            spawnLandingDust(world.player.x, Constants.GROUND_Y)
+        }
+
         // Effects behind the actual skater.
         drawSpeedBoostEffect(canvas, world)
         drawMysteryBurst(canvas)
 
         // Draw player above the mystery burst.
         world.player.draw(canvas, bmpPaint)
+
+        // Landing dust in front of the skater so it is always visible.
+        drawLandingDust(canvas)
+
         drawForeground(canvas, scroll, left, right)
         if (prefs.debugHitboxes) drawDebug(canvas, world)
         // Draw the mystery bubble in world space, using the same camera
@@ -562,8 +665,6 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         debugPaint.color = Color.YELLOW
         for (i in 0 until world.coins.size) { val c = world.coins[i]; if (c.active) canvas.drawCircle(c.centerX, c.centerY, Constants.COIN_PICKUP_RADIUS, debugPaint) }
     }
-
-    /** HUD in screen space so it is independent of the world scale. */
 
     /** HUD in screen space so it is independent of the world scale. */
     private fun drawHud(canvas: Canvas, world: GameWorld, camera: Camera) {
