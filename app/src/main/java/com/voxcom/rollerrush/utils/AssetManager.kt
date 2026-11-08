@@ -65,6 +65,11 @@ class AssetManager(private val context: Context) {
         private set
     lateinit var mysteryBurstFrames: Array<Bitmap>
         private set
+    lateinit var pigeonIdleFrames: Array<Bitmap>
+        private set
+
+    lateinit var pigeonFlyingFrames: Array<Bitmap>
+        private set
     private lateinit var speedBoostEffectFrames: Array<Bitmap>
 
     private var speedBoostEffectLoaded = false
@@ -273,6 +278,40 @@ class AssetManager(private val context: Context) {
         ) { c, w, h ->
             drawBuildings(c, w, h)
         }
+        // ------------------------------------------------------------
+// PIGEON ANIMATIONS
+// ------------------------------------------------------------
+
+        val pigeonSize = (58f * Constants.BITMAP_SCALE).toInt()
+
+        pigeonIdleFrames = arrayOf(
+            make(
+                "background/pigeons/pigeon_idle.webp",
+                pigeonSize,
+                pigeonSize
+            ) { _, _, _ -> },
+
+            make(
+                "background/pigeons/pigeon_idle2.webp",
+                pigeonSize,
+                pigeonSize
+            ) { _, _, _ -> },
+
+            make(
+                "background/pigeons/pigeon_idle3.webp",
+                pigeonSize,
+                pigeonSize
+            ) { _, _, _ -> }
+        )
+
+        pigeonFlyingFrames = Array(4) { index ->
+            make(
+                "background/pigeons/pigeon_flying${index + 1}.webp",
+                pigeonSize,
+                pigeonSize
+            ) { _, _, _ -> }
+        }
+
 
         loaded = true
     }
@@ -480,6 +519,17 @@ class AssetManager(private val context: Context) {
                 if (!bitmap.isRecycled) {
                     bitmap.recycle()
                 }
+            }
+        }
+        if (::pigeonIdleFrames.isInitialized) {
+            pigeonIdleFrames.forEach {
+                if (!it.isRecycled) it.recycle()
+            }
+        }
+
+        if (::pigeonFlyingFrames.isInitialized) {
+            pigeonFlyingFrames.forEach {
+                if (!it.isRecycled) it.recycle()
             }
         }
 

@@ -17,6 +17,7 @@ import com.voxcom.rollerrush.utils.Constants
 import com.voxcom.rollerrush.audio.CoinSoundManager
 import com.voxcom.rollerrush.entities.RushRuby
 import com.voxcom.rollerrush.entities.MysteryBubble
+import com.voxcom.rollerrush.systems.PigeonSystem
 import kotlin.random.Random
 
 /**
@@ -67,8 +68,8 @@ class GameWorld(
 
     val coinSystem = CoinSystem(coinSoundManager)
 
-    private val spawner =
-        SpawnSystem()
+    private val spawner = SpawnSystem()
+    val pigeonSystem = PigeonSystem()
 
     private val speedMultiplier =
         stats.speedMultiplier
@@ -216,6 +217,7 @@ class GameWorld(
         scoreSystem.reset()
         coinSystem.reset()
         spawner.reset()
+        pigeonSystem.reset()
 
         mysteryBubble.active = false
         mysteryRewardType = ""
@@ -605,6 +607,13 @@ class GameWorld(
         scrollX +=
             worldSpeed *
                     simDt
+        // Ambient roadside pigeon behaviour.
+        pigeonSystem.update(
+            dt = simDt,
+            worldSpeed = worldSpeed,
+            playerX = player.x,
+            visibleRight = camera.visibleRight
+        )
 
         // --------------------------------------------------------
         // PLAYER

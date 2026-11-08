@@ -372,6 +372,9 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         }
 
         // Entities
+        // Ambient pigeons are drawn above the roadside and ground,
+// but behind gameplay entities and the player.
+        drawPigeons(canvas, world)
         val coins = world.coins
         for (i in 0 until coins.size) {
             val c = coins[i]
@@ -871,5 +874,50 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
 
             worldX += spacing
         }
+    }
+    // ------------------------------------------------------------
+// AMBIENT PIGEONS
+// ------------------------------------------------------------
+
+    private fun drawPigeons(
+        canvas: Canvas,
+        world: GameWorld
+    ) {
+        val birds = world.pigeonSystem.birds
+        val idleFrames = assets.pigeonIdleFrames
+        val flyingFrames = assets.pigeonFlyingFrames
+
+        for (bird in birds) {
+            if (!bird.active) continue
+
+            val bitmap = if (!bird.flying) {
+                idleFrames[bird.idlePose.coerceIn(0, idleFrames.lastIndex)]
+            } else {
+                val animationTime =
+                    (bird.flightTimer - bird.flightDelay).coerceAtLeast(0f)
+
+                val frame = (
+                        animationTime / 0.09f
+                        ).toInt()
+
+                flyingFrames[
+                    (frame + bird.flightFrameOffset) % flyingFrames.size
+                ]
+            }
+
+            val size = bird.size
+
+            dst.set(
+                bird.x,
+                bird.y - size,
+                bird.x + size,
+                bird.y
+            )
+
+            bmpPaint.alpha = 255
+            canvas.drawBitmap(bitmap, null, dst, bmpPaint)
+        }
+
+        bmpPaint.alpha = 255
     }
 }
