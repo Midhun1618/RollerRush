@@ -1,3 +1,4 @@
+
 package com.voxcom.rollerrush.systems
 
 import com.voxcom.rollerrush.utils.Constants
@@ -6,10 +7,11 @@ import kotlin.random.Random
 /**
  * Ambient roadside pigeons.
  *
- * They are decorative only:
+ * Decorative only:
  * - No collision or gameplay effects.
- * - Idle near the roadside.
- * - Fly diagonally up/right when the player approaches.
+ * - First flock is present during the intro.
+ * - Pigeons scatter as the player approaches.
+ * - Later flocks spawn rarely.
  */
 class PigeonSystem {
 
@@ -19,44 +21,66 @@ class PigeonSystem {
 
         var x = 0f
         var y = 0f
-        var size = 52f
+        var size = PIGEON_SIZE
 
         var idlePose = 0
         var idleTimer = 0f
 
         var flightTimer = 0f
         var flightDelay = 0f
-        var flightFrameOffset = 0
 
-        var horizontalSpeed = 260f
-        var verticalSpeed = 125f
+        var horizontalSpeed = 360f
+        var verticalSpeed = 180f
     }
 
     val birds = Array(MAX_PIGEONS) { Pigeon() }
 
-    private var spawnTimer = FIRST_SPAWN_DELAY
+    private var spawnTimer = 0f
 
-    fun reset() {
+    /**
+     * Called when a run starts.
+     *
+     * Places the first flock relative to the intro building,
+     * so the pigeons already exist before the intro animation.
+     */
+    fun reset(initialScrollX: Float) {
+
         birds.forEach {
             it.active = false
             it.flying = false
         }
 
-        spawnTimer = FIRST_SPAWN_DELAY
+        // The intro building starts at:
+        // -scrollX + INTRO_BACKGROUND_OFFSET_X
+        val buildingX =
+            -initialScrollX + Constants.INTRO_BACKGROUND_OFFSET_X
+
+        // Place the first flock inside the visible part of the building.
+        spawnFlock(buildingX + INTRO_FLOCK_LOCAL_X)
+
+        // Keep subsequent flocks rare.
+        spawnTimer = Random.nextFloat() * 8f + 22f
     }
 
     fun update(
         dt: Float,
         worldSpeed: Float,
         playerX: Float,
+        visibleLeft: Float,
         visibleRight: Float
     ) {
-        // Update existing pigeons.
+
+        // --------------------------------------------------------
+        // UPDATE EXISTING PIGEONS
+        // --------------------------------------------------------
+
         for (bird in birds) {
+
             if (!bird.active) continue
 
             if (!bird.flying) {
-                // Idle pose changes.
+
+                // Subtle idle pose changes.
                 bird.idleTimer -= dt
 
                 if (bird.idleTimer <= 0f) {
@@ -64,53 +88,73 @@ class PigeonSystem {
                     bird.idleTimer = Random.nextFloat() * 1.6f + 0.8f
                 }
 
-                // The world scrolls towards the player.
+                // Follow the movement of the world.
                 bird.x -= worldSpeed * dt
 
                 // Scatter when the player approaches.
                 if (bird.x - playerX <= TRIGGER_DISTANCE) {
+
                     bird.flying = true
                     bird.flightTimer = 0f
+
+                    // Staggered takeoff.
                     bird.flightDelay = Random.nextFloat() * 0.22f
 
-                    bird.flightFrameOffset = Random.nextInt(4)
-                    bird.horizontalSpeed = Random.nextFloat() * 90f + 230f
-                    bird.verticalSpeed = Random.nextFloat() * 55f + 105f
+                    bird.horizontalSpeed =
+                        Random.nextFloat() * 110f + 330f
+
+                    bird.verticalSpeed =
+                        Random.nextFloat() * 70f + 155f
                 }
+
             } else {
+
                 bird.flightTimer += dt
 
-                // Slight delay gives the flock a natural staggered takeoff.
                 if (bird.flightTimer >= bird.flightDelay) {
-                    bird.x += (bird.horizontalSpeed - worldSpeed) * dt
+
+                    bird.x +=
+                        (bird.horizontalSpeed - worldSpeed) * dt
+
                     bird.y -= bird.verticalSpeed * dt
+
                 } else {
+
+                    // Wait briefly before taking off.
                     bird.x -= worldSpeed * dt
                 }
             }
 
-            // Recycle birds after they leave the visible area.
+            // Recycle birds outside the useful area.
             if (
-                bird.x < -100f ||
-                bird.x > visibleRight + 220f ||
-                bird.y < -100f
+                bird.x < visibleLeft - 120f ||
+                bird.x > visibleRight + 420f ||
+                bird.y < -120f
             ) {
                 bird.active = false
             }
         }
 
-        // Spawn the next flock.
+        // --------------------------------------------------------
+        // RARE SUBSEQUENT FLOCKS
+        // --------------------------------------------------------
+
         spawnTimer -= dt
 
         if (spawnTimer <= 0f) {
-            spawnFlock(visibleRight + Random.nextFloat() * 100f + 80f)
 
-            spawnTimer = Random.nextFloat() * 3.0f + 4.5f
+            spawnFlock(
+                visibleRight + Random.nextFloat() * 120f + 100f
+            )
+
+            spawnTimer = Random.nextFloat() * 8f + 22f
         }
     }
 
     private fun spawnFlock(startX: Float) {
+
         val available = birds.filter { !it.active }
+
         if (available.isEmpty()) return
 
         val count = Random.nextInt(2, 5)
@@ -119,30 +163,37 @@ class PigeonSystem {
         var offset = 0f
 
         for (i in 0 until count) {
+
             val bird = available[i]
 
             bird.active = true
             bird.flying = false
 
-            bird.size = Random.nextFloat() * 13f + 45f
+            // All pigeons use exactly the same size.
+            bird.size = PIGEON_SIZE
 
             bird.x = startX + offset
-            bird.y = Constants.GROUND_Y - 5f
+            bird.y = Constants.GROUND_Y
 
             bird.idlePose = Random.nextInt(3)
             bird.idleTimer = Random.nextFloat() * 1.5f + 0.5f
 
             bird.flightTimer = 0f
             bird.flightDelay = 0f
-            bird.flightFrameOffset = 0
 
             offset += Random.nextFloat() * 24f + 24f
         }
     }
 
     companion object {
+
         private const val MAX_PIGEONS = 16
-        private const val FIRST_SPAWN_DELAY = 0.85f
-        private const val TRIGGER_DISTANCE = 180f
+
+        private const val PIGEON_SIZE = 42f
+
+        private const val TRIGGER_DISTANCE = 190f
+
+        // Position within the intro building.
+        private const val INTRO_FLOCK_LOCAL_X = 580f
     }
 }

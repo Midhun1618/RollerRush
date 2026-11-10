@@ -217,7 +217,6 @@ class GameWorld(
         scoreSystem.reset()
         coinSystem.reset()
         spawner.reset()
-        pigeonSystem.reset()
 
         mysteryBubble.active = false
         mysteryRewardType = ""
@@ -240,6 +239,8 @@ class GameWorld(
         // Player stays at PLAYER_X during the intro, so the background is
         // staged INTRO_START_X - PLAYER_X units further along.
         scrollX = Constants.INTRO_START_X - Constants.PLAYER_X
+        // Create the first pigeon flock before the intro begins.
+        pigeonSystem.reset(scrollX)
 
         worldSpeed =
             Constants.BASE_SPEED *
@@ -454,17 +455,22 @@ class GameWorld(
 
         // World is still until the first push, then eases out to the normal
         // gameplay speed (zero acceleration at the hand-off).
-        val pushRaw =
-            ((introTimer - Constants.INTRO_SKATE_START) /
-                    (Constants.INTRO_DURATION - Constants.INTRO_SKATE_START))
-                .coerceIn(0f, 1f)
+        val pushRaw = ((introTimer - Constants.INTRO_SKATE_START) / (Constants.INTRO_DURATION - Constants.INTRO_SKATE_START)).coerceIn(0f, 1f)
 
         val inv = 1f - pushRaw
         val speedBlend = 1f - inv * inv
 
-        worldSpeed =
-            Constants.BASE_SPEED * speedMultiplier * speedBlend
+        worldSpeed = Constants.BASE_SPEED * speedMultiplier * speedBlend
         scrollX += worldSpeed * dt
+
+        // Keep the intro pigeons moving with the scrolling building.
+        pigeonSystem.update(
+            dt = dt,
+            worldSpeed = worldSpeed,
+            playerX = player.x,
+            visibleLeft = camera.visibleLeft,
+            visibleRight = camera.visibleRight
+        )
 
         player.updateHitboxes()
 
@@ -612,6 +618,7 @@ class GameWorld(
             dt = simDt,
             worldSpeed = worldSpeed,
             playerX = player.x,
+            visibleLeft = camera.visibleLeft,
             visibleRight = camera.visibleRight
         )
 

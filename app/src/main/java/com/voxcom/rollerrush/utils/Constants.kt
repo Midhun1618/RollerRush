@@ -45,6 +45,7 @@ object Constants {
 
     const val INTRO_BACKGROUND_WORLD_WIDTH = 1000f
     const val INTRO_BACKGROUND_WORLD_HEIGHT = 360f
+    const val INTRO_BACKGROUND_OFFSET_X = -100f
 
     const val TARGET_FPS = 60
     const val MAX_FRAME_DT = 0.05f

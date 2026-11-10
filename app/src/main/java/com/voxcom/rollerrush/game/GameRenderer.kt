@@ -362,7 +362,7 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         )
 
         // Intro building (part of the world, scrolls left naturally)
-        val introBuildingOffsetX = -100f
+        val introBuildingOffsetX = Constants.INTRO_BACKGROUND_OFFSET_X
         val introX = -scroll + introBuildingOffsetX
         val introRight = introX + Constants.INTRO_BACKGROUND_WORLD_WIDTH
 
@@ -427,6 +427,11 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         // HUD must remain in screen space.
         drawHud(canvas, world, camera)
     }
+    private val pigeonFlightSequence = intArrayOf(
+        0, 1, 2, 3, 2
+    )
+
+    private val pigeonFlightFrameDuration = 0.065f
 
 
     private fun drawSpeedBoostEffect(
@@ -896,13 +901,15 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
                 val animationTime =
                     (bird.flightTimer - bird.flightDelay).coerceAtLeast(0f)
 
-                val frame = (
-                        animationTime / 0.09f
-                        ).toInt()
+                val animationStep =
+                    (animationTime / pigeonFlightFrameDuration).toInt()
 
-                flyingFrames[
-                    (frame + bird.flightFrameOffset) % flyingFrames.size
-                ]
+                val frameIndex =
+                    pigeonFlightSequence[
+                        animationStep % pigeonFlightSequence.size
+                    ]
+
+                flyingFrames[frameIndex]
             }
 
             val size = bird.size
