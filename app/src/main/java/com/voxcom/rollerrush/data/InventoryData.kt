@@ -52,7 +52,7 @@ object ShopCatalog {
         ),
         ShopItem(
             "skate_pixel_pop", "Pixel Pop", 11, ShopItemType.SKATE,
-            "skate_pixel_pop.png",
+            "skate_pixel_pop.webp",
             particleName = "particle_pixel_pop.png",
             description = "An arcade-inspired design.",
             rarity = SkateRarity.SPEED
