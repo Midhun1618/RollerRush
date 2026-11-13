@@ -355,16 +355,20 @@ class GameActivity : BaseActivity(), GameView.Listener {
 
         gameOverHandled = true
         boosterIsAvailable = false
-
         hideBoosterAlert()
 
         val pd = app.playerData
 
-// Add this completed run's score to career progression.
-// gameOverHandled prevents duplicate additions from repeated callbacks.
+        // Capture progression before and after this run's XP.
+        val previousCareerScore = pd.careerScore
+        val previousLevel = pd.level
+
         pd.addCareerScore(score)
 
-// Bank ordinary run coins exactly once.
+        val newCareerScore = pd.careerScore
+        val newLevel = pd.level
+
+        // Bank ordinary run coins exactly once.
         pd.addCoins(coins)
 
         // Grant the mystery reward exactly once.
@@ -374,9 +378,8 @@ class GameActivity : BaseActivity(), GameView.Listener {
                 "rubies" -> pd.addRushRubies(mysteryAmount)
             }
         }
-        // Update mission progress and grant newly earned mission rewards.
-        // Record progress and capture missions newly completed this run.
-// Mission rewards are NOT granted here.
+
+        // Record mission progress. Rewards remain manually claimable.
         val newlyCompletedMissionIds =
             MissionSystem(app.prefs, pd).recordCompletedRun(
                 score = score,
@@ -394,6 +397,10 @@ class GameActivity : BaseActivity(), GameView.Listener {
                 .putExtra(Constants.EXTRA_DISTANCE, distanceMeters)
                 .putExtra(Constants.EXTRA_COINS, coins)
                 .putExtra(Constants.EXTRA_HIGH_SCORE, pd.highScore)
+                .putExtra("previous_career_score", previousCareerScore)
+                .putExtra("new_career_score", newCareerScore)
+                .putExtra("previous_level", previousLevel)
+                .putExtra("new_level", newLevel)
                 .putExtra("mystery_collected", mysteryCollected)
                 .putExtra("mystery_type", mysteryType)
                 .putExtra("mystery_amount", mysteryAmount)

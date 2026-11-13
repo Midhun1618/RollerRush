@@ -1,4 +1,3 @@
-
 package com.voxcom.rollerrush.ui
 
 import android.content.res.ColorStateList
@@ -7,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -33,9 +33,7 @@ class MissionActivity : BaseActivity() {
         missionList = findViewById(R.id.missionList)
         missionStatus = findViewById(R.id.missionStatus)
 
-        findViewById<View>(R.id.backButton).setOnClickListener {
-            finish()
-        }
+        findViewById<View>(R.id.backButton).setOnClickListener { finish() }
     }
 
     override fun onResume() {
@@ -47,25 +45,29 @@ class MissionActivity : BaseActivity() {
         val player = app.playerData
         val careerScore = player.careerScore
 
-        careerLabel.text = "CAREER SCORE: $careerScore"
+        careerLabel.text = "CAREER SCORE: ${String.format("%,d", careerScore)}"
         levelLabel.text = "LEVEL ${player.level}"
-        levelProgress.progress =
-            (player.levelProgress * 1000f).toInt()
+        levelProgress.max = 1000
+        levelProgress.progress = (player.levelProgress * 1000f).toInt()
 
         val nextLevel = player.scoreForNextLevel
         nextLevelLabel.text = if (nextLevel == null) {
             "MAX LEVEL REACHED"
         } else {
-            "$careerScore / $nextLevel XP"
+            "${String.format("%,d", careerScore)} / ${String.format("%,d", nextLevel)} XP"
         }
 
         val system = MissionSystem(app.prefs, player)
-
-        // Pending rewards first, unfinished missions second,
-        // already claimed missions last.
         val missions = system.getMissions().sortedWith(
-            compareBy(
-                { if (it.readyToClaim) 0 else if (!it.completed) 1 else 2 },
+            compareBy<MissionSystem.Mission>(
+                { when {
+                    it.readyToClaim -> 0
+                    !it.locked && !it.completed -> 1
+                    it.locked -> 2
+                    else -> 3
+                } },
+                { it.unlockLevel },
+                { it.category.ordinal },
                 { it.title }
             )
         )
@@ -74,62 +76,54 @@ class MissionActivity : BaseActivity() {
         val inflater = LayoutInflater.from(this)
 
         missions.forEach { mission ->
-            val card = inflater.inflate(
-                R.layout.item_mission,
-                missionList,
-                false
-            )
+            val card = inflater.inflate(R.layout.item_mission, missionList, false)
+            val locked = mission.locked
 
-            card.findViewById<TextView>(R.id.missionName).text =
-                mission.title
+            card.alpha = if (locked) 0.58f else 1f
+
+            card.findViewById<TextView>(R.id.missionName).text = buildString {
+                if (locked) append("🔒 ")
+                append(mission.title)
+            }
 
             card.findViewById<TextView>(R.id.missionDescription).text =
-                mission.description
+                if (locked) {
+                    "Unlocks at Level ${mission.unlockLevel} • ${mission.category.label} • ${mission.description}"
+                } else {
+                    "${mission.category.label} • ${mission.description}"
+                }
 
-            val rewardText = buildString {
-                if (mission.rewardCoins > 0) {
-                    append("+${mission.rewardCoins}")
-                }
-                if (mission.rewardRubies > 0) {
-                    if (isNotEmpty()) append("  ")
-                    append("+${mission.rewardRubies}")
-                }
+            val rewardText = when {
+                mission.rewardCoins > 0 -> "+${mission.rewardCoins}"
+                mission.rewardRubies > 0 -> "+${mission.rewardRubies}"
+                else -> "REWARD"
             }
 
-            card.findViewById<TextView>(R.id.missionReward).text =
-                when {
-                    mission.rewardClaimed -> "REWARDED"
-                    mission.readyToClaim -> "READY"
-                    else -> rewardText
-                }
+            card.findViewById<TextView>(R.id.missionReward).text = rewardText
+            card.findViewById<ImageView>(R.id.missionRewardIcon).setImageResource(
+                if (mission.rewardRubies > 0) R.drawable.rush_ruby else R.drawable.rush_coin
+            )
 
-            val progressBar =
-                card.findViewById<ProgressBar>(R.id.missionProgressBar)
-
+            val progressBar = card.findViewById<ProgressBar>(R.id.missionProgressBar)
             progressBar.max = mission.target.coerceAtLeast(1)
-            progressBar.progress =
-                mission.progress.coerceIn(0, progressBar.max)
+            progressBar.progress = if (locked) 0 else mission.progress.coerceIn(0, progressBar.max)
 
             if (mission.completed) {
-                progressBar.progressTintList = ColorStateList.valueOf(
-                    Color.rgb(82, 210, 139)
-                )
+                progressBar.progressTintList = ColorStateList.valueOf(Color.rgb(82, 210, 139))
+            } else if (locked) {
+                progressBar.progressTintList = ColorStateList.valueOf(Color.rgb(105, 119, 137))
             }
 
-            val progressText =
-                card.findViewById<TextView>(R.id.missionProgressText)
-
+            val progressText = card.findViewById<TextView>(R.id.missionProgressText)
             progressText.text = when {
+                locked -> "LOCKED • REACH LEVEL ${mission.unlockLevel}"
                 mission.rewardClaimed -> "COMPLETED • REWARD RECEIVED"
                 mission.readyToClaim -> "COMPLETED • CLAIM YOUR REWARD"
                 mission.completed -> "COMPLETED"
-                else ->
-                    "${mission.progress.coerceAtMost(mission.target)} / ${mission.target}"
+                else -> "${mission.progress.coerceAtMost(mission.target)} / ${mission.target}"
             }
 
-            val claimButton =
-                card.findViewById<Button>(R.id.missionClaimButton)
-
+            val claimButton = card.findViewById<Button>(R.id.missionClaimButton)
             when {
                 mission.readyToClaim -> {
                     claimButton.visibility = View.VISIBLE
@@ -137,12 +131,8 @@ class MissionActivity : BaseActivity() {
                     claimButton.text = "CLAIM"
                     claimButton.backgroundTintList =
                         ColorStateList.valueOf(Color.rgb(40, 174, 103))
-
                     claimButton.setOnClickListener {
-                        val claimed = system.claimReward(mission.id)
-                        if (claimed) {
-                            refreshScreen()
-                        }
+                        if (system.claimReward(mission.id)) refreshScreen()
                     }
                 }
 
@@ -154,24 +144,22 @@ class MissionActivity : BaseActivity() {
                         ColorStateList.valueOf(Color.rgb(75, 91, 105))
                 }
 
-                else -> {
-                    claimButton.visibility = View.GONE
-                }
+                else -> claimButton.visibility = View.GONE
             }
 
             missionList.addView(card)
         }
 
         val pendingCount = system.getPendingClaimCount()
+        val unlockedCount = system.getUnlockedMissionCount()
         val claimedCount = system.getMissions().count { it.rewardClaimed }
 
         missionStatus.text = when {
-            pendingCount > 0 ->
-                "$pendingCount reward(s) ready to claim"
-            else ->
-                "$claimedCount / ${missions.size} rewards collected"
+            pendingCount > 0 -> "$pendingCount reward(s) ready • $unlockedCount / 50 missions unlocked"
+            else -> "$claimedCount rewards collected • $unlockedCount / 50 missions unlocked"
         }
     }
+
     override fun onStart() {
         super.onStart()
         app.bgmManager.playLobby()

@@ -1,6 +1,7 @@
 package com.voxcom.rollerrush.ui
 
 import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.content.Intent
 import android.graphics.Color
@@ -19,6 +20,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.voxcom.rollerrush.R
 import com.voxcom.rollerrush.data.MissionSystem
+import com.voxcom.rollerrush.data.ShopCatalog
 import com.voxcom.rollerrush.utils.Constants
 import kotlin.math.cos
 import kotlin.math.sin
@@ -536,6 +538,151 @@ class GameOverActivity : BaseActivity() {
         panel.visibility = View.VISIBLE
     }
 
+    private fun animateLevelProgression(
+        previousCareerScore: Int,
+        newCareerScore: Int,
+        previousLevel: Int,
+        newLevel: Int
+    ) {
+        val panel = findViewById<View>(R.id.levelProgressPanel)
+        val levelLabel = findViewById<TextView>(R.id.levelProgressLevel)
+        val xpLabel = findViewById<TextView>(R.id.levelProgressXp)
+        val progressBar = findViewById<android.widget.ProgressBar>(R.id.levelProgressBar)
+        val levelUpLabel = findViewById<TextView>(R.id.levelUpLabel)
+        val messageLabel = findViewById<TextView>(R.id.levelProgressMessage)
+
+        val startScore = previousCareerScore.coerceAtLeast(0)
+        val endScore = newCareerScore.coerceAtLeast(startScore)
+        val firstLevel = app.playerData.levelForCareerScore(startScore)
+        val finalLevel = newLevel.coerceIn(firstLevel, app.playerData.maxLevel)
+
+        progressBar.max = 1000
+        levelLabel.text = "LEVEL $firstLevel"
+        levelUpLabel.visibility = View.GONE
+        messageLabel.text = "+${endScore - startScore} CAREER XP EARNED"
+
+        panel.alpha = 0f
+        panel.translationY = 18f
+        panel.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setStartDelay(850L)
+            .setDuration(400L)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
+
+        fun animateSegment(level: Int, segmentStartScore: Int) {
+            if (!canAnimate()) return
+
+            val levelStart = app.playerData.levelStartScore(level)
+            val nextThreshold = app.playerData.scoreForNextLevel(level)
+
+            if (nextThreshold == null) {
+                levelLabel.text = "LEVEL $level"
+                progressBar.progress = 1000
+                xpLabel.text = "MAX LEVEL REACHED"
+                return
+            }
+
+            val segmentEndScore = minOf(endScore, nextThreshold)
+            val range = (nextThreshold - levelStart).coerceAtLeast(1)
+
+            val fromProgress = (
+                    (segmentStartScore - levelStart).coerceAtLeast(0).toFloat() /
+                            range * 1000f
+                    ).toInt().coerceIn(0, 1000)
+
+            val toProgress = (
+                    (segmentEndScore - levelStart).coerceAtLeast(0).toFloat() /
+                            range * 1000f
+                    ).toInt().coerceIn(0, 1000)
+
+            levelLabel.text = "LEVEL $level"
+            progressBar.progress = fromProgress
+            xpLabel.text = "$segmentStartScore / $nextThreshold XP"
+
+            val animator = ValueAnimator.ofInt(fromProgress, toProgress).apply {
+                duration = 850L
+                interpolator = AccelerateDecelerateInterpolator()
+
+                addUpdateListener { valueAnimator ->
+                    val progress = valueAnimator.animatedValue as Int
+                    progressBar.progress = progress
+                    val animatedScore = levelStart +
+                            (range * (progress / 1000f)).toInt()
+                    xpLabel.text = "$animatedScore / $nextThreshold XP"
+                }
+
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        if (!canAnimate()) return
+
+                        val crossedLevel = level < finalLevel && endScore >= nextThreshold
+                        if (crossedLevel) {
+                            levelUpLabel.text = "LEVEL UP!  LEVEL ${level + 1}"
+                            levelUpLabel.visibility = View.VISIBLE
+                            levelUpLabel.scaleX = 0.65f
+                            levelUpLabel.scaleY = 0.65f
+                            levelUpLabel.alpha = 0f
+
+                            levelUpLabel.animate()
+                                .alpha(1f)
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .setDuration(350L)
+                                .setInterpolator(OvershootInterpolator(1.8f))
+                                .withEndAction {
+                                    levelUpLabel.postDelayed({
+                                        if (!canAnimate()) return@postDelayed
+                                        levelUpLabel.visibility = View.GONE
+                                        animateSegment(level + 1, nextThreshold)
+                                    }, 450L)
+                                }
+                                .start()
+                        } else {
+                            levelLabel.text = "LEVEL $finalLevel"
+                            val finalThreshold = app.playerData.scoreForNextLevel(finalLevel)
+                            if (finalThreshold == null) {
+                                progressBar.progress = 1000
+                                xpLabel.text = "MAX LEVEL REACHED"
+                            } else {
+                                progressBar.progress = (
+                                        (endScore - app.playerData.levelStartScore(finalLevel))
+                                            .coerceAtLeast(0).toFloat() /
+                                                (finalThreshold - app.playerData.levelStartScore(finalLevel))
+                                                    .coerceAtLeast(1) * 1000f
+                                        ).toInt().coerceIn(0, 1000)
+                                xpLabel.text = "$endScore / $finalThreshold XP"
+                            }
+
+                            if (finalLevel > firstLevel) {
+                                val gainedLevels = (firstLevel + 1)..finalLevel
+                                val skateCount = ShopCatalog.allSkates().count {
+                                    it.unlockLevel in gainedLevels
+                                }
+                                val missionCount = MissionSystem(app.prefs, app.playerData)
+                                    .getMissions().count { it.unlockLevel in gainedLevels }
+
+                                levelUpLabel.text = "LEVEL $finalLevel UNLOCKED!"
+                                levelUpLabel.visibility = View.VISIBLE
+                                messageLabel.text =
+                                    "$skateCount new skates • $missionCount new missions unlocked"
+                            } else {
+                                levelUpLabel.visibility = View.GONE
+                                messageLabel.text = "+${endScore - startScore} CAREER XP EARNED"
+                            }
+                        }
+                    }
+                })
+            }
+
+            runningAnimators.add(animator)
+            animator.start()
+        }
+
+        animateSegment(firstLevel, startScore)
+    }
+
     private fun animateEntrance(
         view: View,
         delay: Long,
@@ -886,6 +1033,7 @@ class GameOverActivity : BaseActivity() {
         startActivity(
             Intent(this, MainMenuActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+
         )
         finish()
     }

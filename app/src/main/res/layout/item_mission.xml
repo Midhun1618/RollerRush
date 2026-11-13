@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    app:cardElevation="2dp">
+    android:layout_marginBottom="10dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -46,15 +44,16 @@
                     android:layout_marginTop="3dp"
                     android:text="Complete 1 run"
                     android:fontFamily="@font/count_font"
-                    android:textColor="#B9C9DD"
+                    android:textColor="#78889C"
                     android:textSize="13sp" />
+
                 <ProgressBar
                     android:id="@+id/missionProgressBar"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="8dp"
                     android:layout_marginTop="12dp"
-                    android:layout_marginRight="12dp"
+                    android:layout_marginEnd="12dp"
                     android:max="100"
                     android:progress="0"
                     android:progressTint="#F6B214"
@@ -66,35 +65,42 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
                     android:text="0 / 1"
-                    android:textColor="#D5E2F2"
+                    android:textColor="#78889C"
                     android:fontFamily="@font/count_font"
                     android:textSize="12sp" />
             </LinearLayout>
+
             <LinearLayout
                 android:layout_width="120dp"
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:orientation="vertical">
+
                 <LinearLayout
                     android:layout_width="120dp"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:orientation="horizontal"
                     android:layout_marginBottom="4dp">
-                <TextView
-                    android:id="@+id/missionReward"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="+50"
-                    android:layout_marginRight="6dp"
-                    android:fontFamily="@font/count_font"
-                    android:textColor="#FFD34B"
-                    android:textSize="18sp" />
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/rush_coin"/>
+
+                    <TextView
+                        android:id="@+id/missionReward"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="+50"
+                        android:layout_marginEnd="6dp"
+                        android:fontFamily="@font/count_font"
+                        android:textColor="#D59B16"
+                        android:textSize="18sp" />
+
+                    <ImageView
+                        android:id="@+id/missionRewardIcon"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/rush_coin"
+                        android:contentDescription="Mission reward" />
                 </LinearLayout>
+
                 <Button
                     android:id="@+id/missionClaimButton"
                     android:layout_width="120dp"
@@ -108,14 +114,6 @@
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
-
-
         </LinearLayout>
-
-
-
-
-
     </LinearLayout>
-
 </LinearLayout>

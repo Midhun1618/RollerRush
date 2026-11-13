@@ -1,6 +1,6 @@
 package com.voxcom.rollerrush.data
 
-/** Persistent player profile (currency, best score, equipped items). */
+/** Persistent player profile (currency, best score, equipped items and career progression). */
 class PlayerData(private val prefs: GamePreferences) {
 
     var coins: Int
@@ -11,43 +11,51 @@ class PlayerData(private val prefs: GamePreferences) {
         get() = prefs.getInt(KEY_HIGH_SCORE, 0)
         set(v) = prefs.putInt(KEY_HIGH_SCORE, v)
 
-    /**
-     * Total score accumulated across completed runs.
-     * Separate from the best single-run score.
-     */
+    /** Total score accumulated across completed runs. */
     var careerScore: Int
         get() = prefs.getInt(KEY_CAREER_SCORE, 0).coerceAtLeast(0)
-        private set(value) = prefs.putInt(
-            KEY_CAREER_SCORE,
-            value.coerceAtLeast(0)
-        )
+        private set(value) = prefs.putInt(KEY_CAREER_SCORE, value.coerceAtLeast(0))
 
-    /** Level is calculated from career score. */
+    val maxLevel: Int
+        get() = LEVEL_THRESHOLDS.size
+
+    /** Level is calculated from career score; existing thresholds are preserved. */
     val level: Int
-        get() = LEVEL_THRESHOLDS
-            .indexOfLast { careerScore >= it }
-            .plus(1)
-            .coerceAtLeast(1)
+        get() = levelForCareerScore(careerScore)
 
-    /** Score required for the next level; null at the maximum level. */
+    /** Score required for the next level; null at max level. */
     val scoreForNextLevel: Int?
-        get() = LEVEL_THRESHOLDS.getOrNull(level)
+        get() = scoreForNextLevel(level)
 
     /** Progress through the current level, between 0 and 1. */
     val levelProgress: Float
-        get() {
-            val currentThreshold = LEVEL_THRESHOLDS[level - 1]
-            val nextThreshold = scoreForNextLevel ?: return 1f
-            val range = (nextThreshold - currentThreshold).coerceAtLeast(1)
+        get() = levelProgressForCareerScore(careerScore)
 
-            return ((careerScore - currentThreshold).toFloat() / range)
-                .coerceIn(0f, 1f)
-        }
+    fun levelForCareerScore(score: Int): Int = LEVEL_THRESHOLDS
+        .indexOfLast { score.coerceAtLeast(0) >= it }
+        .plus(1)
+        .coerceIn(1, maxLevel)
+
+    /** First career-score value belonging to [level]. */
+    fun levelStartScore(level: Int): Int =
+        LEVEL_THRESHOLDS[(level - 1).coerceIn(0, LEVEL_THRESHOLDS.lastIndex)]
+
+    /** Career-score threshold for the level after [level], or null at max level. */
+    fun scoreForNextLevel(level: Int): Int? =
+        LEVEL_THRESHOLDS.getOrNull(level.coerceIn(1, maxLevel))
+
+    fun levelProgressForCareerScore(score: Int): Float {
+        val safeScore = score.coerceAtLeast(0)
+        val currentLevel = levelForCareerScore(safeScore)
+        val start = levelStartScore(currentLevel)
+        val next = scoreForNextLevel(currentLevel) ?: return 1f
+        val range = (next - start).coerceAtLeast(1)
+        return ((safeScore - start).toFloat() / range).coerceIn(0f, 1f)
+    }
 
     /** Add the score from a completed run. */
     fun addCareerScore(amount: Int) {
         if (amount <= 0) return
-
         careerScore = (careerScore.toLong() + amount)
             .coerceAtMost(Int.MAX_VALUE.toLong())
             .toInt()
@@ -65,7 +73,8 @@ class PlayerData(private val prefs: GamePreferences) {
     val character: CharacterData
         get() = SkinCatalog.presets[characterPreset].copy(skateSkin = equippedSkateId)
 
-    val skateStats: SkateStats get() = SkateStats.forSkate(equippedSkateId)
+    val skateStats: SkateStats
+        get() = SkateStats.forSkate(equippedSkateId)
 
     var rushRubies: Int
         get() = prefs.getInt(KEY_RUSH_RUBIES, 0)
@@ -73,23 +82,21 @@ class PlayerData(private val prefs: GamePreferences) {
 
     fun addRushRubies(amount: Int = 1) {
         if (amount <= 0) return
-
         rushRubies = (rushRubies.toLong() + amount)
             .coerceAtMost(Int.MAX_VALUE.toLong())
             .toInt()
     }
 
-    /** Returns true if the ruby purchase went through. */
     fun spendRushRubies(amount: Int): Boolean {
         if (amount <= 0 || amount > rushRubies) return false
-
         rushRubies -= amount
         return true
     }
 
-    fun addCoins(amount: Int) { if (amount > 0) coins += amount }
+    fun addCoins(amount: Int) {
+        if (amount > 0) coins += amount
+    }
 
-    /** @return true if the purchase went through. */
     fun spendCoins(amount: Int): Boolean {
         if (amount < 0 || amount > coins) return false
         coins -= amount
@@ -104,13 +111,9 @@ class PlayerData(private val prefs: GamePreferences) {
         const val KEY_PRESET = "player_character_preset"
         const val KEY_SKATE = "player_equipped_skate"
         const val KEY_RUSH_RUBIES = "player_rush_rubies"
-
         const val KEY_CAREER_SCORE = "player_career_score"
 
-        /**
-         * Minimum career score required for each level.
-         * Level 2 starts at 500; Level 5 starts at 20,000.
-         */
+        // Do not change these values: existing players' saved levels depend on them.
         val LEVEL_THRESHOLDS = intArrayOf(
             0,          // Level 1
             500,        // Level 2

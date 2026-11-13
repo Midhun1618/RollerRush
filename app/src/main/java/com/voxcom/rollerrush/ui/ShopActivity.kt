@@ -517,12 +517,15 @@ class ShopActivity : AppCompatActivity() {
 
         val owned = inventory.owns(item.id)
         val equipped = playerData.equippedSkateId == item.id
+        val levelLocked = !owned && playerData.level < item.unlockLevel
 
-        refs.image.alpha = 1f
+        refs.image.alpha = if (levelLocked) 0.38f else 1f
+        refs.card.alpha = if (levelLocked) 0.78f else 1f
 
         refs.status.text = when {
             equipped -> "EQUIPPED"
             owned -> "OWNED"
+            levelLocked -> "LEVEL ${item.unlockLevel}"
             item.price == 0 -> "FREE"
             else -> "LOCKED"
         }
@@ -531,6 +534,7 @@ class ShopActivity : AppCompatActivity() {
             when {
                 equipped -> Color.rgb(255, 220, 105)
                 owned -> Color.rgb(112, 238, 177)
+                levelLocked -> Color.rgb(180, 190, 205)
                 else -> Color.rgb(205, 215, 229)
             }
         )
@@ -538,24 +542,17 @@ class ShopActivity : AppCompatActivity() {
         refs.price.text = when {
             equipped -> "READY TO ROLL"
             owned -> "UNLOCKED"
+            levelLocked -> "UNLOCKS AT LEVEL ${item.unlockLevel}"
             item.price == 0 -> "FREE"
             else -> String.format(Locale.US, "%,d COINS", item.price)
         }
 
         refs.card.background = resourceDrawable(
-            if (equipped) {
-                "shop_equipped_item_card_bg"
-            } else {
-                "shop_item_card_bg"
-            }
+            if (equipped) "shop_equipped_item_card_bg" else "shop_item_card_bg"
         ) ?: roundedBackground(
             Color.rgb(28, 42, 63),
             dp(14),
-            if (equipped) {
-                Color.rgb(255, 211, 75)
-            } else {
-                Color.argb(100, 255, 255, 255)
-            }
+            if (equipped) Color.rgb(255, 211, 75) else Color.argb(100, 255, 255, 255)
         )
     }
 
@@ -653,17 +650,11 @@ class ShopActivity : AppCompatActivity() {
 
         val priceText = TextView(this).apply {
             text = when {
-                playerData.equippedSkateId == item.id ->
-                    "CURRENTLY EQUIPPED"
-
-                inventory.owns(item.id) ->
-                    "ALREADY IN YOUR COLLECTION"
-
-                item.price == 0 ->
-                    "FREE"
-
-                else ->
-                    String.format(Locale.US, "%,d COINS", item.price)
+                playerData.equippedSkateId == item.id -> "CURRENTLY EQUIPPED"
+                inventory.owns(item.id) -> "ALREADY IN YOUR COLLECTION"
+                playerData.level < item.unlockLevel -> "UNLOCKS AT LEVEL ${item.unlockLevel}"
+                item.price == 0 -> "FREE"
+                else -> String.format(Locale.US, "%,d COINS", item.price)
             }
 
             setTextColor(Color.rgb(255, 211, 75))
@@ -699,6 +690,7 @@ class ShopActivity : AppCompatActivity() {
             text = when {
                 equipped -> "EQUIPPED"
                 owned -> "EQUIP"
+                playerData.level < item.unlockLevel -> "LOCKED"
                 item.price == 0 -> "CLAIM"
                 else -> "BUY"
             }
@@ -707,7 +699,7 @@ class ShopActivity : AppCompatActivity() {
             setTextColor(Color.rgb(20, 28, 40))
             backgroundTintList =
                 ColorStateList.valueOf(Color.rgb(255, 208, 68))
-            isEnabled = !equipped
+            isEnabled = !equipped && (owned || playerData.level >= item.unlockLevel)
         }
 
         buttons.addView(
@@ -735,9 +727,13 @@ class ShopActivity : AppCompatActivity() {
         }
 
         actionButton.setOnClickListener {
-            if (inventory.owns(item.id)) {
-                playerData.equippedSkateId = item.id
-                sounds.playSkateEquipped()
+            if (!inventory.owns(item.id) && playerData.level < item.unlockLevel) {
+                RollerRushNotification.show(
+                    this,
+                    "Reach Level ${item.unlockLevel} to unlock this skate.",
+                    RollerRushNotification.Type.WARNING
+                )
+                return@setOnClickListener
             } else {
                 if (item.price > 0 && !playerData.spendCoins(item.price)) {
                     RollerRushNotification.show(
