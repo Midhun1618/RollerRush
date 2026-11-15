@@ -91,6 +91,37 @@ class GameOverActivity : BaseActivity() {
             ).orEmpty()
         )
 
+        // Read career progression snapshots sent by GameActivity.
+        val previousCareerScore = intent.getIntExtra(
+            "previous_career_score",
+            app.playerData.careerScore
+        )
+
+        val newCareerScore = intent.getIntExtra(
+            "new_career_score",
+            app.playerData.careerScore
+        )
+
+        val previousLevel = intent.getIntExtra(
+            "previous_level",
+            app.playerData.level
+        )
+
+        val newLevel = intent.getIntExtra(
+            "new_level",
+            app.playerData.level
+        )
+
+        // Trigger the career XP and level-up animation.
+        animateLevelProgression(
+            previousCareerScore = previousCareerScore,
+            newCareerScore = newCareerScore,
+            previousLevel = previousLevel,
+            newLevel = newLevel
+        )
+
+        // Initial result values.
+
         // Initial result values.
         distanceView.text = "0 m"
         scoreView.text = "0"
@@ -553,7 +584,7 @@ class GameOverActivity : BaseActivity() {
 
         val startScore = previousCareerScore.coerceAtLeast(0)
         val endScore = newCareerScore.coerceAtLeast(startScore)
-        val firstLevel = app.playerData.levelForCareerScore(startScore)
+        val firstLevel = previousLevel.coerceIn(1, app.playerData.maxLevel)
         val finalLevel = newLevel.coerceIn(firstLevel, app.playerData.maxLevel)
 
         progressBar.max = 1000

@@ -1,5 +1,7 @@
+
 package com.voxcom.rollerrush.data
 
+/** Mission groups used by the Missions screen. */
 enum class MissionCategory(val label: String) {
     DISTANCE("DISTANCE"),
     SCORE("SCORE"),
@@ -48,6 +50,9 @@ class MissionSystem(
         BEST_COINS("mission_best_run_coins", MissionCategory.RECORDS)
     }
 
+    /**
+     * Records one completed run and returns mission IDs that became claimable.
+     */
     fun recordCompletedRun(
         score: Int,
         distanceMeters: Int,
@@ -69,6 +74,7 @@ class MissionSystem(
         return (prefs.getStringSet(KEY_PENDING) - pendingBefore).toList()
     }
 
+    /** Returns all 50 missions, including level-locked ones. */
     fun getMissions(): List<Mission> {
         syncPendingCompletions()
 
@@ -107,6 +113,7 @@ class MissionSystem(
         }
     }
 
+    /** Returns true only when an unlocked pending reward was successfully claimed. */
     fun claimReward(missionId: String): Boolean {
         syncPendingCompletions()
 
@@ -125,6 +132,7 @@ class MissionSystem(
             return false
         }
 
+        // Mark first so a repeated tap cannot pay the same reward twice.
         prefs.putStringSet(KEY_PENDING, pending - missionId)
         prefs.putStringSet(KEY_CLAIMED, claimed + missionId)
 
@@ -139,6 +147,10 @@ class MissionSystem(
         return true
     }
 
+    /**
+     * Newly unlocked missions can already meet their targets
+     * because lifetime stats may have accumulated earlier.
+     */
     private fun syncPendingCompletions() {
         val claimed = prefs.getStringSet(KEY_CLAIMED)
         val pending = prefs.getStringSet(KEY_PENDING)
@@ -185,7 +197,7 @@ class MissionSystem(
         )
     }
 
-    /** Five missions per level: 50 missions in total. */
+    /** 5 missions per level, 50 total. Original seven IDs are preserved. */
     private fun missionDefinitions(): List<Mission> = listOf(
 
         // LEVEL 1

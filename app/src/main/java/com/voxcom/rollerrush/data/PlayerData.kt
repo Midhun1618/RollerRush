@@ -1,3 +1,4 @@
+
 package com.voxcom.rollerrush.data
 
 /** Persistent player profile (currency, best score, equipped items and career progression). */
