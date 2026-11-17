@@ -373,9 +373,18 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
 
         // Entities
         // Ambient pigeons are drawn above the roadside and ground,
-// but behind gameplay entities and the player.
+        // but behind gameplay entities and the player.
         drawPigeons(canvas, world)
+
+        // Shipping containers
+        for (platform in world.containerPlatforms) {
+            if (platform.active) {
+                platform.draw(canvas)
+            }
+        }
+
         val coins = world.coins
+
         for (i in 0 until coins.size) {
             val c = coins[i]
             if (c.active) c.draw(canvas, assets, bmpPaint)

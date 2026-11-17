@@ -60,14 +60,14 @@ object Constants {
     const val SPAWN_JITTER = 0.15f
     const val FIRST_SPAWN_DELAY = 1.5f
     const val TALL_UNLOCK_METERS = 120
-    const val MOVING_UNLOCK_METERS = 300
+    const val MOVING_UNLOCK_METERS = 420
+    const val OVERHEAD_UNLOCK_METERS = 240
     const val MOVING_EXTRA_SPEED = 70f
     const val MOVING_HOP_HEIGHT = 18f
     const val SLIDE_DURATION = 0.78f
     const val SLIDE_SWIPE_DISTANCE = 70f
     const val JUMP_SWIPE_DISTANCE = 70f
     const val DOUBLE_TAP_WINDOW = 0.28f
-    const val OVERHEAD_UNLOCK_METERS = 180
     const val SPEED_BOOST_DURATION = 2.0f
     const val SPEED_BOOST_MULTIPLIER = 1.65f
     const val SPEED_BOOST_UNLOCK_METERS = 80
@@ -95,4 +95,19 @@ object Constants {
     const val EXTRA_DISTANCE = "extra_distance"
     const val EXTRA_COINS = "extra_coins"
     const val EXTRA_HIGH_SCORE = "extra_high_score"
+
+    // ------------------------------------------------------------
+    // SHIPPING CONTAINER PLATFORMS
+    // ------------------------------------------------------------
+
+    const val MAX_CONTAINER_PLATFORMS = 3
+
+    const val CONTAINER_UNLOCK_METERS = 350
+
+    const val CONTAINER_SEGMENT_WIDTH = 180f
+    const val CONTAINER_HEIGHT = 76f
+
+    const val CONTAINER_FIRST_DELAY = 6f
+    const val CONTAINER_SPAWN_MIN_SECONDS = 14f
+    const val CONTAINER_SPAWN_MAX_SECONDS = 20f
 }

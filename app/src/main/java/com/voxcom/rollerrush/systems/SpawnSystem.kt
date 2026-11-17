@@ -85,6 +85,12 @@ class SpawnSystem {
         timer += interval
 
         val spawnX = right + Constants.SPAWN_MARGIN
+
+// Keep ordinary obstacles away from container platforms.
+        if (world.isContainerNear(spawnX, 180f)) {
+            return
+        }
+
         val meters = world.scoreSystem.distanceMeters
         val maxIndex = when {
             meters >= Constants.MOVING_UNLOCK_METERS -> 2

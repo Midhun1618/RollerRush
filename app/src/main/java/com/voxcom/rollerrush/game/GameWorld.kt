@@ -18,7 +18,8 @@ import com.voxcom.rollerrush.audio.CoinSoundManager
 import com.voxcom.rollerrush.entities.RushRuby
 import com.voxcom.rollerrush.entities.MysteryBubble
 import com.voxcom.rollerrush.systems.PigeonSystem
-import kotlin.random.Random
+import com.voxcom.rollerrush.entities.ContainerPlatform
+import com.voxcom.rollerrush.systems.ContainerSystem
 
 /**
  * Owns ALL simulation state and runs one update step.
@@ -69,6 +70,8 @@ class GameWorld(
     val coinSystem = CoinSystem(coinSoundManager)
 
     private val spawner = SpawnSystem()
+    private val containerSystem = ContainerSystem()
+
     val pigeonSystem = PigeonSystem()
 
     private val speedMultiplier =
@@ -81,6 +84,11 @@ class GameWorld(
     val obstacles: List<Obstacle> =
         List(Constants.MAX_OBSTACLES) {
             Obstacle()
+        }
+
+    val containerPlatforms: List<ContainerPlatform> =
+        List(Constants.MAX_CONTAINER_PLATFORMS) {
+            ContainerPlatform()
         }
 
     val coins: List<Coin> =
@@ -171,14 +179,14 @@ class GameWorld(
     // SPEED BOOST
     // ------------------------------------------------------------
 
-    private var speedBoostReady =
-        false
+    private var speedBoostReady = false
 
-    private var speedBoostTimer =
-        0f
+    private var speedBoostTimer = 0f
 
-    private var introTimer =
-        0f
+    private var introTimer = 0f
+
+    private var containerFlipActive = false
+    private var containerFlipTimer = 0f
 
     // True when the intro was interrupted by pause(); resume() returns to INTRO.
     private var pausedFromIntro =
@@ -217,6 +225,15 @@ class GameWorld(
         scoreSystem.reset()
         coinSystem.reset()
         spawner.reset()
+
+        containerSystem.reset()
+
+        containerFlipActive = false
+        containerFlipTimer = 0f
+
+        for (platform in containerPlatforms) {
+            platform.active = false
+        }
 
         mysteryBubble.active = false
         mysteryRewardType = ""
@@ -373,6 +390,38 @@ class GameWorld(
 
             if (!obstacles[i].active) {
                 return obstacles[i]
+            }
+        }
+
+        return null
+    }
+    fun acquireContainerPlatform(): ContainerPlatform? {
+        for (platform in containerPlatforms) {
+            if (!platform.active) return platform
+        }
+
+        return null
+    }
+
+    fun isContainerNear(
+        x: Float,
+        padding: Float = 0f
+    ): Boolean {
+        return containerPlatforms.any { platform ->
+            platform.active &&
+                    x >= platform.x - padding &&
+                    x <= platform.right + padding
+        }
+    }
+
+    private fun containerPlatformForPlayer(): ContainerPlatform? {
+        for (platform in containerPlatforms) {
+            if (
+                platform.active &&
+                player.x + 28f > platform.x &&
+                player.x - 28f < platform.right
+            ) {
+                return platform
             }
         }
 
@@ -622,19 +671,58 @@ class GameWorld(
             visibleRight = camera.visibleRight
         )
 
+        containerSystem.update(simDt, this)
+
         // --------------------------------------------------------
         // PLAYER
         // --------------------------------------------------------
 
-        val wasGrounded =
-            player.grounded
-
-        val wasSliding =
-            player.sliding
+        val wasGrounded = player.grounded
+        val wasSliding = player.sliding
+        val wasOnStreet = player.bottomY >= Constants.GROUND_Y - 1f
 
         controller.update(
-            simDt
+            simDt,
+            containerPlatformForPlayer()
         )
+
+// Trigger a special full-body flip when jumping toward a container.
+        if (
+            wasGrounded &&
+            wasOnStreet &&
+            !player.grounded &&
+            !player.sliding
+        ) {
+            val approachingContainer = containerPlatforms.any { platform ->
+                platform.active &&
+                        platform.right > player.x &&
+                        platform.x < player.x + 220f
+            }
+
+            if (approachingContainer) {
+                containerFlipActive = true
+                containerFlipTimer = 0f
+            }
+        }
+
+// Animate the container jump flip.
+        if (containerFlipActive) {
+            containerFlipTimer += simDt
+
+            val progress =
+                (containerFlipTimer / 0.48f).coerceIn(0f, 1f)
+
+            val eased =
+                progress * progress * (3f - 2f * progress)
+
+            player.setIntroRotation(360f * eased)
+
+            if (progress >= 1f || player.grounded) {
+                player.setIntroRotation(0f)
+                containerFlipActive = false
+                containerFlipTimer = 0f
+            }
+        }
         // Start the crouch animation before actual takeoff.
         if (controller.consumeJumpAnticipationStarted()) {
             animator.requestJumpAnticipation()
@@ -867,7 +955,10 @@ class GameWorld(
 // OBSTACLE COLLISION
 // --------------------------------------------------------
 
-        if (CollisionSystem.playerHitsObstacle(player, obstacles)) {
+        if (
+            CollisionSystem.playerHitsObstacle(player, obstacles) ||
+            CollisionSystem.playerHitsContainerSide(player, containerPlatforms)
+        ) {
             onObstacleHit()
 
             // Disable every obstacle hitbox immediately.
