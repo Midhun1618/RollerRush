@@ -1,3 +1,4 @@
+
 package com.voxcom.rollerrush.entities
 
 import android.graphics.Canvas
@@ -8,64 +9,46 @@ import com.voxcom.rollerrush.utils.Constants
 
 class ContainerPlatform {
 
-    var x = 0f
-        private set
-
-    var width = 0f
-        private set
-
-    var height = Constants.CONTAINER_HEIGHT
-        private set
-
-    var sectionCount = 1
-        private set
-
     var active = false
+    var x = 0f
+    var width = 0f
+    var sectionCount = 1
 
     val right: Float
         get() = x + width
 
     val topY: Float
-        get() = Constants.GROUND_Y - height
+        get() = Constants.GROUND_Y - Constants.CONTAINER_HEIGHT
 
     val sideHitbox = RectF()
 
     private val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(55, 91, 120)
+        color = Color.rgb(48, 91, 112)
     }
 
     private val topPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(91, 133, 160)
+        color = Color.rgb(91, 139, 153)
+    }
+
+    private val darkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.rgb(30, 59, 75)
     }
 
     private val ribPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(37, 67, 91)
-        strokeWidth = 2.5f
-    }
-
-    private val highlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(145, 177, 194)
-        strokeWidth = 2f
+        color = Color.rgb(111, 151, 161)
+        strokeWidth = 3f
+        style = Paint.Style.STROKE
     }
 
     private val seamPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(28, 53, 74)
-        strokeWidth = 5f
-    }
-
-    private val doorPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(42, 72, 96)
-    }
-
-    private val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(90, 0, 0, 0)
+        color = Color.rgb(25, 54, 70)
+        strokeWidth = 4f
     }
 
     fun init(spawnX: Float, sections: Int) {
         x = spawnX
         sectionCount = sections.coerceIn(1, 3)
-        width = Constants.CONTAINER_SEGMENT_WIDTH * sectionCount
-        height = Constants.CONTAINER_HEIGHT
+        width = sectionCount * Constants.CONTAINER_SEGMENT_WIDTH
         active = true
         refreshHitbox()
     }
@@ -77,11 +60,20 @@ class ContainerPlatform {
         refreshHitbox()
     }
 
+    fun overlapsPlayer(playerX: Float, halfWidth: Float = 18f): Boolean {
+        return playerX + halfWidth > x &&
+                playerX - halfWidth < right
+    }
+
+    fun isOffScreenLeft(visibleLeft: Float): Boolean {
+        return right < visibleLeft - 80f
+    }
+
     private fun refreshHitbox() {
         sideHitbox.set(
-            x + 1f,
+            x,
             topY + 3f,
-            right - 1f,
+            right,
             Constants.GROUND_Y
         )
     }
@@ -89,25 +81,17 @@ class ContainerPlatform {
     fun draw(canvas: Canvas) {
         if (!active) return
 
-        // Ground shadow
-        canvas.drawRect(
-            x + 5f,
-            Constants.GROUND_Y - 2f,
-            right + 5f,
-            Constants.GROUND_Y + 7f,
-            shadowPaint
-        )
-
-        // Main container body
-        canvas.drawRect(
+        val body = RectF(
             x,
             topY,
             right,
-            Constants.GROUND_Y,
-            bodyPaint
+            Constants.GROUND_Y
         )
 
-        // Top edge
+        // Main container body.
+        canvas.drawRoundRect(body, 5f, 5f, bodyPaint)
+
+        // Top surface / landing edge.
         canvas.drawRect(
             x,
             topY,
@@ -116,74 +100,77 @@ class ContainerPlatform {
             topPaint
         )
 
-        // Vertical corrugations
-        var ribX = x + 10f
+        // Bottom shadow.
+        canvas.drawRect(
+            x,
+            Constants.GROUND_Y - 7f,
+            right,
+            Constants.GROUND_Y,
+            darkPaint
+        )
 
+        // Vertical corrugated metal ribs.
+        var ribX = x + 14f
         while (ribX < right - 8f) {
             canvas.drawLine(
                 ribX,
-                topY + 10f,
+                topY + 12f,
                 ribX,
-                Constants.GROUND_Y - 5f,
+                Constants.GROUND_Y - 12f,
                 ribPaint
             )
-
-            canvas.drawLine(
-                ribX + 2f,
-                topY + 10f,
-                ribX + 2f,
-                Constants.GROUND_Y - 5f,
-                highlightPaint
-            )
-
-            ribX += 13f
+            ribX += 24f
         }
 
-        // Seams between connected container sections
+        // Section separators.
         for (i in 1 until sectionCount) {
             val seamX = x + i * Constants.CONTAINER_SEGMENT_WIDTH
-
             canvas.drawLine(
                 seamX,
-                topY,
+                topY + 2f,
                 seamX,
-                Constants.GROUND_Y,
+                Constants.GROUND_Y - 2f,
                 seamPaint
             )
         }
 
-        // Rear door detail
-        canvas.drawRect(
-            right - 34f,
-            topY + 12f,
-            right - 7f,
-            Constants.GROUND_Y - 8f,
-            doorPaint
-        )
-
-        canvas.drawLine(
-            right - 20f,
-            topY + 12f,
-            right - 20f,
-            Constants.GROUND_Y - 8f,
-            highlightPaint
-        )
-
-        // Corner details
+        // Reinforced end edges.
         canvas.drawRect(
             x,
-            topY,
-            x + 8f,
-            topY + 10f,
-            topPaint
+            topY + 7f,
+            x + 7f,
+            Constants.GROUND_Y - 5f,
+            darkPaint
         )
 
         canvas.drawRect(
-            right - 8f,
-            topY,
+            right - 7f,
+            topY + 7f,
             right,
-            topY + 10f,
-            topPaint
+            Constants.GROUND_Y - 5f,
+            darkPaint
         )
+
+        // Door details on each section.
+        for (i in 0 until sectionCount) {
+            val sectionX = x + i * Constants.CONTAINER_SEGMENT_WIDTH
+            val doorX = sectionX + Constants.CONTAINER_SEGMENT_WIDTH - 52f
+
+            canvas.drawLine(
+                doorX,
+                topY + 15f,
+                doorX,
+                Constants.GROUND_Y - 12f,
+                seamPaint
+            )
+
+            canvas.drawLine(
+                doorX + 8f,
+                topY + 15f,
+                doorX + 8f,
+                Constants.GROUND_Y - 12f,
+                seamPaint
+            )
+        }
     }
 }

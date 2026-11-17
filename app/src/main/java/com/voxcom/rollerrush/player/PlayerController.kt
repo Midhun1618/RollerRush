@@ -8,10 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.max
 import kotlin.math.sqrt
 
-class PlayerController(
-    private val player: Player,
-    var stats: SkateStats
-) {
+class PlayerController(private val player: Player, var stats: SkateStats) {
 
     private val jumpRequested = AtomicBoolean(false)
     private val slideRequested = AtomicBoolean(false)
@@ -22,17 +19,14 @@ class PlayerController(
 
     companion object {
         private const val JUMP_CROUCH_DELAY = 0.10f
-        private const val PLATFORM_HALF_WIDTH = 28f
     }
 
     fun requestJump() = jumpRequested.set(true)
-
     fun requestSlide() = slideRequested.set(true)
 
     fun reset() {
         jumpRequested.set(false)
         slideRequested.set(false)
-
         jumpBuffer = 0f
         jumpAnticipationTimer = -1f
         jumpAnticipationStarted = false
@@ -47,7 +41,6 @@ class PlayerController(
             return
         }
 
-        // SLIDE INPUT
         if (
             slideRequested.getAndSet(false) &&
             player.grounded &&
@@ -56,14 +49,12 @@ class PlayerController(
             player.startSlide(Constants.SLIDE_DURATION)
         }
 
-        // JUMP BUFFER
         if (jumpRequested.getAndSet(false)) {
             jumpBuffer = stats.jumpBufferTime
         }
 
         jumpBuffer = max(0f, jumpBuffer - dt)
 
-        // JUMP ANTICIPATION
         if (
             jumpAnticipationTimer < 0f &&
             jumpBuffer > 0f &&
@@ -93,9 +84,7 @@ class PlayerController(
             }
         }
 
-        // PHYSICS
         integrate(dt, platform)
-
         player.updateSlide(dt)
     }
 
@@ -103,59 +92,25 @@ class PlayerController(
         dt: Float,
         platform: ContainerPlatform?
     ) {
-        val previousBottomY = player.bottomY
-
         player.vy += Constants.GRAVITY * dt
         player.bottomY += player.vy * dt
 
-        val overlapsPlatform =
-            platform != null &&
-                    player.x + PLATFORM_HALF_WIDTH > platform.x &&
-                    player.x - PLATFORM_HALF_WIDTH < platform.right
+        val platformY = platform
+            ?.takeIf {
+                it.active && it.overlapsPlayer(player.x, 18f)
+            }
+            ?.topY
 
-        // Land on the container roof while descending.
-        if (
-            platform != null &&
-            overlapsPlatform &&
-            player.vy >= 0f &&
-            previousBottomY <= platform.topY &&
-            player.bottomY >= platform.topY
-        ) {
+        val landingY = platformY ?: Constants.GROUND_Y
+
+        if (player.vy >= 0f && player.bottomY >= landingY) {
             if (!player.grounded) {
                 player.markLanded()
             }
 
-            player.bottomY = platform.topY
+            player.bottomY = landingY
             player.vy = 0f
             player.grounded = true
-            return
-        }
-
-        // Stay on the container while it moves underneath the player.
-        val standingOnPlatform =
-            platform != null &&
-                    overlapsPlatform &&
-                    player.grounded &&
-                    previousBottomY <= platform.topY + 1f
-
-        val groundY =
-            if (standingOnPlatform) {
-                platform!!.topY
-            } else {
-                Constants.GROUND_Y
-            }
-
-        // Normal road landing or container departure.
-        if (player.bottomY >= groundY) {
-
-            if (!player.grounded) {
-                player.markLanded()
-            }
-
-            player.bottomY = groundY
-            player.vy = 0f
-            player.grounded = true
-
         } else {
             player.grounded = false
         }

@@ -1,3 +1,4 @@
+
 package com.voxcom.rollerrush.systems
 
 import android.graphics.RectF
@@ -11,7 +12,9 @@ object CollisionSystem {
         player: Player,
         obstacles: List<Obstacle>
     ): Boolean {
-        for (obstacle in obstacles) {
+        for (i in obstacles.indices) {
+            val obstacle = obstacles[i]
+
             if (!obstacle.active) continue
 
             if (
@@ -48,9 +51,10 @@ object CollisionSystem {
         cx: Float,
         cy: Float,
         r: Float
-    ): Boolean =
-        circleHitsRect(cx, cy, r, player.bodyHitbox) ||
+    ): Boolean {
+        return circleHitsRect(cx, cy, r, player.bodyHitbox) ||
                 circleHitsRect(cx, cy, r, player.feetHitbox)
+    }
 
     fun circleHitsRect(
         cx: Float,

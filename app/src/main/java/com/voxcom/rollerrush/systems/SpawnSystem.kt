@@ -85,6 +85,10 @@ class SpawnSystem {
         timer += interval
 
         val spawnX = right + Constants.SPAWN_MARGIN
+        // Avoid spawning ordinary obstacles directly on container platforms.
+        if (world.isContainerNear(spawnX, 160f)) {
+            return
+        }
 
 // Keep ordinary obstacles away from container platforms.
         if (world.isContainerNear(spawnX, 180f)) {

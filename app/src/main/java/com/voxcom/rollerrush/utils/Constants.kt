@@ -99,15 +99,18 @@ object Constants {
     // ------------------------------------------------------------
     // SHIPPING CONTAINER PLATFORMS
     // ------------------------------------------------------------
-
     const val MAX_CONTAINER_PLATFORMS = 3
 
     const val CONTAINER_UNLOCK_METERS = 350
 
-    const val CONTAINER_SEGMENT_WIDTH = 180f
-    const val CONTAINER_HEIGHT = 76f
+    const val CONTAINER_SEGMENT_WIDTH = 400f
+    const val CONTAINER_HEIGHT = 108f
 
     const val CONTAINER_FIRST_DELAY = 6f
     const val CONTAINER_SPAWN_MIN_SECONDS = 14f
     const val CONTAINER_SPAWN_MAX_SECONDS = 20f
+
+    // Special stunt jump timing window.
+    const val CONTAINER_STUNT_MIN_DISTANCE = 120f
+    const val CONTAINER_STUNT_MAX_DISTANCE = 210f
 }

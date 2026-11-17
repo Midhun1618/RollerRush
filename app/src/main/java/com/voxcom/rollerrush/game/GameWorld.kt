@@ -20,6 +20,7 @@ import com.voxcom.rollerrush.entities.MysteryBubble
 import com.voxcom.rollerrush.systems.PigeonSystem
 import com.voxcom.rollerrush.entities.ContainerPlatform
 import com.voxcom.rollerrush.systems.ContainerSystem
+import com.voxcom.rollerrush.player.ContainerStuntController
 
 /**
  * Owns ALL simulation state and runs one update step.
@@ -70,9 +71,10 @@ class GameWorld(
     val coinSystem = CoinSystem(coinSoundManager)
 
     private val spawner = SpawnSystem()
-    private val containerSystem = ContainerSystem()
-
     val pigeonSystem = PigeonSystem()
+
+    private val containerSystem = ContainerSystem()
+    private val containerStunt = ContainerStuntController(player)
 
     private val speedMultiplier =
         stats.speedMultiplier
@@ -185,8 +187,6 @@ class GameWorld(
 
     private var introTimer = 0f
 
-    private var containerFlipActive = false
-    private var containerFlipTimer = 0f
 
     // True when the intro was interrupted by pause(); resume() returns to INTRO.
     private var pausedFromIntro =
@@ -227,9 +227,7 @@ class GameWorld(
         spawner.reset()
 
         containerSystem.reset()
-
-        containerFlipActive = false
-        containerFlipTimer = 0f
+        containerStunt.reset()
 
         for (platform in containerPlatforms) {
             platform.active = false
@@ -332,8 +330,17 @@ class GameWorld(
     // INPUT
     // ------------------------------------------------------------
 
+    @Synchronized
     fun requestJump() {
-        if (state != GameState.INTRO) controller.requestJump()
+        if (state != GameState.PLAYING) return
+
+        val target = containerSystem.findStuntTarget(player.x)
+
+        if (target != null && containerStunt.tryStart(target)) {
+            return
+        }
+
+        controller.requestJump()
     }
 
     fun requestSlide() {
@@ -395,39 +402,6 @@ class GameWorld(
 
         return null
     }
-    fun acquireContainerPlatform(): ContainerPlatform? {
-        for (platform in containerPlatforms) {
-            if (!platform.active) return platform
-        }
-
-        return null
-    }
-
-    fun isContainerNear(
-        x: Float,
-        padding: Float = 0f
-    ): Boolean {
-        return containerPlatforms.any { platform ->
-            platform.active &&
-                    x >= platform.x - padding &&
-                    x <= platform.right + padding
-        }
-    }
-
-    private fun containerPlatformForPlayer(): ContainerPlatform? {
-        for (platform in containerPlatforms) {
-            if (
-                platform.active &&
-                player.x + 28f > platform.x &&
-                player.x - 28f < platform.right
-            ) {
-                return platform
-            }
-        }
-
-        return null
-    }
-
     fun acquireCoin(): Coin? {
 
         for (i in 0 until coins.size) {
@@ -451,6 +425,15 @@ class GameWorld(
 
         return null
     }
+
+    fun acquireContainerPlatform(): ContainerPlatform? {
+        return containerPlatforms.firstOrNull { !it.active }
+    }
+
+    fun isContainerNear(x: Float, margin: Float): Boolean {
+        return containerSystem.isContainerNear(x, margin)
+    }
+
 
     // ------------------------------------------------------------
     // UPDATE
@@ -681,48 +664,19 @@ class GameWorld(
         val wasSliding = player.sliding
         val wasOnStreet = player.bottomY >= Constants.GROUND_Y - 1f
 
-        controller.update(
-            simDt,
-            containerPlatformForPlayer()
-        )
+        // The stunt controller owns movement while a container stunt is active.
+        // Otherwise, normal jump/slide physics run with container-roof support.
+        val stuntWasActive = containerStunt.active
 
-// Trigger a special full-body flip when jumping toward a container.
-        if (
-            wasGrounded &&
-            wasOnStreet &&
-            !player.grounded &&
-            !player.sliding
-        ) {
-            val approachingContainer = containerPlatforms.any { platform ->
-                platform.active &&
-                        platform.right > player.x &&
-                        platform.x < player.x + 220f
-            }
-
-            if (approachingContainer) {
-                containerFlipActive = true
-                containerFlipTimer = 0f
-            }
+        if (stuntWasActive) {
+            containerStunt.update(simDt)
+        } else {
+            controller.update(
+                simDt,
+                containerSystem.platformUnderPlayer(player.x)
+            )
         }
 
-// Animate the container jump flip.
-        if (containerFlipActive) {
-            containerFlipTimer += simDt
-
-            val progress =
-                (containerFlipTimer / 0.48f).coerceIn(0f, 1f)
-
-            val eased =
-                progress * progress * (3f - 2f * progress)
-
-            player.setIntroRotation(360f * eased)
-
-            if (progress >= 1f || player.grounded) {
-                player.setIntroRotation(0f)
-                containerFlipActive = false
-                containerFlipTimer = 0f
-            }
-        }
         // Start the crouch animation before actual takeoff.
         if (controller.consumeJumpAnticipationStarted()) {
             animator.requestJumpAnticipation()
@@ -775,6 +729,10 @@ class GameWorld(
             worldSpeed,
             speedBoostTimer > 0f
         )
+
+        if (containerStunt.active) {
+            containerStunt.applyPose()
+        }
 
         player.updateHitboxes()
 
@@ -957,7 +915,10 @@ class GameWorld(
 
         if (
             CollisionSystem.playerHitsObstacle(player, obstacles) ||
-            CollisionSystem.playerHitsContainerSide(player, containerPlatforms)
+            (
+                    !containerStunt.active &&
+                            CollisionSystem.playerHitsContainerSide(player, containerPlatforms)
+                    )
         ) {
             onObstacleHit()
 
@@ -971,6 +932,12 @@ class GameWorld(
             speedBoostTimer = 0f
             speedBoostReady = false
             camera.setSpeedBoost(false)
+
+            // Cancel any active container stunt and clear its platforms.
+            containerStunt.reset()
+            for (platform in containerPlatforms) {
+                platform.active = false
+            }
 
             // Trigger crash animation and cinematic camera effects.
             player.crash()
