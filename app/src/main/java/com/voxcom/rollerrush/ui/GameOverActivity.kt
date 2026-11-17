@@ -85,12 +85,6 @@ class GameOverActivity : BaseActivity() {
         val rushRubiesLabel =
             findViewById<TextView>(R.id.rubiesLabel)
 
-        displayCompletedMissions(
-            intent.getStringArrayListExtra(
-                "missions_completed_this_run"
-            ).orEmpty()
-        )
-
         // Read career progression snapshots sent by GameActivity.
         val previousCareerScore = intent.getIntExtra(
             "previous_career_score",
@@ -119,8 +113,18 @@ class GameOverActivity : BaseActivity() {
             previousLevel = previousLevel,
             newLevel = newLevel
         )
-
-        // Initial result values.
+        // Animated mission celebration followed by skate recommendation.
+        GameOverRewardSequence(
+            activity = this,
+            prefs = app.prefs,
+            playerData = app.playerData
+        ).start(
+            missionIds = intent.getStringArrayListExtra(
+                "missions_completed_this_run"
+            ).orEmpty(),
+            previousLevel = previousLevel,
+            newLevel = newLevel
+        )
 
         // Initial result values.
         distanceView.text = "0 m"
@@ -137,7 +141,6 @@ class GameOverActivity : BaseActivity() {
         val buttons = findViewById<View>(R.id.linearLayout11)
         val coinsCounter = findViewById<View>(R.id.linearLayout2)
         val rubiesCounter = findViewById<View>(R.id.linearLayout3)
-        val missionsPanel = findViewById<View>(R.id.completedMissionsPanel)
 
         title.alpha = 0f
         title.translationY = -90f
@@ -267,19 +270,6 @@ class GameOverActivity : BaseActivity() {
 
         }, 650L)
 
-// Completed mission panel enters from the right.
-        if (missionsPanel.visibility == View.VISIBLE) {
-            missionsPanel.alpha = 0f
-            missionsPanel.translationX = 110f
-
-            animateEntrance(
-                view = missionsPanel,
-                delay = 850L,
-                duration = 600L,
-                fromX = 110f,
-                fromY = 0f
-            )
-        }
 
 // Small continuous movement so the buttons do not feel static.
         buttons.postDelayed({
