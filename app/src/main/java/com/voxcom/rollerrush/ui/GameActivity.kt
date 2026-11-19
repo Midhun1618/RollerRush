@@ -24,6 +24,7 @@ class GameActivity : BaseActivity(), GameView.Listener {
 
     private lateinit var gameView: GameView
     private lateinit var root: FrameLayout
+    private var runSkateId: String = "skate_basic"
 
     private lateinit var boosterAlert: ImageView
     private lateinit var boosterBurst: ImageView
@@ -48,6 +49,7 @@ class GameActivity : BaseActivity(), GameView.Listener {
         app.gameAssets.ensureLoaded()
 
         root = FrameLayout(this)
+        runSkateId = app.playerData.equippedSkateId
 
         // The game remains the background layer.
         gameView = GameView(this).also {
@@ -354,6 +356,8 @@ class GameActivity : BaseActivity(), GameView.Listener {
         if (gameOverHandled) return@runOnUiThread
 
         gameOverHandled = true
+        // Submit this completed run to the global Roller Rush system.
+
         boosterIsAvailable = false
         hideBoosterAlert()
 

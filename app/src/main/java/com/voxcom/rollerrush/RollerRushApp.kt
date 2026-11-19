@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import com.voxcom.rollerrush.audio.BgmManager
+import com.voxcom.rollerrush.data.FirebaseGameService
 import com.voxcom.rollerrush.data.GamePreferences
 import com.voxcom.rollerrush.data.InventoryData
 import com.voxcom.rollerrush.data.PlayerData
@@ -15,6 +16,8 @@ import com.voxcom.rollerrush.utils.AssetManager
  */
 class RollerRushApp : Application() {
     lateinit var prefs: GamePreferences
+        private set
+    lateinit var firebaseGameService: FirebaseGameService
         private set
     lateinit var playerData: PlayerData
         private set
@@ -33,6 +36,26 @@ class RollerRushApp : Application() {
         inventory = InventoryData(prefs)
         gameAssets = AssetManager(this)
         bgmManager = BgmManager(this)
+
+        firebaseGameService = FirebaseGameService()
+
+        firebaseGameService.initialize { success, error ->
+            if (success) {
+                android.util.Log.d(
+                    "RollerRushFirebase",
+                    """
+            Player initialized!
+            UID: ${firebaseGameService.currentUid}
+            Username: ${firebaseGameService.displayName}
+            """.trimIndent()
+                )
+            } else {
+                android.util.Log.e(
+                    "RollerRushFirebase",
+                    "Player initialization failed: $error"
+                )
+            }
+        }
 
         registerMusicLifecycle()
     }

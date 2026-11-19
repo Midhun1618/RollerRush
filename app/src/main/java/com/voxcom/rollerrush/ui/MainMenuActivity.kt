@@ -1,4 +1,3 @@
-
 package com.voxcom.rollerrush.ui
 
 import android.animation.Animator
@@ -55,7 +54,6 @@ class MainMenuActivity : BaseActivity() {
         settingsButton = findViewById(R.id.settingsButton)
         missionBadge = findViewById(R.id.missionBadge)
 
-
         playButton.setOnClickListener {
             startActivity(Intent(this, GameActivity::class.java))
         }
@@ -72,7 +70,6 @@ class MainMenuActivity : BaseActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
-        // Start animations after the views are ready.
         startPlayButtonPulse()
         startTitleAnimation()
     }
@@ -99,6 +96,7 @@ class MainMenuActivity : BaseActivity() {
         playPulseAnimator = AnimatorSet().apply {
             playTogether(zoomInX, zoomInY)
             interpolator = AccelerateDecelerateInterpolator()
+
             addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     if (!isFinishing && !isDestroyed) {
@@ -110,6 +108,7 @@ class MainMenuActivity : BaseActivity() {
                     }
                 }
             })
+
             start()
         }
     }
@@ -120,8 +119,9 @@ class MainMenuActivity : BaseActivity() {
         titleFrameIndex = 0
         rushTitle.setImageResource(titleFrames[titleFrameIndex])
 
-        // Show each title frame for 140 ms, then advance in sequence.
-        titleAnimator = ValueAnimator.ofInt(0, titleFrames.size - 1).apply {
+        titleAnimator = ValueAnimator.ofInt(
+            0, titleFrames.size - 1
+        ).apply {
             duration = 420L
             repeatCount = ValueAnimator.INFINITE
             repeatMode = ValueAnimator.RESTART
@@ -139,7 +139,6 @@ class MainMenuActivity : BaseActivity() {
             start()
         }
 
-        // A separate, subtle pulse gives the title a little energy.
         rushTitle.animate()
             .scaleX(1.04f)
             .scaleY(1.04f)
@@ -195,19 +194,23 @@ class MainMenuActivity : BaseActivity() {
         levelLabel.text = "LEVEL ${app.playerData.level}"
         rushRubiesLabel.text = "${app.playerData.rushRubies}"
 
-
-
         if (::missionBadge.isInitialized) {
             val pending = MissionSystem(
                 app.prefs,
                 app.playerData
             ).getPendingClaimCount()
 
-            missionBadge.text = if (pending > 99) "99+" else pending.toString()
+            missionBadge.text =
+                if (pending > 99) "99+" else pending.toString()
+
             missionBadge.visibility =
                 if (pending > 0) android.view.View.VISIBLE
                 else android.view.View.GONE
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
     }
 
     override fun onDestroy() {
