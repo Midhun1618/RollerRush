@@ -12,6 +12,14 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.voxcom.rollerrush.R
 import com.voxcom.rollerrush.data.MissionSystem
+import android.graphics.Color
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import com.voxcom.rollerrush.data.LeaderboardEntry
+import java.text.NumberFormat
+import java.util.Locale
 
 class MainMenuActivity : BaseActivity() {
 
@@ -31,6 +39,15 @@ class MainMenuActivity : BaseActivity() {
     private var titleFrameIndex = 0
     private var titleAnimator: ValueAnimator? = null
     private var playPulseAnimator: AnimatorSet? = null
+
+    private lateinit var leaderboardPanel: LinearLayout
+    private lateinit var leaderboardLeaderName: TextView
+    private lateinit var leaderboardLeaderDistance: TextView
+    private lateinit var leaderboardRows: LinearLayout
+    private lateinit var leaderboardExpandIcon: TextView
+
+    private var leaderboardExpanded = false
+    private var leaderboardAnimation: AnimatorSet? = null
 
     private val titleFrames by lazy {
         intArrayOf(
@@ -56,6 +73,15 @@ class MainMenuActivity : BaseActivity() {
         settingsButton = findViewById(R.id.settingsButton)
         missionBadge = findViewById(R.id.missionBadge)
         playerNameLabel = findViewById(R.id.playerNameLabel)
+        leaderboardPanel = findViewById(R.id.leaderboardPanel)
+        leaderboardLeaderName = findViewById(R.id.leaderboardLeaderName)
+        leaderboardLeaderDistance = findViewById(R.id.leaderboardLeaderDistance)
+        leaderboardRows = findViewById(R.id.leaderboardRows)
+        leaderboardExpandIcon = findViewById(R.id.leaderboardExpandIcon)
+
+        leaderboardPanel.setOnClickListener {
+            toggleLeaderboard()
+        }
 
         playerNameLabel.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
@@ -196,6 +222,7 @@ class MainMenuActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         refreshPlayerName()
+        refreshLeaderboard()
         app.firebaseGameService.syncPendingRuns()
 
         coinsLabel.text = "${app.playerData.coins}"
@@ -231,6 +258,7 @@ class MainMenuActivity : BaseActivity() {
 
         rushTitle.animate().cancel()
         playButton.animate().cancel()
+        leaderboardAnimation?.cancel()
 
         super.onDestroy()
     }
@@ -277,4 +305,190 @@ class MainMenuActivity : BaseActivity() {
             }
         }
     }
+
+    private fun refreshLeaderboard() {
+        app.firebaseGameService.fetchTopLeaderboard { entries, error ->
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+
+                if (entries.isEmpty()) {
+                    leaderboardLeaderName.text =
+                        if (error != null) "LEADERBOARD OFFLINE" else "NO RUSHERS YET"
+
+                    leaderboardLeaderDistance.text =
+                        if (error != null) "TAP TO RETRY" else "BE THE FIRST TO SET A RECORD"
+
+                    leaderboardRows.removeAllViews()
+                    return@runOnUiThread
+                }
+
+                val leader = entries.first()
+
+                leaderboardLeaderName.text = leader.displayName
+                leaderboardLeaderDistance.text =
+                    "${formatLeaderboardDistance(leader.bestDistance)}  •  BEST DISTANCE"
+
+                renderLeaderboardRows(entries)
+            }
+        }
+    }
+
+    private fun renderLeaderboardRows(entries: List<LeaderboardEntry>) {
+        leaderboardRows.removeAllViews()
+
+        entries.drop(1).take(4).forEachIndexed { index, entry ->
+            val rank = index + 2
+
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(8), dp(6), dp(8), dp(6))
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    dp(43)
+                )
+            }
+
+            val rankView = TextView(this).apply {
+                text = "#$rank"
+                textSize = 14f
+                setTextColor(Color.rgb(255, 211, 75))
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(dp(38), dp(35))
+            }
+
+            val details = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_VERTICAL
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    1f
+                )
+            }
+
+            val isCurrentPlayer =
+                entry.uid == app.firebaseGameService.currentUid
+
+            val name = TextView(this).apply {
+                text = if (isCurrentPlayer) {
+                    "${entry.displayName} (you)"
+                } else {
+                    entry.displayName
+                }
+
+                textSize = 13f
+                maxLines = 1
+                setTextColor(Color.WHITE)
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+            }
+
+            val skate = TextView(this).apply {
+                text = formatSkateName(entry.bestSkateId)
+                textSize = 9f
+                maxLines = 1
+                setTextColor(Color.LTGRAY)
+            }
+
+            details.addView(name)
+            details.addView(skate)
+
+            val distance = TextView(this).apply {
+                text = formatLeaderboardDistance(entry.bestDistance)
+                textSize = 12f
+                setTextColor(Color.rgb(255, 211, 75))
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+            }
+
+            row.addView(rankView)
+            row.addView(details)
+            row.addView(distance)
+
+            leaderboardRows.addView(row)
+        }
+    }
+
+    private fun toggleLeaderboard() {
+        val expanding = !leaderboardExpanded
+        leaderboardExpanded = expanding
+
+        leaderboardAnimation?.cancel()
+
+        val startWidth = leaderboardPanel.width
+        val startHeight = leaderboardPanel.height
+
+        val targetWidth = dp(if (expanding) 430 else 300)
+        val targetHeight = dp(if (expanding) {
+            56 + (entriesHeight())
+        } else {
+            56
+        })
+
+        if (expanding) {
+            leaderboardRows.visibility = View.VISIBLE
+            leaderboardRows.alpha = 0f
+            leaderboardRows.animate()
+                .alpha(1f)
+                .setDuration(250)
+                .start()
+        } else {
+            leaderboardRows.animate()
+                .alpha(0f)
+                .setDuration(150)
+                .start()
+        }
+
+        leaderboardExpandIcon.text = if (expanding) "⌃" else "⌄"
+
+        val widthAnimator = ValueAnimator.ofInt(startWidth, targetWidth)
+        val heightAnimator = ValueAnimator.ofInt(startHeight, targetHeight)
+
+        widthAnimator.addUpdateListener {
+            leaderboardPanel.layoutParams.width = it.animatedValue as Int
+            leaderboardPanel.requestLayout()
+        }
+
+        heightAnimator.addUpdateListener {
+            leaderboardPanel.layoutParams.height = it.animatedValue as Int
+            leaderboardPanel.requestLayout()
+        }
+
+        leaderboardAnimation = AnimatorSet().apply {
+            playTogether(widthAnimator, heightAnimator)
+            duration = 350L
+            interpolator = AccelerateDecelerateInterpolator()
+
+            addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: android.animation.Animator) {
+                    if (!leaderboardExpanded) {
+                        leaderboardRows.visibility = View.GONE
+                        leaderboardRows.alpha = 1f
+                    }
+                }
+            })
+
+            start()
+        }
+    }
+
+    private fun entriesHeight(): Int {
+        val count = leaderboardRows.childCount.coerceAtMost(4)
+        return 16 + (count * 43) + 8
+    }
+
+    private fun formatLeaderboardDistance(distance: Long): String {
+        return "${NumberFormat.getIntegerInstance(Locale.getDefault()).format(distance)} m"
+    }
+
+    private fun formatSkateName(skateId: String): String {
+        return skateId.removePrefix("skate_")
+            .replace("_", " ")
+            .uppercase(Locale.ROOT)
+    }
+
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).toInt()
+    }
+
 }

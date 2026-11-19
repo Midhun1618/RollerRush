@@ -118,17 +118,12 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
     private var dustActive = 0
     private var dustLastNs = 0L
 
-    private val dustFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.FILL
-        color = Color.rgb(248, 244, 236)
-    }
+    private val dustBitmapPaint =
+        Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
+            isFilterBitmap = true
+        }
 
-    // Darker outline so the puffs read on both light and dark ground.
-    private val dustRingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        strokeWidth = 1.6f
-        color = Color.rgb(110, 104, 118)
-    }
+    private val dustBitmapRect = RectF()
 
     private fun spawnLandingDust(x: Float, groundY: Float) {
         for (i in 0 until dustCount) {
@@ -151,26 +146,33 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         dustLastNs = 0L
     }
 
+
     private fun drawLandingDust(canvas: Canvas) {
         if (dustActive == 0) return
 
         val now = System.nanoTime()
+
         val dt = if (dustLastNs == 0L) {
             0f
         } else {
-            ((now - dustLastNs) / 1_000_000_000f).coerceIn(0f, 0.05f)
+            ((now - dustLastNs) / 1_000_000_000f)
+                .coerceIn(0f, 0.05f)
         }
+
         dustLastNs = now
 
         var alive = 0
+
         for (i in 0 until dustCount) {
             if (dustLife[i] <= 0f) continue
 
             dustLife[i] -= dt
+
             if (dustLife[i] <= 0f) {
                 dustLife[i] = 0f
                 continue
             }
+
             alive++
 
             val p = 1f - dustLife[i] / dustMaxLife[i]
@@ -180,20 +182,38 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
             dustVX[i] *= 1f - 3f * dt
 
             val fade = (1f - p) * (1f - p * 0.5f)
-            val a = (215f * fade).toInt()
-            if (a <= 0) continue
+            val alpha = (215f * fade).toInt().coerceIn(0, 255)
 
-            val r = dustRadius[i] + dustGrowth[i] * p
+            if (alpha <= 0) continue
 
-            dustFillPaint.alpha = a
-            dustRingPaint.alpha = (a * 0.7f).toInt()
+            val radius = dustRadius[i] + dustGrowth[i] * p
 
-            canvas.drawCircle(dustX[i], dustY[i], r, dustFillPaint)
-            canvas.drawCircle(dustX[i], dustY[i], r, dustRingPaint)
+            // Fade the WebP texture over its lifetime.
+            dustBitmapPaint.alpha = alpha
+
+            // Expand the smoke texture as it spreads.
+            dustBitmapRect.set(
+                dustX[i] - radius,
+                dustY[i] - radius,
+                dustX[i] + radius,
+                dustY[i] + radius
+            )
+
+            canvas.drawBitmap(
+                assets.landingSmokeBitmap,
+                null,
+                dustBitmapRect,
+                dustBitmapPaint
+            )
         }
 
-        if (alive == 0) dustActive = 0
+        if (alive == 0) {
+            dustActive = 0
+        }
+
+        dustBitmapPaint.alpha = 255
     }
+
 
     private fun boostRandom(): Float {
         boostRandomState =

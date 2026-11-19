@@ -82,7 +82,7 @@ class SettingsActivity : BaseActivity() {
             } else {
                 Toast.makeText(
                     this,
-                    "Google account linking will be enabled in the next step.",
+                    "Google account linking will be enabled in the upcoming updates.",
                     Toast.LENGTH_LONG
                 ).show()
             }

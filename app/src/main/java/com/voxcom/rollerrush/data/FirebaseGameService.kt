@@ -1,5 +1,7 @@
+
 package com.voxcom.rollerrush.data
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -7,10 +9,10 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.MutableData
 import com.google.firebase.database.ServerValue
 import com.google.firebase.database.Transaction
+import com.google.firebase.database.ValueEventListener
 import java.util.Locale
 import org.json.JSONArray
 import org.json.JSONObject
-import com.google.firebase.database.ValueEventListener
 
 data class CompletedRun(
     val runId: String,
@@ -20,11 +22,20 @@ data class CompletedRun(
     val skateId: String,
     val completedAtMillis: Long
 )
+
+data class LeaderboardEntry(
+    val uid: String,
+    val displayName: String,
+    val bestDistance: Long,
+    val bestSkateId: String
+)
+
 class FirebaseGameService(
     private val preferences: GamePreferences
 ) {
 
     private var pendingSyncInProgress = false
+
     private val auth = FirebaseAuth.getInstance()
     private val database = FirebaseDatabase.getInstance().reference
 
@@ -41,8 +52,13 @@ class FirebaseGameService(
         get() = auth.currentUser?.providerData?.any {
             it.providerId == "google.com"
         } == true
+
     var displayName: String? = null
         private set
+
+    // ------------------------------------------------------------
+    // USERNAME GENERATION
+    // ------------------------------------------------------------
 
     private val prefixes = listOf(
         "Fire", "Neon", "Shadow", "Turbo", "Frost",
@@ -97,13 +113,17 @@ class FirebaseGameService(
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    android.util.Log.w(
+                    Log.w(
                         "RollerRushFirebase",
                         "Connection listener cancelled: ${error.message}"
                     )
                 }
             })
     }
+
+    // ------------------------------------------------------------
+    // AUTHENTICATION AND PLAYER PROFILE
+    // ------------------------------------------------------------
 
     fun initialize(
         onComplete: (Boolean, String?) -> Unit = { _, _ -> }
@@ -117,6 +137,7 @@ class FirebaseGameService(
 
         auth.signInAnonymously()
             .addOnCompleteListener { task ->
+
                 if (task.isSuccessful) {
                     val uid = auth.currentUser?.uid
 
@@ -125,6 +146,7 @@ class FirebaseGameService(
                     } else {
                         ensurePlayerProfile(uid, onComplete)
                     }
+
                 } else {
                     onComplete(
                         false,
@@ -155,7 +177,12 @@ class FirebaseGameService(
 
                 if (!existingName.isNullOrBlank()) {
                     displayName = existingName
+
+                    // Publish an existing player's best record.
+                    refreshOwnLeaderboardEntry(uid)
+
                     onComplete(true, null)
+
                 } else {
                     reserveUsername(uid, 0, onComplete)
                 }
@@ -208,15 +235,11 @@ class FirebaseGameService(
                     currentData: DataSnapshot?
                 ) {
                     if (error != null) {
-                        onComplete(
-                            false,
-                            error.message
-                        )
+                        onComplete(false, error.message)
                         return
                     }
 
                     if (!committed) {
-                        // Another player already owns this username.
                         reserveUsername(uid, attempt + 1, onComplete)
                         return
                     }
@@ -242,7 +265,6 @@ class FirebaseGameService(
                     val existingName =
                         currentData.child("displayName").value as? String
 
-                    // Another device may already have created this profile.
                     if (!existingName.isNullOrBlank()) {
                         return Transaction.success(currentData)
                     }
@@ -283,8 +305,6 @@ class FirebaseGameService(
                         return
                     }
 
-                    // If another device won the profile creation race,
-                    // release the unused username reservation.
                     if (!actualName.equals(username, ignoreCase = true)) {
                         releaseUsername(username, uid)
                     }
@@ -294,6 +314,10 @@ class FirebaseGameService(
                 }
             }, false)
     }
+
+    // ------------------------------------------------------------
+    // CHANGE USERNAME
+    // ------------------------------------------------------------
 
     fun changeUsername(
         requestedName: String,
@@ -370,8 +394,15 @@ class FirebaseGameService(
 
                             displayName = newName
 
+                            // Update the public leaderboard name too.
+                            database.child("leaderboard")
+                                .child(uid)
+                                .child("displayName")
+                                .setValue(newName)
+
                             if (!oldName.isNullOrBlank()) {
-                                val oldKey = oldName.lowercase(Locale.ROOT)
+                                val oldKey =
+                                    oldName.lowercase(Locale.ROOT)
 
                                 if (oldKey != newKey) {
                                     releaseUsername(oldName, uid)
@@ -382,7 +413,6 @@ class FirebaseGameService(
                         }
                         .addOnFailureListener { updateError ->
 
-                            // The profile update failed. Release the new reservation.
                             releaseUsername(newName, uid)
 
                             onComplete(
@@ -405,6 +435,7 @@ class FirebaseGameService(
                 override fun doTransaction(
                     currentData: MutableData
                 ): Transaction.Result {
+
                     if (currentData.getValue(String::class.java) == uid) {
                         currentData.value = null
                         return Transaction.success(currentData)
@@ -424,8 +455,113 @@ class FirebaseGameService(
     }
 
     // ------------------------------------------------------------
-// COMPLETED RUNS AND OFFLINE SYNC
-// ------------------------------------------------------------
+    // LEADERBOARD
+    // ------------------------------------------------------------
+
+    /**
+     * Reads the player's private profile and publishes only the
+     * public leaderboard information.
+     */
+    private fun refreshOwnLeaderboardEntry(
+        uid: String,
+        onComplete: (Boolean, String?) -> Unit = { _, _ -> }
+    ) {
+        database.child("users")
+            .child(uid)
+            .get()
+            .addOnSuccessListener { profile ->
+
+                val distance =
+                    (profile.child("bestDistance").value as? Number)
+                        ?.toLong() ?: 0L
+
+                if (distance <= 0L) {
+                    onComplete(true, null)
+                    return@addOnSuccessListener
+                }
+
+                val publicEntry = mapOf(
+                    "displayName" to (
+                            profile.child("displayName")
+                                .getValue(String::class.java) ?: "RUSHER"
+                            ),
+                    "bestDistance" to distance,
+                    "bestSkateId" to (
+                            profile.child("bestSkateId")
+                                .getValue(String::class.java) ?: "skate_basic"
+                            ),
+                    "updatedAtMillis" to System.currentTimeMillis()
+                )
+
+                database.child("leaderboard")
+                    .child(uid)
+                    .setValue(publicEntry)
+                    .addOnSuccessListener {
+                        onComplete(true, null)
+                    }
+                    .addOnFailureListener { error ->
+                        onComplete(
+                            false,
+                            error.localizedMessage
+                                ?: "Could not publish leaderboard entry."
+                        )
+                    }
+            }
+            .addOnFailureListener { error ->
+                onComplete(
+                    false,
+                    error.localizedMessage ?: "Could not read player profile."
+                )
+            }
+    }
+
+    /**
+     * Fetches the five highest personal-best distances.
+     */
+    fun fetchTopLeaderboard(
+        onComplete: (List<LeaderboardEntry>, String?) -> Unit
+    ) {
+        database.child("leaderboard")
+            .orderByChild("bestDistance")
+            .limitToLast(5)
+            .get()
+            .addOnSuccessListener { snapshot ->
+
+                val entries = snapshot.children.mapNotNull { child ->
+
+                    val uid = child.key ?: return@mapNotNull null
+
+                    val distance =
+                        (child.child("bestDistance").value as? Number)
+                            ?.toLong() ?: 0L
+
+                    if (distance <= 0L) {
+                        return@mapNotNull null
+                    }
+
+                    LeaderboardEntry(
+                        uid = uid,
+                        displayName = child.child("displayName")
+                            .getValue(String::class.java) ?: "RUSHER",
+                        bestDistance = distance,
+                        bestSkateId = child.child("bestSkateId")
+                            .getValue(String::class.java) ?: "skate_basic"
+                    )
+                }.sortedByDescending { it.bestDistance }
+
+                onComplete(entries, null)
+            }
+            .addOnFailureListener { error ->
+                onComplete(
+                    emptyList(),
+                    error.localizedMessage ?: "Could not load leaderboard."
+                )
+            }
+    }
+
+    // ------------------------------------------------------------
+    // COMPLETED RUNS AND OFFLINE SYNC
+    // ------------------------------------------------------------
 
     private fun readPendingRuns(): MutableList<CompletedRun> {
         val result = mutableListOf<CompletedRun>()
@@ -445,13 +581,19 @@ class FirebaseGameService(
                         score = item.optInt("score", 0),
                         distanceMeters = item.optInt("distanceMeters", 0),
                         coins = item.optInt("coins", 0),
-                        skateId = item.optString("skateId", "skate_basic"),
-                        completedAtMillis = item.optLong("completedAtMillis", 0L)
+                        skateId = item.optString(
+                            "skateId",
+                            "skate_basic"
+                        ),
+                        completedAtMillis = item.optLong(
+                            "completedAtMillis",
+                            0L
+                        )
                     )
                 )
             }
         } catch (error: Exception) {
-            android.util.Log.e(
+            Log.e(
                 "RollerRushFirebase",
                 "Could not read pending runs",
                 error
@@ -483,7 +625,6 @@ class FirebaseGameService(
     private fun enqueueRun(run: CompletedRun) {
         val runs = readPendingRuns()
 
-        // Avoid adding the same run twice to the local queue.
         if (runs.any { it.runId == run.runId }) return
 
         runs.add(run)
@@ -491,9 +632,7 @@ class FirebaseGameService(
     }
 
     /**
-     * Called once when a run finishes.
-     * The run is saved locally first, so it is not lost if the
-     * device has no internet connection.
+     * Saves a completed run locally first, then attempts to sync.
      */
     fun submitCompletedRun(run: CompletedRun) {
         val safeRun = run.copy(
@@ -510,7 +649,7 @@ class FirebaseGameService(
                 if (success) {
                     syncPendingRuns()
                 } else {
-                    android.util.Log.w(
+                    Log.w(
                         "RollerRushFirebase",
                         "Run saved offline; sign-in/sync pending: $error"
                     )
@@ -523,8 +662,8 @@ class FirebaseGameService(
 
     /**
      * Uploads queued runs sequentially.
-     * A run is removed from local storage only after Firebase
-     * confirms that its transaction has completed.
+     * A run is removed only after Firebase confirms its upload
+     * and its public leaderboard entry has been updated.
      */
     fun syncPendingRuns() {
         if (pendingSyncInProgress) return
@@ -546,16 +685,17 @@ class FirebaseGameService(
         if (index >= runs.size) {
             pendingSyncInProgress = false
 
-            // Pick up any runs added while the previous batch was syncing.
             if (readPendingRuns().isNotEmpty()) {
                 syncPendingRuns()
             }
+
             return
         }
 
         val run = runs[index]
 
         saveRunToFirebase(uid, run) { success, error ->
+
             if (success) {
                 val remainingRuns = readPendingRuns()
                     .filterNot { it.runId == run.runId }
@@ -563,10 +703,11 @@ class FirebaseGameService(
                 savePendingRuns(remainingRuns)
 
                 uploadNextRun(uid, runs, index + 1)
+
             } else {
                 pendingSyncInProgress = false
 
-                android.util.Log.w(
+                Log.w(
                     "RollerRushFirebase",
                     "Run ${run.runId} remains queued: $error"
                 )
@@ -575,8 +716,8 @@ class FirebaseGameService(
     }
 
     /**
-     * One transaction updates the player's run history and lifetime
-     * statistics together. The run ID makes retries idempotent.
+     * Records the run exactly once, updates lifetime statistics,
+     * updates personal best, then refreshes the public leaderboard.
      */
     private fun saveRunToFirebase(
         uid: String,
@@ -595,8 +736,7 @@ class FirebaseGameService(
                         .child("runs")
                         .child(run.runId)
 
-                    // This run was already recorded. Treat it as success
-                    // so a retry can safely remove it from the local queue.
+                    // Avoid counting the same run more than once.
                     if (runNode.value != null) {
                         return Transaction.success(currentData)
                     }
@@ -616,7 +756,8 @@ class FirebaseGameService(
                     val distance = run.distanceMeters.toLong()
 
                     runNode.child("score").value = run.score
-                    runNode.child("distanceMeters").value = run.distanceMeters
+                    runNode.child("distanceMeters").value =
+                        run.distanceMeters
                     runNode.child("coins").value = run.coins
                     runNode.child("skateId").value = run.skateId
                     runNode.child("completedAtMillis").value =
@@ -651,10 +792,19 @@ class FirebaseGameService(
                 ) {
                     if (error != null) {
                         onComplete(false, error.message)
+
                     } else if (!committed) {
-                        onComplete(false, "Firebase did not commit the run.")
+                        onComplete(
+                            false,
+                            "Firebase did not commit the run."
+                        )
+
                     } else {
-                        onComplete(true, null)
+                        // Publish the latest personal best to the
+                        // public leaderboard before removing the queue item.
+                        refreshOwnLeaderboardEntry(uid) { published, publishError ->
+                            onComplete(published, publishError)
+                        }
                     }
                 }
             }, false)

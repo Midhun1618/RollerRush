@@ -63,6 +63,8 @@ class AssetManager(private val context: Context) {
 
     lateinit var mysteryBubbleBitmap: Bitmap
         private set
+    lateinit var landingSmokeBitmap: Bitmap
+        private set
     lateinit var mysteryBurstFrames: Array<Bitmap>
         private set
     lateinit var pigeonIdleFrames: Array<Bitmap>
@@ -142,6 +144,12 @@ class AssetManager(private val context: Context) {
             canvas.drawPath(highlight, highlightPaint)
         }
 
+        landingSmokeBitmap = make(
+            "effects/dust_cloud.png",
+            128,
+            128
+        ) { _, _, _ -> }
+
         mysteryBubbleBitmap = make(
             "collectibles/mystery_bubble.webp",
             (54f * Constants.BITMAP_SCALE).toInt(),
@@ -184,13 +192,13 @@ class AssetManager(private val context: Context) {
         ) { _, _, _ -> }
 
         roadsideShrub = make(
-            "background/roadside/shrubs.webp",
+            "background/roadside/shrub.webp",
             (55f * Constants.BITMAP_SCALE).toInt(),
             (42f * Constants.BITMAP_SCALE).toInt()
         ) { _, _, _ -> }
 
         roadsideOldGrill = make(
-            "background/roadside/grill_old.webp",
+            "background/roadside/shrub1.webp",
             (62f * Constants.BITMAP_SCALE).toInt(),
             (46f * Constants.BITMAP_SCALE).toInt()
         ) { _, _, _ -> }
@@ -501,6 +509,7 @@ class AssetManager(private val context: Context) {
             farBackground,
             midBackground,
             groundTile,
+            landingSmokeBitmap,
             introBackground
         ).forEach { bitmap ->
             if (!bitmap.isRecycled) {
