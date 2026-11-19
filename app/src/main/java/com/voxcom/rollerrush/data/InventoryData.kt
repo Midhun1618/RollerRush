@@ -39,7 +39,7 @@ object ShopCatalog {
             unlockLevel = 1
         ),
         ShopItem(
-            "skate_ice", "Ice Glide", 50, ShopItemType.SKATE,
+            "skate_ice", "Ice Glide", 500, ShopItemType.SKATE,
             "skate2.png",
             particleName = "particle_ice.png",
             description = "Smooth and cold.",
@@ -47,7 +47,7 @@ object ShopCatalog {
             unlockLevel = 2
         ),
         ShopItem(
-            "skate_sunset_rush", "Sunset Rush", 90, ShopItemType.SKATE,
+            "skate_sunset_rush", "Sunset Rush", 1000, ShopItemType.SKATE,
             "skate_sunset_rush.webp",
             particleName = "particle_sunset_rush.png",
             description = "Bright colors and racing energy.",
@@ -55,7 +55,7 @@ object ShopCatalog {
             unlockLevel = 3
         ),
         ShopItem(
-            "skate_pixel_pop", "Pixel Pop", 11, ShopItemType.SKATE,
+            "skate_pixel_pop", "Pixel Pop", 1500, ShopItemType.SKATE,
             "skate_pixel_pop.webp",
             particleName = "particle_pixel_pop.png",
             description = "An arcade-inspired design.",
@@ -63,7 +63,7 @@ object ShopCatalog {
             unlockLevel = 3
         ),
         ShopItem(
-            "skate_night_shift", "Night Shift", 13, ShopItemType.SKATE,
+            "skate_night_shift", "Night Shift", 3000, ShopItemType.SKATE,
             "skate_night_shift.webp",
             particleName = "particle_night_shift.png",
             description = "A stealthy black-and-silver style.",
@@ -73,7 +73,7 @@ object ShopCatalog {
 
         // PRO SERIES
         ShopItem(
-            "skate_aero", "Aero Blue", 18, ShopItemType.SKATE,
+            "skate_aero", "Aero Blue", 5200, ShopItemType.SKATE,
             "skate3.png",
             particleName = "particle_aero.png",
             description = "Lightweight racing setup.",
@@ -81,7 +81,7 @@ object ShopCatalog {
             unlockLevel = 4
         ),
         ShopItem(
-            "skate_nitro_edge", "Nitro Edge", 21, ShopItemType.SKATE,
+            "skate_nitro_edge", "Nitro Edge", 7100, ShopItemType.SKATE,
             "skate_nitro_edge.webp",
             particleName = "particle_nitro_edge.png",
             description = "Motorsport-inspired racing style.",
@@ -89,7 +89,7 @@ object ShopCatalog {
             unlockLevel = 5
         ),
         ShopItem(
-            "skate_sonic_wave", "Sonic Wave", 24, ShopItemType.SKATE,
+            "skate_sonic_wave", "Sonic Wave", 8000, ShopItemType.SKATE,
             "skate_sonic_wave.webp",
             particleName = "particle_sonic_wave.png",
             description = "A streamlined speed design.",
@@ -97,7 +97,7 @@ object ShopCatalog {
             unlockLevel = 5
         ),
         ShopItem(
-            "skate_gold_standard", "Gold Standard", 27, ShopItemType.SKATE,
+            "skate_gold_standard", "Gold Standard", 9200, ShopItemType.SKATE,
             "skate_gold_standard.webp",
             particleName = "particle_gold_standard.png",
             description = "Premium metallic detailing.",
@@ -105,7 +105,7 @@ object ShopCatalog {
             unlockLevel = 6
         ),
         ShopItem(
-            "skate_drift_king", "Drift King", 33, ShopItemType.SKATE,
+            "skate_drift_king", "Drift King", 10000, ShopItemType.SKATE,
             "skate_drift_king.webp",
             particleName = "particle_drift_king.png",
             description = "Made for a drifting-inspired look.",
@@ -113,7 +113,7 @@ object ShopCatalog {
             unlockLevel = 6
         ),
         ShopItem(
-            "skate_cross_rider", "Cross Rider", 20, ShopItemType.SKATE,
+            "skate_cross_rider", "Cross Rider", 12000, ShopItemType.SKATE,
             "skate_cross_rider.webp",
             particleName = "particle_cross_rider.png",
             description = "A bold street-racing design.",
@@ -123,7 +123,7 @@ object ShopCatalog {
 
         // APEX SERIES
         ShopItem(
-            "skate_volt", "Volt Runner", 30, ShopItemType.SKATE,
+            "skate_volt", "Volt Runner", 20000, ShopItemType.SKATE,
             "skate5.png",
             particleName = "particle_volt.png",
             description = "Electric racing wheels.",
@@ -131,7 +131,7 @@ object ShopCatalog {
             unlockLevel = 7
         ),
         ShopItem(
-            "skate_street_tox", "Street Tox", 38, ShopItemType.SKATE,
+            "skate_street_tox", "Street Tox", 38000, ShopItemType.SKATE,
             "skate_street_tox.webp",
             particleName = "particle_street_tox.png",
             description = "An aggressive urban skate style.",
@@ -139,7 +139,7 @@ object ShopCatalog {
             unlockLevel = 8
         ),
         ShopItem(
-            "skate_inferno", "Inferno", 40, ShopItemType.SKATE,
+            "skate_inferno", "Inferno", 40000, ShopItemType.SKATE,
             "skate4.png",
             particleName = "particle_inferno.png",
             description = "Built for aggressive runs.",
@@ -147,7 +147,7 @@ object ShopCatalog {
             unlockLevel = 7
         ),
         ShopItem(
-            "skate_thunderbolt", "Thunderbolt", 45, ShopItemType.SKATE,
+            "skate_thunderbolt", "Thunderbolt", 45000, ShopItemType.SKATE,
             "skate_thunderbolt.webp",
             particleName = "particle_thunderbolt.png",
             description = "An electric lightning design.",
@@ -155,7 +155,7 @@ object ShopCatalog {
             unlockLevel = 8
         ),
         ShopItem(
-            "skate_titanium_x", "Titanium X", 50, ShopItemType.SKATE,
+            "skate_titanium_x", "Titanium X", 50000, ShopItemType.SKATE,
             "skate_titanium.webp",
             particleName = "particle_titanium_x.png",
             description = "A high-tech metallic finish.",
@@ -163,7 +163,7 @@ object ShopCatalog {
             unlockLevel = 8
         ),
         ShopItem(
-            "skate_neon_phantom", "Neon Phantom", 55, ShopItemType.SKATE,
+            "skate_neon_phantom", "Neon Phantom", 55000, ShopItemType.SKATE,
             "skate_neon_phantom.png",
             particleName = "particle_neon_phantom.png",
             description = "A mysterious neon racing style.",
@@ -173,7 +173,7 @@ object ShopCatalog {
 
         // MYTHIC SERIES
         ShopItem(
-            "skate_skull_ride", "Skull Ride", 60, ShopItemType.SKATE,
+            "skate_skull_ride", "Skull Ride", 60000, ShopItemType.SKATE,
             "skate_skull_ride.webp",
             particleName = "particle_skull_ride.png",
             description = "A dark design built to stand out.",
@@ -181,7 +181,7 @@ object ShopCatalog {
             unlockLevel = 9
         ),
         ShopItem(
-            "skate_cosmic_drift", "Cosmic Drift", 65, ShopItemType.SKATE,
+            "skate_cosmic_drift", "Cosmic Drift", 65000, ShopItemType.SKATE,
             "skate_cosmic_drift.webp",
             particleName = "particle_cosmic_drift.png",
             description = "A galaxy-inspired legendary design.",
@@ -189,7 +189,7 @@ object ShopCatalog {
             unlockLevel = 10
         ),
         ShopItem(
-            "skate_solar_flare", "Solar Flare", 70, ShopItemType.SKATE,
+            "skate_solar_flare", "Solar Flare", 70000, ShopItemType.SKATE,
             "skate_solar_flare.webp",
             particleName = "particle_solar_flare.png",
             description = "A radiant celestial design.",
@@ -197,7 +197,7 @@ object ShopCatalog {
             unlockLevel = 10
         ),
         ShopItem(
-            "skate_void_reaper", "Void Reaper", 75, ShopItemType.SKATE,
+            "skate_void_reaper", "Void Reaper", 75000, ShopItemType.SKATE,
             "skate_void_reaper.webp",
             particleName = "particle_void_reaper.png",
             description = "A dark, crimson energy style.",
@@ -205,7 +205,7 @@ object ShopCatalog {
             unlockLevel = 10
         ),
         ShopItem(
-            "skate_infinity", "Infinity", 90, ShopItemType.SKATE,
+            "skate_infinity", "Infinity", 90000, ShopItemType.SKATE,
             "skate_infinity.webp",
             particleName = "particle_infinity.png",
             description = "A holographic rainbow finish.",

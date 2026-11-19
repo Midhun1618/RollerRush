@@ -75,6 +75,7 @@ class GameWorld(
 
     private val containerSystem = ContainerSystem()
     private val containerStunt = ContainerStuntController(player)
+    private var lastSupportY = Constants.GROUND_Y
 
     private val speedMultiplier =
         stats.speedMultiplier
@@ -680,6 +681,7 @@ class GameWorld(
         // Start the crouch animation before actual takeoff.
         if (controller.consumeJumpAnticipationStarted()) {
             animator.requestJumpAnticipation()
+            camera.triggerJumpAnticipation()
         }
 
         // --------------------------------------------------------
@@ -733,6 +735,19 @@ class GameWorld(
         if (containerStunt.active) {
             containerStunt.applyPose()
         }
+
+        // Jump camera follow: height above the surface the skater last stood on.
+        if (player.grounded || containerStunt.active) {
+            lastSupportY = player.bottomY
+            camera.setAirHeight(0f)
+        } else {
+            camera.setAirHeight(lastSupportY - player.bottomY)
+        }
+
+        // Container stunt camera: goals every frame + one-shot punches (grab / landing).
+        camera.setStuntTarget(containerStunt.cameraTarget)
+        val stuntImpact = containerStunt.consumeCameraImpact()
+        if (stuntImpact > 0f) camera.triggerStuntImpact(stuntImpact)
 
         player.updateHitboxes()
 

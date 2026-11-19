@@ -113,4 +113,19 @@ object Constants {
     // Special stunt jump timing window.
     const val CONTAINER_STUNT_MIN_DISTANCE = 120f
     const val CONTAINER_STUNT_MAX_DISTANCE = 210f
+
+    const val CART_UNLOCK_METERS = 180
+    const val BARRICADE_UNLOCK_METERS = 300
+
+    const val SHOPPING_CART_WIDTH = 58f
+    const val SHOPPING_CART_HEIGHT = 58f
+    const val CART_EXTRA_SPEED = 35f
+    const val CART_BOB_AMOUNT = 1.4f
+    const val CART_TILT_AMOUNT = 2.0f
+    const val CART_SPAWN_CHANCE = 0.18f
+
+    const val BARRICADE_WIDTH = 100f
+    const val BARRICADE_HEIGHT = 75f
+    const val BARRICADE_SPAWN_CHANCE = 0.12f
+
 }

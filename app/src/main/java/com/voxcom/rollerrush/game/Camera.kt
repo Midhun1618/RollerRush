@@ -1,6 +1,7 @@
 package com.voxcom.rollerrush.game
 
 import android.graphics.Canvas
+import com.voxcom.rollerrush.player.StuntCameraTarget
 import com.voxcom.rollerrush.utils.Constants
 import kotlin.math.cos
 import kotlin.math.exp
@@ -17,6 +18,8 @@ import kotlin.math.sin
  * - Crash shake / zoom
  * - Speed boost chase camera
  * - Slide cinematic camera
+ * - Lively jump camera (crouch dip, takeoff snap, height follow, landing thump)
+ * - Container stunt camera (zoom / look-up / pan / tilt, chased smoothly)
  */
 class Camera {
 
@@ -90,6 +93,58 @@ class Camera {
     private var slideTilt = 0f
 
     private var slideSeed = 0f
+
+    // ------------------------------------------------------------
+    // JUMP CAMERA
+    // ------------------------------------------------------------
+
+    // Two small damped springs react to impulses: vertical bob (units) and tilt (deg).
+    private var kickY = 0f
+    private var kickYVel = 0f
+    private var kickTilt = 0f
+    private var kickTiltVel = 0f
+
+    // Camera rises with the skater (lagging behind), then settles back after landing.
+    private var airHeight = 0f
+    private var followDy = 0f
+
+    // Gentle zoom that breathes with the jump (>= 1 so no extra world is revealed).
+    private var jumpZoom = 1f
+
+    /** Called every frame by GameWorld: skater height above the surface he took off from (>= 0). */
+    fun setAirHeight(height: Float) {
+        airHeight = height.coerceAtLeast(0f)
+    }
+
+    /** Crouch before takeoff: camera dips with the body. */
+    fun triggerJumpAnticipation() {
+        kickYVel += 46f
+    }
+
+    // ------------------------------------------------------------
+    // CONTAINER STUNT CAMERA
+    // ------------------------------------------------------------
+
+    // Goals come from ContainerStuntController.cameraTarget; the camera chases them
+    // with exponential easing, so entering AND leaving the stunt framing is smooth.
+    private var stuntTarget: StuntCameraTarget? = null
+
+    private var stuntZoom = 1f
+    private var stuntDy = 0f
+    private var stuntPanX = 0f
+    private var stuntTilt = 0f
+
+    fun setStuntTarget(target: StuntCameraTarget?) {
+        stuntTarget = target
+    }
+
+    /** One-shot camera punch (ledge grab / heroic landing). */
+    fun triggerStuntImpact(strength: Float) {
+        addShake(
+            strength = strength,
+            duration = 0.24f
+        )
+    }
 
     // ------------------------------------------------------------
     // INTRO CAMERA
@@ -204,6 +259,40 @@ class Camera {
         }
 
         // --------------------------------------------------------
+        // JUMP CAMERA
+        // --------------------------------------------------------
+
+        val sdt = min(dt, 0.033f)
+
+        // Damped springs (semi-implicit Euler, ~2 Hz, a little under-damped = bouncy).
+        kickYVel += (-190f * kickY - 17f * kickYVel) * sdt
+        kickY += kickYVel * sdt
+
+        kickTiltVel += (-170f * kickTilt - 15f * kickTiltVel) * sdt
+        kickTilt += kickTiltVel * sdt
+
+        // Follow the jump upward, quicker on the way up than on the way down.
+        val followTarget = -min(airHeight, 120f) * 0.17f
+        val followRate = if (followTarget < followDy) 7f else 3.6f
+        followDy += (followTarget - followDy) * (1f - exp(-sdt * followRate))
+
+        // Slight push-in while rising, easing out near the apex and on the way down.
+        val zoomTarget2 = 1f + 0.03f * min(airHeight / 95f, 1f)
+        jumpZoom += (zoomTarget2 - jumpZoom) * (1f - exp(-sdt * 6f))
+
+        // --------------------------------------------------------
+        // CONTAINER STUNT CAMERA
+        // --------------------------------------------------------
+
+        val st = stuntTarget
+        val stuntK = 1f - exp(-dt * (st?.response ?: 4.5f))
+
+        stuntZoom += ((st?.zoom ?: 1f) - stuntZoom) * stuntK
+        stuntDy += ((st?.focusDy ?: 0f) - stuntDy) * stuntK
+        stuntPanX += ((st?.panX ?: 0f) - stuntPanX) * stuntK
+        stuntTilt += ((st?.tilt ?: 0f) - stuntTilt) * stuntK
+
+        // --------------------------------------------------------
         // SLIDE CINEMATIC CAMERA
         // --------------------------------------------------------
 
@@ -253,7 +342,7 @@ class Camera {
             slideTilt = 0f
         }
 
- // ------------------------------------------------------------
+        // ------------------------------------------------------------
 // CRASH TILT: sharp reaction, then controlled settle
 // ------------------------------------------------------------
 
@@ -308,6 +397,19 @@ class Camera {
 
         crashTiltTime = 1f
         crashTilt = 0f
+
+        stuntZoom = 1f
+        stuntDy = 0f
+        stuntPanX = 0f
+        stuntTilt = 0f
+
+        kickY = 0f
+        kickYVel = 0f
+        kickTilt = 0f
+        kickTiltVel = 0f
+        airHeight = 0f
+        followDy = 0f
+        jumpZoom = 1f
     }
 
     // ------------------------------------------------------------
@@ -351,14 +453,18 @@ class Camera {
 
     fun triggerJump() {
 
+        // Takeoff snap: camera springs up and leans in a touch.
+        kickYVel -= 130f
+        kickTiltVel -= 16f
+
         addShake(
-            strength = 2.0f,
-            duration = 0.10f
+            strength = 1.2f,
+            duration = 0.08f
         )
 
         kickZoom(
-            target = 1.035f,
-            duration = 0.14f
+            target = 1.03f,
+            duration = 0.12f
         )
     }
 
@@ -367,6 +473,10 @@ class Camera {
     // ------------------------------------------------------------
 
     fun triggerLanding(impact: Float = 1f) {
+
+        // Landing thump: camera drops hard, then bounces back via the spring.
+        kickYVel += 150f * impact.coerceIn(0.4f, 1.5f) * (1f - introBlend)
+        kickTiltVel += 12f
 
         val strength =
             (3.5f + impact * 5.0f)
@@ -496,7 +606,7 @@ class Camera {
                     (Constants.INTRO_CAMERA_ZOOM - 1f) * introBlend
 
         val finalZoom =
-            zoom * slideZoom * introZoom
+            zoom * slideZoom * introZoom * stuntZoom * jumpZoom
 
         val zScale =
             scale * finalZoom
@@ -509,7 +619,7 @@ class Camera {
 
         val normalX =
             screenFocusX +
-                    panX * scale +
+                    (panX + stuntPanX) * scale +
                     slideShakeX +
                     shakeX
 
@@ -538,7 +648,7 @@ class Camera {
 
         canvas.translate(finalX, finalY)
         // World-space range that is actually visible after zoom / pan / tilt.
-        val tiltDeg = kotlin.math.abs((slideTilt + crashTilt) * (1f - introBlend))
+        val tiltDeg = kotlin.math.abs((slideTilt + crashTilt + stuntTilt + kickTilt) * (1f - introBlend))
         val tiltExtra = kotlin.math.abs(
             sin(Math.toRadians(tiltDeg.toDouble())).toFloat()
         ) * screenHeight / zScale
@@ -547,11 +657,12 @@ class Camera {
         visibleRight = focusX + (screenWidth - finalX) / zScale + tiltExtra + 2f
 
         canvas.rotate(
-            (slideTilt + crashTilt) * (1f - introBlend)
+            (slideTilt + crashTilt + stuntTilt + kickTilt) * (1f - introBlend)
         )
 
         canvas.scale(zScale, zScale)
-        canvas.translate(-focusX, -focusY)
+        // Container stunt: look higher (stuntDy < 0) so the flip stays framed.
+        canvas.translate(-focusX, -(focusY + stuntDy + followDy + kickY))
     }
 
     // ------------------------------------------------------------

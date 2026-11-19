@@ -5,7 +5,10 @@ import com.voxcom.rollerrush.animation.Pose
 import com.voxcom.rollerrush.animation.SkatingAnimation
 import com.voxcom.rollerrush.utils.Constants
 import kotlin.math.max
+import kotlin.math.abs
 import kotlin.math.min
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class PlayerAnimator(private val player: Player) {
 
@@ -23,6 +26,12 @@ class PlayerAnimator(private val player: Player) {
     private val reachPose = Pose()
     private val landPose = Pose()
     private val heroPose = Pose()
+
+    // Jump key poses: takeoff stretch -> apex tuck -> landing reach.
+    private val airRisePose = Pose()
+    private val airApexPose = Pose()
+    private val airFallPose = Pose()
+    private var airTime = 0f
 
     private val jumpAnticipationPose = Pose()
     private val out = Pose()
@@ -58,12 +67,28 @@ class PlayerAnimator(private val player: Player) {
         setBody(heroPose, 72f, -52f, 3f, 2f)
         setLegs(heroPose, 57f, 2f, 0f, -70f, 115f, 0f)
         setArms(heroPose, 72f, -20f, -102f, -25f)
+
+        // JUMP: TAKEOFF STRETCH. Body extends, toes point, both arms drive up.
+        setBody(airRisePose, 2f, -1f, 0f, -4f)
+        setLegs(airRisePose, -26f, 28f, 28f, 14f, 22f, 42f)
+        setArms(airRisePose, -118f, -22f, -138f, -26f)
+
+        // JUMP: APEX TUCK. Knees pulled up (body lifted so the tuck reads), arms float out.
+        setBody(airApexPose, 15f, -9f, 1f, -11f)
+        setLegs(airApexPose, -82f, 102f, 4f, -54f, 96f, 14f)
+        setArms(airApexPose, -52f, -28f, -98f, -34f)
+
+        // JUMP: LANDING REACH. Legs unfold toward the ground, arms wide for balance.
+        setBody(airFallPose, 9f, -7f, 0f, -4f)
+        setLegs(airFallPose, -32f, 44f, 4f, -10f, 36f, 8f)
+        setArms(airFallPose, 24f, -26f, -88f, -38f)
     }
 
     fun reset() {
         skating.reset()
 
         airBlend = 0f
+        airTime = 0f
         landDip = 0f
         crashTime = 0f
 
@@ -321,10 +346,7 @@ class PlayerAnimator(private val player: Player) {
         // -------------------------------------------------------------
         // AIR POSE
         // -------------------------------------------------------------
-        SkatingAnimation.airPose(
-            player.vy,
-            airPose
-        )
+        buildAirPose(airPose, dt)
 
         // -------------------------------------------------------------
         // JUMP ANTICIPATION + AIR TRANSITION
@@ -516,8 +538,8 @@ class PlayerAnimator(private val player: Player) {
         // LANDING RECOVERY
         // -------------------------------------------------------------
         if (landDip > 0f) {
-            val dKnee = 28f * landDip
-            val dThigh = -8f * landDip
+            val dKnee = 40f * landDip
+            val dThigh = -10f * landDip
 
             out.leftKnee += dKnee
             out.leftThigh += dThigh
@@ -527,13 +549,51 @@ class PlayerAnimator(private val player: Player) {
             out.rightThigh += dThigh
             out.rightSkate -= dKnee + dThigh
 
-            out.torsoRotation += 6f * landDip
-            out.headRotation -= 5f * landDip
+            out.torsoRotation += 8f * landDip
+            out.headRotation -= 6f * landDip
+            out.bodyOffsetY += 5f * landDip
+
+            // Arms drop to absorb the impact.
+            out.leftArm += 14f * landDip
+            out.rightArm += 18f * landDip
         }
 
         apply(out)
     }
 
+
+    /**
+     * Jump pose driven by vertical speed: u = -1 at takeoff, 0 at the apex, +1 at landing.
+     * Rise: stretch -> tuck. Fall: tuck -> reach for the ground. A small arm flutter
+     * keeps the apex alive. While still on the ground it returns the takeoff stretch
+     * (so the crouch extends into the jump) or, after touchdown, the landing reach.
+     */
+    private fun buildAirPose(dst: Pose, dt: Float) {
+        val jumpSpeed = sqrt(2f * Constants.GRAVITY * Constants.JUMP_HEIGHT_BASE)
+
+        val u = when {
+            !player.grounded -> (player.vy / jumpSpeed).coerceIn(-1f, 1f)
+            jumpAnticipationTime >= 0f -> -1f
+            else -> 1f
+        }
+
+        airTime = if (player.grounded) 0f else airTime + dt
+
+        if (u < 0f) {
+            // Tuck starts right after leaving the ground, fully tucked at the apex.
+            dst.lerp(airApexPose, airRisePose, smooth(-u * 1.25f - 0.12f))
+        } else {
+            // Unfold early enough to be ready before touchdown.
+            dst.lerp(airApexPose, airFallPose, smooth(u * 1.45f))
+        }
+
+        val floaty = 1f - abs(u)
+        val flutter = sin(airTime * 15f) * 5f * floaty
+        dst.leftArm += flutter
+        dst.rightArm -= flutter * 0.8f
+        dst.leftForearm += flutter * 0.6f
+        dst.torsoRotation += sin(airTime * 9f) * 1.2f * floaty
+    }
 
     private fun apply(p: Pose) {
 
@@ -675,6 +735,6 @@ class PlayerAnimator(private val player: Player) {
         const val JUMP_TOTAL_TRANSITION =
             JUMP_CROUCH_DURATION + JUMP_EXTENSION_DURATION
 
-        const val LAND_RECOVER_RATE = 6f
+        const val LAND_RECOVER_RATE = 5.2f
     }
 }

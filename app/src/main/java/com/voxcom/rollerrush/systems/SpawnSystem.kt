@@ -10,19 +10,29 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 /**
- * PROCEDURAL SPAWNING.
+ * Procedural obstacle and reward spawning.
  *
- * A countdown timer (seconds, so it is frame-rate independent and freezes while paused)
- * triggers a "spawn event" just off the right edge of the screen:
- *   1. pick an obstacle type from those unlocked by distance (variety grows over time)
- *   2. place it from the pool
- *   3. decorate it with coins: an ARC over the obstacle (reward for jumping) or a LINE on the
- *      ground halfway to the next obstacle (reward for skating).
- * Entities come from fixed pools, so no objects are allocated while playing.
+ * Obstacles are selected from the types unlocked at the current distance.
+ * Entities are acquired from GameWorld's fixed pools.
  */
 class SpawnSystem {
     private val rng = Random(System.nanoTime())
-    private val normalTypes = arrayOf(ObstacleType.GROUND, ObstacleType.TALL, ObstacleType.MOVING)
+
+    private val earlyTypes = arrayOf(
+        ObstacleType.GROUND
+    )
+
+    private val midTypes = arrayOf(
+        ObstacleType.GROUND,
+        ObstacleType.TALL
+    )
+
+    private val lateTypes = arrayOf(
+        ObstacleType.GROUND,
+        ObstacleType.TALL,
+        ObstacleType.MOVING
+    )
+
     private var timer = Constants.FIRST_SPAWN_DELAY
     private var powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN
     private var nextRushRubyDistance = 0
@@ -31,7 +41,7 @@ class SpawnSystem {
     private var nextMysteryBubbleDistance = 0
 
     fun reset() {
-        timer = Constants.FIRST_SPAWN_DELAY;
+        timer = Constants.FIRST_SPAWN_DELAY
         powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN
         nextRushRubyDistance = rng.nextInt(1000, 2001)
         mysteryBubbleSpawned = false
@@ -42,15 +52,10 @@ class SpawnSystem {
         timer -= dt
         powerUpTimer -= dt
 
-        // Spawn just past the right edge the camera can actually see (zoom / pan / tilt aware).
+        // Use the camera's visible edge so spawning remains correct during zoom/pan.
         val right = maxOf(world.camera.viewWidth, world.camera.visibleRight)
 
-        // ------------------------------------------------------------
-        // REPEATING RUSH RUBY SPAWNING
-        // First ruby appears between 1,000 and 2,000 meters.
-        // Subsequent rubies appear at random 1,000–2,000 meter intervals.
-        // ------------------------------------------------------------
-
+        // Rush Ruby spawning.
         if (world.scoreSystem.distanceMeters >= nextRushRubyDistance) {
             val ruby = world.acquireRushRuby()
 
@@ -60,23 +65,28 @@ class SpawnSystem {
                     Constants.GROUND_Y - 72f
                 )
 
-                // Schedule the next ruby from the current distance.
                 nextRushRubyDistance =
                     world.scoreSystem.distanceMeters + rng.nextInt(1000, 2001)
             }
         }
 
+        // Speed booster spawning.
         if (powerUpTimer <= 0f) {
             if (world.scoreSystem.distanceMeters >= Constants.SPEED_BOOST_UNLOCK_METERS) {
-                val pu = world.acquirePowerUp()
-                if (pu != null) pu.init(
-                    com.voxcom.rollerrush.entities.PowerUpType.SPEED,
-                    right + Constants.SPAWN_MARGIN + 80f,
-                    Constants.GROUND_Y - 72f
-                )
+                val powerUp = world.acquirePowerUp()
+
+                if (powerUp != null) {
+                    powerUp.init(
+                        com.voxcom.rollerrush.entities.PowerUpType.SPEED,
+                        right + Constants.SPAWN_MARGIN + 80f,
+                        Constants.GROUND_Y - 72f
+                    )
+                }
             }
+
             powerUpTimer = Constants.SPEED_BOOST_SPAWN_MIN +
-                    rng.nextFloat() * (Constants.SPEED_BOOST_SPAWN_MAX - Constants.SPEED_BOOST_SPAWN_MIN)
+                    rng.nextFloat() *
+                    (Constants.SPEED_BOOST_SPAWN_MAX - Constants.SPEED_BOOST_SPAWN_MIN)
         }
 
         if (timer > 0f) return
@@ -85,41 +95,58 @@ class SpawnSystem {
         timer += interval
 
         val spawnX = right + Constants.SPAWN_MARGIN
-        // Avoid spawning ordinary obstacles directly on container platforms.
-        if (world.isContainerNear(spawnX, 160f)) {
-            return
-        }
 
-// Keep ordinary obstacles away from container platforms.
+        // Keep ordinary obstacles away from the container stunt area.
         if (world.isContainerNear(spawnX, 180f)) {
             return
         }
 
         val meters = world.scoreSystem.distanceMeters
-        val maxIndex = when {
-            meters >= Constants.MOVING_UNLOCK_METERS -> 2
-            meters >= Constants.TALL_UNLOCK_METERS -> 1
-            else -> 0
+
+        val baseTypes = when {
+            meters >= Constants.MOVING_UNLOCK_METERS -> lateTypes
+            meters >= Constants.TALL_UNLOCK_METERS -> midTypes
+            else -> earlyTypes
         }
 
-        // Overhead hazards are deliberately uncommon: they teach the player to
-        // use the new swipe-down slide without making the run feel random.
-        val type = if (meters >= Constants.OVERHEAD_UNLOCK_METERS && rng.nextFloat() < 0.20f) {
-            ObstacleType.OVERHEAD
-        } else {
-            normalTypes[rng.nextInt(maxIndex + 1)]
-        }
+        val type = chooseObstacleType(meters, baseTypes)
 
         val obstacle = world.acquireObstacle() ?: return
         obstacle.init(type, spawnX)
 
-        if (type != ObstacleType.MOVING && rng.nextFloat() < 0.6f) {
-            spawnCoinArc(world, obstacle)
-        } else {
-            // Midway between this obstacle and the next one (they are speed * interval apart).
-            spawnCoinLine(world, spawnX + 0.5f * world.worldSpeed * interval)
+        // Reward placement matches the action needed for the obstacle:
+        // jumpable obstacles get an arc; slide/rolling hazards get a low line.
+        when (type) {
+            ObstacleType.GROUND,
+            ObstacleType.TALL,
+            ObstacleType.SHOPPING_CART -> {
+                if (rng.nextFloat() < 0.65f) {
+                    spawnCoinArc(world, obstacle)
+                } else {
+                    spawnCoinLine(
+                        world,
+                        spawnX + 0.5f * world.worldSpeed * interval
+                    )
+                }
+            }
+
+            ObstacleType.MOVING -> {
+                spawnCoinLine(
+                    world,
+                    spawnX + 0.5f * world.worldSpeed * interval
+                )
+            }
+
+            ObstacleType.OVERHEAD,
+            ObstacleType.BARRICADE -> {
+                spawnCoinLine(
+                    world,
+                    spawnX + obstacle.width * 0.5f
+                )
+            }
         }
 
+        // Mystery bubble appears once per run.
         if (
             !mysteryBubbleSpawned &&
             world.scoreSystem.distanceMeters >= nextMysteryBubbleDistance
@@ -128,31 +155,73 @@ class SpawnSystem {
                 right + Constants.SPAWN_MARGIN + 80f,
                 Constants.GROUND_Y - 65f
             )
-
             mysteryBubbleSpawned = true
         }
     }
 
-    /** Coins following a jump arc above the obstacle. Peak is high enough that jumping is needed. */
-    private fun spawnCoinArc(world: GameWorld, o: Obstacle) {
-        val n = 5
+    private fun chooseObstacleType(
+        meters: Int,
+        baseTypes: Array<ObstacleType>
+    ): ObstacleType {
+        // New obstacle unlocks are intentionally weighted so they add variety
+        // without flooding the player with unfamiliar hazards.
+        if (
+            meters >= Constants.BARRICADE_UNLOCK_METERS &&
+            rng.nextFloat() < Constants.BARRICADE_SPAWN_CHANCE
+        ) {
+            return ObstacleType.BARRICADE
+        }
+
+        if (
+            meters >= Constants.CART_UNLOCK_METERS &&
+            rng.nextFloat() < Constants.CART_SPAWN_CHANCE
+        ) {
+            return ObstacleType.SHOPPING_CART
+        }
+
+        if (
+            meters >= Constants.OVERHEAD_UNLOCK_METERS &&
+            rng.nextFloat() < 0.12f
+        ) {
+            return ObstacleType.OVERHEAD
+        }
+
+        return baseTypes[rng.nextInt(baseTypes.size)]
+    }
+
+    /** Coins following a jump arc above an obstacle. */
+    private fun spawnCoinArc(world: GameWorld, obstacle: Obstacle) {
+        val count = 5
         val spacing = 22f
-        val centerX = o.x + o.width / 2f
-        val peak = min(o.height + 70f, 130f)
+        val centerX = obstacle.x + obstacle.width / 2f
+        val peak = min(obstacle.height + 70f, 130f)
         val base = 28f
-        for (i in 0 until n) {
+
+        for (i in 0 until count) {
             val coin = world.acquireCoin() ?: return
-            val frac = i / (n - 1).toFloat()
-            val h = base + (peak - base) * sin(frac * PI.toFloat())
-            coin.init(centerX + (i - n / 2) * spacing, Constants.GROUND_Y - h, i * 0.5f)
+            val fraction = i / (count - 1).toFloat()
+            val height = base + (peak - base) *
+                    sin(fraction * PI.toFloat())
+
+            coin.init(
+                centerX + (i - count / 2) * spacing,
+                Constants.GROUND_Y - height,
+                i * 0.5f
+            )
         }
     }
 
+    /** Low coin line for skating/sliding through a hazard. */
     private fun spawnCoinLine(world: GameWorld, centerX: Float) {
-        val n = 5
-        for (i in 0 until n) {
+        val count = 5
+
+        for (i in 0 until count) {
             val coin = world.acquireCoin() ?: return
-            coin.init(centerX + (i - n / 2) * 24f, Constants.GROUND_Y - 26f, i * 0.5f)
+            coin.init(
+                centerX + (i - count / 2) * 24f,
+                Constants.GROUND_Y - 26f,
+                i * 0.5f
+            )
         }
     }
 }

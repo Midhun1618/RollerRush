@@ -1,4 +1,3 @@
-
 package com.voxcom.rollerrush.entities
 
 import android.graphics.Canvas
@@ -10,7 +9,12 @@ import kotlin.math.abs
 import kotlin.math.sin
 
 enum class ObstacleType {
-    GROUND, TALL, MOVING, OVERHEAD
+    GROUND,
+    TALL,
+    MOVING,
+    OVERHEAD,
+    SHOPPING_CART,
+    BARRICADE
 }
 
 class Obstacle : GameEntity() {
@@ -22,11 +26,11 @@ class Obstacle : GameEntity() {
 
     private var t = 0f
 
-    // Visual rotation settings
+    // Used by the rolling tyre and shopping cart artwork.
     var rotationDegrees = 0f
         private set
 
-    private val rotationSpeed = -240f // Degrees per second
+    private val tyreRotationSpeed = -240f
 
     fun init(type: ObstacleType, spawnX: Float) {
         this.type = type
@@ -36,27 +40,35 @@ class Obstacle : GameEntity() {
                 width = 22f
                 height = 26f
             }
+
             ObstacleType.TALL -> {
                 width = 20f
                 height = 58f
             }
+
             ObstacleType.MOVING -> {
                 width = 32f
                 height = 32f
             }
+
             ObstacleType.OVERHEAD -> {
                 width = 38f
                 height = 24f
             }
+
+            ObstacleType.SHOPPING_CART -> {
+                width = Constants.SHOPPING_CART_WIDTH
+                height = Constants.SHOPPING_CART_HEIGHT
+            }
+
+            ObstacleType.BARRICADE -> {
+                width = Constants.BARRICADE_WIDTH
+                height = Constants.BARRICADE_HEIGHT
+            }
         }
 
         x = spawnX
-
-        y = if (type == ObstacleType.OVERHEAD) {
-            Constants.GROUND_Y - 90f
-        } else {
-            Constants.GROUND_Y - height
-        }
+        y = Constants.GROUND_Y - height
 
         t = 0f
         rotationDegrees = 0f
@@ -66,19 +78,35 @@ class Obstacle : GameEntity() {
     }
 
     override fun update(dt: Float, worldSpeed: Float) {
-        if (type == ObstacleType.MOVING) {
-            // Move and hop as before.
-            x -= (worldSpeed + Constants.MOVING_EXTRA_SPEED) * dt
-            t += dt
+        when (type) {
+            ObstacleType.MOVING -> {
+                x -= (worldSpeed + Constants.MOVING_EXTRA_SPEED) * dt
+                t += dt
 
-            y = Constants.GROUND_Y - height -
-                    abs(sin(t * 3.2f)) * Constants.MOVING_HOP_HEIGHT
+                y = Constants.GROUND_Y - height -
+                        abs(sin(t * 3.2f)) * Constants.MOVING_HOP_HEIGHT
 
-            // Rotate the artwork continuously.
-            rotationDegrees =
-                (rotationDegrees + rotationSpeed * dt) % 360f
-        } else {
-            x -= worldSpeed * dt
+                rotationDegrees =
+                    (rotationDegrees + tyreRotationSpeed * dt) % 360f
+            }
+
+            ObstacleType.SHOPPING_CART -> {
+                // A cart rolls slightly faster than the world and wobbles
+                // gently on its wheels. Keep the wobble subtle so the art
+                // remains readable and the collision box stays predictable.
+                x -= (worldSpeed + Constants.CART_EXTRA_SPEED) * dt
+                t += dt
+
+                y = Constants.GROUND_Y - height +
+                        sin(t * 8f) * Constants.CART_BOB_AMOUNT
+
+                rotationDegrees = sin(t * 5.5f) * Constants.CART_TILT_AMOUNT
+            }
+
+            else -> {
+                x -= worldSpeed * dt
+                y = Constants.GROUND_Y - height
+            }
         }
 
         refreshBoxes()
@@ -86,8 +114,34 @@ class Obstacle : GameEntity() {
 
     private fun refreshBoxes() {
         updateBounds()
-        hitbox.set(bounds)
-        hitbox.inset(2f, 2f)
+
+        when (type) {
+            ObstacleType.BARRICADE -> {
+                // The uploaded barricade is an arch: only its striped top
+                // beam blocks the player. The open centre remains passable.
+                hitbox.set(
+                    x + width * 0.12f,
+                    y + height * 0.025f,
+                    x + width * 0.88f,
+                    y + height * 0.235f
+                )
+            }
+
+            ObstacleType.SHOPPING_CART -> {
+                // Ignore transparent padding around the cart artwork.
+                hitbox.set(
+                    x + width * 0.08f,
+                    y + height * 0.12f,
+                    x + width * 0.96f,
+                    y + height * 0.98f
+                )
+            }
+
+            else -> {
+                hitbox.set(bounds)
+                hitbox.inset(2f, 2f)
+            }
+        }
     }
 
     override fun draw(
@@ -97,30 +151,32 @@ class Obstacle : GameEntity() {
     ) {
         dst.set(x, y, x + width, y + height)
 
-        if (type == ObstacleType.MOVING) {
-            canvas.save()
+        when (type) {
+            ObstacleType.MOVING,
+            ObstacleType.SHOPPING_CART -> {
+                canvas.save()
+                canvas.rotate(
+                    rotationDegrees,
+                    dst.centerX(),
+                    dst.centerY()
+                )
+                canvas.drawBitmap(
+                    assets.obstacleBitmap(type),
+                    null,
+                    dst,
+                    paint
+                )
+                canvas.restore()
+            }
 
-            canvas.rotate(
-                rotationDegrees,
-                dst.centerX(),
-                dst.centerY()
-            )
-
-            canvas.drawBitmap(
-                assets.obstacleBitmap(type),
-                null,
-                dst,
-                paint
-            )
-
-            canvas.restore()
-        } else {
-            canvas.drawBitmap(
-                assets.obstacleBitmap(type),
-                null,
-                dst,
-                paint
-            )
+            else -> {
+                canvas.drawBitmap(
+                    assets.obstacleBitmap(type),
+                    null,
+                    dst,
+                    paint
+                )
+            }
         }
     }
 }

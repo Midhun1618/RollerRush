@@ -97,7 +97,10 @@ class AssetManager(private val context: Context) {
             obstacle("obstacles/short_cone.webp", 22f, 26f) { c, w, h -> drawCrate(c, w, h) },
             obstacle("obstacles/long_cone.webp", 20f, 58f) { c, w, h -> drawPillar(c, w, h) },
             obstacle("obstacles/rolling_tyre.webp", 24f, 24f) { c, w, h -> drawSpiky(c, w, h) },
-            obstacle("obstacles/block.webp", 38f, 24f) { c, w, h -> drawOverhead(c, w, h) }
+            obstacle("obstacles/block.webp", 38f, 24f) { c, w, h -> drawOverhead(c, w, h) },
+            obstacle("obstacles/shopping_cart.webp", Constants.SHOPPING_CART_WIDTH, Constants.SHOPPING_CART_HEIGHT) { c, w, h -> drawShoppingCartFallback(c, w, h) },
+            obstacle("obstacles/barricade.webp", Constants.BARRICADE_WIDTH, Constants.BARRICADE_HEIGHT) { c, w, h -> drawBarricadeFallback(c, w, h) }
+
         )
         coinBitmap = make("coins/rush_coin.webp", (Constants.COIN_RADIUS * 2 * s).toInt(), (Constants.COIN_RADIUS * 2 * s).toInt()) { c, w, h ->
             val p = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -727,6 +730,58 @@ class AssetManager(private val context: Context) {
         c.drawRect(0f, 0f, w, h * 0.1f, paint(Color.rgb(154, 140, 152)))            // kerb
         c.drawRect(w * 0.16f, h * 0.5f, w * 0.5f, h * 0.55f, paint(Color.rgb(201, 173, 167))) // lane dash
     }
+
+    private fun drawShoppingCartFallback(c: Canvas, w: Float, h: Float) {
+        val frame = paint(Color.rgb(105, 108, 112)).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = (w * 0.045f).coerceAtLeast(2f)
+            strokeCap = Paint.Cap.ROUND
+            strokeJoin = Paint.Join.ROUND
+        }
+        val basket = Path().apply {
+            moveTo(w * 0.08f, h * 0.12f)
+            lineTo(w * 0.68f, h * 0.12f)
+            lineTo(w * 0.58f, h * 0.57f)
+            lineTo(w * 0.18f, h * 0.57f)
+            close()
+        }
+        c.drawPath(basket, frame)
+        for (i in 1..5) {
+            val x = w * (0.08f + i * 0.095f)
+            c.drawLine(x, h * 0.16f, x - w * 0.04f, h * 0.52f, frame)
+        }
+        c.drawLine(w * 0.18f, h * 0.31f, w * 0.63f, h * 0.31f, frame)
+        c.drawLine(w * 0.18f, h * 0.45f, w * 0.60f, h * 0.45f, frame)
+        c.drawLine(w * 0.58f, h * 0.57f, w * 0.43f, h * 0.80f, frame)
+        c.drawLine(w * 0.43f, h * 0.80f, w * 0.76f, h * 0.80f, frame)
+        val wheelPaint = paint(Color.rgb(145, 48, 79))
+        c.drawCircle(w * 0.40f, h * 0.88f, h * 0.10f, wheelPaint)
+        c.drawCircle(w * 0.78f, h * 0.88f, h * 0.10f, wheelPaint)
+    }
+
+    private fun drawBarricadeFallback(c: Canvas, w: Float, h: Float) {
+        val legPaint = paint(Color.rgb(130, 105, 94))
+        c.drawRect(w * 0.08f, h * 0.10f, w * 0.22f, h, legPaint)
+        c.drawRect(w * 0.78f, h * 0.10f, w * 0.92f, h, legPaint)
+        val beam = RectF(w * 0.12f, h * 0.02f, w * 0.88f, h * 0.25f)
+        c.drawRect(beam, paint(Color.rgb(245, 235, 220)))
+        val stripePaint = paint(Color.rgb(255, 120, 24))
+        val stripeWidth = beam.height() * 0.72f
+        var x = beam.left - stripeWidth
+        while (x < beam.right) {
+            val stripe = Path().apply {
+                moveTo(x, beam.bottom)
+                lineTo(x + stripeWidth, beam.bottom)
+                lineTo(x + stripeWidth * 1.55f, beam.top)
+                lineTo(x + stripeWidth * 0.55f, beam.top)
+                close()
+            }
+            c.drawPath(stripe, stripePaint)
+            x += stripeWidth * 1.5f
+        }
+    }
+
+
 
     companion object { const val TILE_W = 1000 }
 }
