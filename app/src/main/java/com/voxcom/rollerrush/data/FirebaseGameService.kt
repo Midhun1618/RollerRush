@@ -8,9 +8,23 @@ import com.google.firebase.database.MutableData
 import com.google.firebase.database.ServerValue
 import com.google.firebase.database.Transaction
 import java.util.Locale
+import org.json.JSONArray
+import org.json.JSONObject
+import com.google.firebase.database.ValueEventListener
 
-class FirebaseGameService {
+data class CompletedRun(
+    val runId: String,
+    val score: Int,
+    val distanceMeters: Int,
+    val coins: Int,
+    val skateId: String,
+    val completedAtMillis: Long
+)
+class FirebaseGameService(
+    private val preferences: GamePreferences
+) {
 
+    private var pendingSyncInProgress = false
     private val auth = FirebaseAuth.getInstance()
     private val database = FirebaseDatabase.getInstance().reference
 
@@ -20,6 +34,13 @@ class FirebaseGameService {
     val isLoggedIn: Boolean
         get() = auth.currentUser != null
 
+    val isAnonymous: Boolean
+        get() = auth.currentUser?.isAnonymous == true
+
+    val isGoogleLinked: Boolean
+        get() = auth.currentUser?.providerData?.any {
+            it.providerId == "google.com"
+        } == true
     var displayName: String? = null
         private set
 
@@ -61,6 +82,28 @@ class FirebaseGameService {
         "171", "180", "202", "222", "247",
         "256", "303", "404", "777", "999"
     )
+
+    init {
+        database.child(".info/connected")
+            .addValueEventListener(object : ValueEventListener {
+
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val connected =
+                        snapshot.getValue(Boolean::class.java) == true
+
+                    if (connected && currentUid != null) {
+                        syncPendingRuns()
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    android.util.Log.w(
+                        "RollerRushFirebase",
+                        "Connection listener cancelled: ${error.message}"
+                    )
+                }
+            })
+    }
 
     fun initialize(
         onComplete: (Boolean, String?) -> Unit = { _, _ -> }
@@ -252,6 +295,106 @@ class FirebaseGameService {
             }, false)
     }
 
+    fun changeUsername(
+        requestedName: String,
+        onComplete: (Boolean, String?) -> Unit
+    ) {
+        val uid = currentUid
+
+        if (uid == null) {
+            onComplete(false, "Player is not signed in.")
+            return
+        }
+
+        val newName = requestedName.trim()
+
+        if (!Regex("^[A-Za-z0-9_]{3,16}$").matches(newName)) {
+            onComplete(
+                false,
+                "Use 3–16 letters, numbers or underscores."
+            )
+            return
+        }
+
+        val oldName = displayName
+
+        if (oldName.equals(newName, ignoreCase = true)) {
+            onComplete(true, null)
+            return
+        }
+
+        val newKey = newName.lowercase(Locale.ROOT)
+
+        database.child("usernames")
+            .child(newKey)
+            .runTransaction(object : Transaction.Handler {
+
+                override fun doTransaction(
+                    currentData: MutableData
+                ): Transaction.Result {
+
+                    val owner = currentData.getValue(String::class.java)
+
+                    if (owner == null || owner == uid) {
+                        currentData.value = uid
+                        return Transaction.success(currentData)
+                    }
+
+                    return Transaction.abort()
+                }
+
+                override fun onComplete(
+                    error: DatabaseError?,
+                    committed: Boolean,
+                    currentData: DataSnapshot?
+                ) {
+                    if (error != null) {
+                        onComplete(false, error.message)
+                        return
+                    }
+
+                    if (!committed) {
+                        onComplete(false, "That username is already taken.")
+                        return
+                    }
+
+                    val updates = mapOf<String, Any>(
+                        "displayName" to newName,
+                        "username" to newName
+                    )
+
+                    database.child("users")
+                        .child(uid)
+                        .updateChildren(updates)
+                        .addOnSuccessListener {
+
+                            displayName = newName
+
+                            if (!oldName.isNullOrBlank()) {
+                                val oldKey = oldName.lowercase(Locale.ROOT)
+
+                                if (oldKey != newKey) {
+                                    releaseUsername(oldName, uid)
+                                }
+                            }
+
+                            onComplete(true, null)
+                        }
+                        .addOnFailureListener { updateError ->
+
+                            // The profile update failed. Release the new reservation.
+                            releaseUsername(newName, uid)
+
+                            onComplete(
+                                false,
+                                updateError.localizedMessage
+                                    ?: "Could not update username."
+                            )
+                        }
+                }
+            }, false)
+    }
+
     private fun releaseUsername(username: String, uid: String) {
         val key = username.lowercase(Locale.ROOT)
 
@@ -276,6 +419,243 @@ class FirebaseGameService {
                     currentData: DataSnapshot?
                 ) {
                     // Cleanup is best-effort.
+                }
+            }, false)
+    }
+
+    // ------------------------------------------------------------
+// COMPLETED RUNS AND OFFLINE SYNC
+// ------------------------------------------------------------
+
+    private fun readPendingRuns(): MutableList<CompletedRun> {
+        val result = mutableListOf<CompletedRun>()
+
+        try {
+            val array = JSONArray(preferences.getPendingRunsJson())
+
+            for (i in 0 until array.length()) {
+                val item = array.optJSONObject(i) ?: continue
+                val runId = item.optString("runId")
+
+                if (runId.isBlank()) continue
+
+                result.add(
+                    CompletedRun(
+                        runId = runId,
+                        score = item.optInt("score", 0),
+                        distanceMeters = item.optInt("distanceMeters", 0),
+                        coins = item.optInt("coins", 0),
+                        skateId = item.optString("skateId", "skate_basic"),
+                        completedAtMillis = item.optLong("completedAtMillis", 0L)
+                    )
+                )
+            }
+        } catch (error: Exception) {
+            android.util.Log.e(
+                "RollerRushFirebase",
+                "Could not read pending runs",
+                error
+            )
+        }
+
+        return result
+    }
+
+    private fun savePendingRuns(runs: List<CompletedRun>) {
+        val array = JSONArray()
+
+        runs.forEach { run ->
+            array.put(
+                JSONObject().apply {
+                    put("runId", run.runId)
+                    put("score", run.score)
+                    put("distanceMeters", run.distanceMeters)
+                    put("coins", run.coins)
+                    put("skateId", run.skateId)
+                    put("completedAtMillis", run.completedAtMillis)
+                }
+            )
+        }
+
+        preferences.setPendingRunsJson(array.toString())
+    }
+
+    private fun enqueueRun(run: CompletedRun) {
+        val runs = readPendingRuns()
+
+        // Avoid adding the same run twice to the local queue.
+        if (runs.any { it.runId == run.runId }) return
+
+        runs.add(run)
+        savePendingRuns(runs)
+    }
+
+    /**
+     * Called once when a run finishes.
+     * The run is saved locally first, so it is not lost if the
+     * device has no internet connection.
+     */
+    fun submitCompletedRun(run: CompletedRun) {
+        val safeRun = run.copy(
+            score = run.score.coerceAtLeast(0),
+            distanceMeters = run.distanceMeters.coerceAtLeast(0),
+            coins = run.coins.coerceAtLeast(0),
+            skateId = run.skateId.ifBlank { "skate_basic" }
+        )
+
+        enqueueRun(safeRun)
+
+        if (currentUid == null) {
+            initialize { success, error ->
+                if (success) {
+                    syncPendingRuns()
+                } else {
+                    android.util.Log.w(
+                        "RollerRushFirebase",
+                        "Run saved offline; sign-in/sync pending: $error"
+                    )
+                }
+            }
+        } else {
+            syncPendingRuns()
+        }
+    }
+
+    /**
+     * Uploads queued runs sequentially.
+     * A run is removed from local storage only after Firebase
+     * confirms that its transaction has completed.
+     */
+    fun syncPendingRuns() {
+        if (pendingSyncInProgress) return
+
+        val uid = currentUid ?: return
+        val runs = readPendingRuns()
+
+        if (runs.isEmpty()) return
+
+        pendingSyncInProgress = true
+        uploadNextRun(uid, runs, 0)
+    }
+
+    private fun uploadNextRun(
+        uid: String,
+        runs: List<CompletedRun>,
+        index: Int
+    ) {
+        if (index >= runs.size) {
+            pendingSyncInProgress = false
+
+            // Pick up any runs added while the previous batch was syncing.
+            if (readPendingRuns().isNotEmpty()) {
+                syncPendingRuns()
+            }
+            return
+        }
+
+        val run = runs[index]
+
+        saveRunToFirebase(uid, run) { success, error ->
+            if (success) {
+                val remainingRuns = readPendingRuns()
+                    .filterNot { it.runId == run.runId }
+
+                savePendingRuns(remainingRuns)
+
+                uploadNextRun(uid, runs, index + 1)
+            } else {
+                pendingSyncInProgress = false
+
+                android.util.Log.w(
+                    "RollerRushFirebase",
+                    "Run ${run.runId} remains queued: $error"
+                )
+            }
+        }
+    }
+
+    /**
+     * One transaction updates the player's run history and lifetime
+     * statistics together. The run ID makes retries idempotent.
+     */
+    private fun saveRunToFirebase(
+        uid: String,
+        run: CompletedRun,
+        onComplete: (Boolean, String?) -> Unit
+    ) {
+        database.child("users")
+            .child(uid)
+            .runTransaction(object : Transaction.Handler {
+
+                override fun doTransaction(
+                    currentData: MutableData
+                ): Transaction.Result {
+
+                    val runNode = currentData
+                        .child("runs")
+                        .child(run.runId)
+
+                    // This run was already recorded. Treat it as success
+                    // so a retry can safely remove it from the local queue.
+                    if (runNode.value != null) {
+                        return Transaction.success(currentData)
+                    }
+
+                    val oldTotalDistance =
+                        (currentData.child("totalDistance").value as? Number)
+                            ?.toLong() ?: 0L
+
+                    val oldTotalRuns =
+                        (currentData.child("totalRuns").value as? Number)
+                            ?.toLong() ?: 0L
+
+                    val oldBestDistance =
+                        (currentData.child("bestDistance").value as? Number)
+                            ?.toLong() ?: 0L
+
+                    val distance = run.distanceMeters.toLong()
+
+                    runNode.child("score").value = run.score
+                    runNode.child("distanceMeters").value = run.distanceMeters
+                    runNode.child("coins").value = run.coins
+                    runNode.child("skateId").value = run.skateId
+                    runNode.child("completedAtMillis").value =
+                        run.completedAtMillis
+
+                    currentData.child("totalDistance").value =
+                        if (Long.MAX_VALUE - oldTotalDistance < distance) {
+                            Long.MAX_VALUE
+                        } else {
+                            oldTotalDistance + distance
+                        }
+
+                    currentData.child("totalRuns").value =
+                        if (oldTotalRuns == Long.MAX_VALUE) {
+                            Long.MAX_VALUE
+                        } else {
+                            oldTotalRuns + 1L
+                        }
+
+                    if (distance > oldBestDistance) {
+                        currentData.child("bestDistance").value = distance
+                        currentData.child("bestSkateId").value = run.skateId
+                    }
+
+                    return Transaction.success(currentData)
+                }
+
+                override fun onComplete(
+                    error: DatabaseError?,
+                    committed: Boolean,
+                    currentData: DataSnapshot?
+                ) {
+                    if (error != null) {
+                        onComplete(false, error.message)
+                    } else if (!committed) {
+                        onComplete(false, "Firebase did not commit the run.")
+                    } else {
+                        onComplete(true, null)
+                    }
                 }
             }, false)
     }

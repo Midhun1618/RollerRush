@@ -37,7 +37,7 @@ class RollerRushApp : Application() {
         gameAssets = AssetManager(this)
         bgmManager = BgmManager(this)
 
-        firebaseGameService = FirebaseGameService()
+        firebaseGameService = FirebaseGameService(prefs)
 
         firebaseGameService.initialize { success, error ->
             if (success) {
@@ -49,6 +49,7 @@ class RollerRushApp : Application() {
             Username: ${firebaseGameService.displayName}
             """.trimIndent()
                 )
+                firebaseGameService.syncPendingRuns()
             } else {
                 android.util.Log.e(
                     "RollerRushFirebase",

@@ -1,10 +1,7 @@
 package com.voxcom.rollerrush.ui
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
-import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.content.Intent
 import android.os.Bundle
@@ -18,6 +15,8 @@ import com.voxcom.rollerrush.data.MissionSystem
 import com.voxcom.rollerrush.game.GameState
 import com.voxcom.rollerrush.game.GameView
 import com.voxcom.rollerrush.utils.Constants
+import com.voxcom.rollerrush.data.CompletedRun
+import java.util.UUID
 
 @Suppress("DEPRECATION")
 class GameActivity : BaseActivity(), GameView.Listener {
@@ -356,6 +355,17 @@ class GameActivity : BaseActivity(), GameView.Listener {
         if (gameOverHandled) return@runOnUiThread
 
         gameOverHandled = true
+
+        app.firebaseGameService.submitCompletedRun(
+            CompletedRun(
+                runId = UUID.randomUUID().toString(),
+                score = score,
+                distanceMeters = distanceMeters,
+                coins = coins,
+                skateId = runSkateId,
+                completedAtMillis = System.currentTimeMillis()
+            )
+        )
         // Submit this completed run to the global Roller Rush system.
 
         boosterIsAvailable = false

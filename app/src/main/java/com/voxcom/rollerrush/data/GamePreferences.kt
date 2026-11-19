@@ -7,6 +7,20 @@ import android.content.SharedPreferences
 class GamePreferences(context: Context) {
     private val sp: SharedPreferences =
         context.applicationContext.getSharedPreferences("roller_rush_prefs", Context.MODE_PRIVATE)
+    private val cloudQueuePrefs =
+        context.applicationContext.getSharedPreferences(
+            "roller_rush_cloud_queue",
+            Context.MODE_PRIVATE
+        )
+
+    fun getPendingRunsJson(): String =
+        cloudQueuePrefs.getString("pending_runs", "[]") ?: "[]"
+
+    fun setPendingRunsJson(value: String) {
+        cloudQueuePrefs.edit()
+            .putString("pending_runs", value)
+            .apply()
+    }
 
     fun getInt(key: String, def: Int): Int = sp.getInt(key, def)
     fun putInt(key: String, value: Int) = sp.edit().putInt(key, value).apply()

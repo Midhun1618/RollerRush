@@ -25,6 +25,8 @@ class MainMenuActivity : BaseActivity() {
     private lateinit var settingsButton: ImageView
     private lateinit var levelLabel: TextView
     private lateinit var missionBadge: TextView
+    private lateinit var playerNameLabel: TextView
+    private var profileLoadRequested = false
 
     private var titleFrameIndex = 0
     private var titleAnimator: ValueAnimator? = null
@@ -53,6 +55,11 @@ class MainMenuActivity : BaseActivity() {
         rushTitle = findViewById(R.id.rushTitle)
         settingsButton = findViewById(R.id.settingsButton)
         missionBadge = findViewById(R.id.missionBadge)
+        playerNameLabel = findViewById(R.id.playerNameLabel)
+
+        playerNameLabel.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
 
         playButton.setOnClickListener {
             startActivity(Intent(this, GameActivity::class.java))
@@ -188,6 +195,8 @@ class MainMenuActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        refreshPlayerName()
+        app.firebaseGameService.syncPendingRuns()
 
         coinsLabel.text = "${app.playerData.coins}"
         highScoreLabel.text = "${app.playerData.highScore}"
@@ -230,5 +239,42 @@ class MainMenuActivity : BaseActivity() {
         super.onStart()
         android.util.Log.d("RollerRushBGM", "MainMenuActivity onStart")
         app.bgmManager.playLobby()
+    }
+
+    private fun refreshPlayerName() {
+        val service = app.firebaseGameService
+        val currentName = service.displayName
+
+        if (!currentName.isNullOrBlank()) {
+            playerNameLabel.text = "$currentName"
+            profileLoadRequested = false
+            return
+        }
+
+        playerNameLabel.text = "CONNECTING..."
+
+        if (profileLoadRequested) return
+
+        profileLoadRequested = true
+
+        service.initialize { success, error ->
+            runOnUiThread {
+                profileLoadRequested = false
+
+                if (isFinishing || isDestroyed) return@runOnUiThread
+
+                if (success) {
+                    playerNameLabel.text =
+                        "${service.displayName ?: "RUSHER"}"
+                } else {
+                    playerNameLabel.text = "OFFLINE"
+
+                    android.util.Log.w(
+                        "RollerRushFirebase",
+                        "Could not load menu username: $error"
+                    )
+                }
+            }
+        }
     }
 }
