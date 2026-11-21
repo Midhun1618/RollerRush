@@ -44,6 +44,8 @@ class MainMenuActivity : BaseActivity() {
     private lateinit var leaderboardLeaderName: TextView
     private lateinit var leaderboardLeaderDistance: TextView
     private lateinit var leaderboardRows: LinearLayout
+    private lateinit var rubyLayout: LinearLayout
+    private lateinit var coinLayout: LinearLayout
     private lateinit var leaderboardExpandIcon: TextView
 
     private var leaderboardExpanded = false
@@ -78,6 +80,8 @@ class MainMenuActivity : BaseActivity() {
         leaderboardLeaderDistance = findViewById(R.id.leaderboardLeaderDistance)
         leaderboardRows = findViewById(R.id.leaderboardRows)
         leaderboardExpandIcon = findViewById(R.id.leaderboardExpandIcon)
+        coinLayout = findViewById(R.id.coinLayout)
+        rubyLayout = findViewById(R.id.rubyLayout)
 
         leaderboardPanel.setOnClickListener {
             toggleLeaderboard()
@@ -101,6 +105,13 @@ class MainMenuActivity : BaseActivity() {
 
         settingsButton.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
+        }
+        coinLayout.setOnClickListener {
+            showRewardShop()
+        }
+
+        rubyLayout.setOnClickListener {
+            showRewardShop()
         }
 
         startPlayButtonPulse()
@@ -489,6 +500,13 @@ class MainMenuActivity : BaseActivity() {
 
     private fun dp(value: Int): Int {
         return (value * resources.displayMetrics.density).toInt()
+    }
+
+    private fun showRewardShop() {
+        RewardShopDialog(this, app.playerData) {
+            coinsLabel.text = "${app.playerData.coins}"
+            rushRubiesLabel.text = "${app.playerData.rushRubies}"
+        }.show()
     }
 
 }

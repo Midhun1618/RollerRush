@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/reward_shop_panel"
+    android:orientation="vertical"
+    android:padding="18dp">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/new_font"
+            android:text="REWARD SHOP"
+            android:textAlignment="center"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/rewardShopClose"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="×"
+            android:textColor="#FFFFFF"
+            android:textSize="28sp"/>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:text="Watch a short video to earn rewards!"
+        android:textColor="#DCEBFF"
+        android:textSize="13sp"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+
+
+    <!-- COIN REWARD -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@drawable/reward_shop_card1"
+        android:gravity="center_horizontal"
+        android:layout_marginHorizontal="8dp"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <ImageView
+            android:layout_width="132dp"
+            android:layout_height="132dp"
+            android:contentDescription="Coin reward"
+            android:scaleType="fitCenter"
+            android:src="@drawable/coin_bunch"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/new_font"
+                android:text="500 COINS"
+                android:textColor="#FFD34B"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Boost your coin stash"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"/>
+
+            <Button
+                android:id="@+id/rewardCoinsButton"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/watch_ad_button"
+                android:fontFamily="@font/new_font"
+                android:text="WATCH AD"
+                android:textColor="#3E2626"
+                android:textSize="12sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- RUBY REWARD -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/reward_shop_card2"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:layout_marginHorizontal="8dp"
+        android:padding="12dp">
+
+        <ImageView
+            android:layout_width="132dp"
+            android:layout_height="132dp"
+            android:contentDescription="Rush Ruby reward"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ruby_bunch"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/new_font"
+                android:text="1 RUSH RUBY"
+                android:textColor="#E5A4FF"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Collect rare currency"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"/>
+
+            <Button
+                android:id="@+id/rewardRubyButton"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/watch_ad_button"
+                android:fontFamily="@font/new_font"
+                android:text="WATCH AD"
+                android:textColor="#3E2626"
+                android:textSize="12sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:text="Each reward has its own 3-minute cooldown."
+        android:textColor="#B9C9DD"
+        android:textSize="11sp"/>
+
+
+</LinearLayout>

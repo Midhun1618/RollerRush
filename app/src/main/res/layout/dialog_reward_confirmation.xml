@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/reward_shop_panel"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="22dp">
+
+    <ImageView
+        android:id="@+id/rewardConfirmImage"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:contentDescription="Reward item"
+        android:scaleType="fitCenter"/>
+
+    <TextView
+        android:id="@+id/rewardConfirmTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:fontFamily="@font/new_font"
+        android:gravity="center"
+        android:text="COIN REWARD"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/rewardConfirmMessage"
+        android:layout_width="260dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="Complete the video to receive your reward."
+        android:textColor="#DCEBFF"
+        android:textSize="13sp"/>
+
+    <Button
+        android:id="@+id/rewardConfirmWatchButton"
+        android:layout_width="260dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="18dp"
+        android:background="@drawable/watch_ad_button"
+        android:fontFamily="@font/new_font"
+        android:text="SIMULATE AD COMPLETION"
+        android:textColor="#1F1313"
+        android:textSize="12sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/rewardConfirmCancel"
+        android:layout_width="wrap_content"
+        android:layout_height="42dp"
+        android:layout_marginTop="4dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:paddingHorizontal="18dp"
+        android:text="CANCEL"
+        android:textColor="#B9C9DD"
+        android:textSize="13sp"/>
+
+</LinearLayout>
