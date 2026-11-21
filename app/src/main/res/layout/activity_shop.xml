@@ -1,235 +1,465 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/shopRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/shop_bg_img"
-    android:paddingStart="12dp"
-    android:paddingEnd="12dp"
-    android:paddingTop="6dp"
-    android:paddingBottom="4dp">
+    android:background="@drawable/shop_bg_img">
 
-    <!-- HEADER -->
     <LinearLayout
-        android:id="@+id/shopHeader"
+        android:id="@+id/linearLayout5"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="48dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="4dp">
 
-        <Button
-            android:id="@+id/btnShopBack"
-            android:layout_width="80dp"
-            android:layout_height="40dp"
-            android:minWidth="0dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:text="HOME"
-            android:fontFamily="@font/new_font"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFF"
-            android:textSize="13sp"
-            android:background="@drawable/violet_button_bg"
-            android:contentDescription="Return to home screen" />
-
-        <TextView
-            android:id="@+id/tvShopTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="12dp"
-            android:text="SKATE MARKET"
-            android:textColor="#FFFFFF"
-            android:textSize="22sp"
-            android:fontFamily="@font/new_font"
-            android:textStyle="bold"
-            android:maxLines="1"
-            android:ellipsize="end" />
-
-        <!-- CURRENCY -->
+        <!-- HEADER -->
         <LinearLayout
-            android:id="@+id/currencyBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginEnd="6dp"
-                android:background="@drawable/coin_container"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:paddingStart="7dp"
-                android:paddingEnd="7dp">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginEnd="5dp"
-                    android:src="@drawable/rush_ruby"
-                    android:contentDescription="Rush Rubies" />
-
-                <TextView
-                    android:id="@+id/tvShopRubies"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textColor="#FFFFFF"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:maxLines="1" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:background="@drawable/coin_container"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:paddingStart="7dp"
-                android:paddingEnd="7dp">
-
-                <ImageView
-                    android:layout_width="19dp"
-                    android:layout_height="19dp"
-                    android:layout_marginEnd="5dp"
-                    android:src="@drawable/rush_coin"
-                    android:contentDescription="Coins" />
-
-                <TextView
-                    android:id="@+id/tvShopCoins"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textColor="#FFD34B"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:maxLines="1" />
-            </LinearLayout>
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- CATEGORY FILTERS -->
-    <LinearLayout
-        android:id="@+id/shopCategoryTabs"
-        android:layout_width="match_parent"
-        android:layout_height="42dp"
-        android:layout_marginTop="6dp"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:weightSum="5">
-
-        <Button
-            android:id="@+id/btnAll"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_marginEnd="3dp"
-            android:minWidth="0dp"
-            android:paddingStart="2dp"
-            android:paddingEnd="2dp"
-            android:text="ALL"
-            android:textAllCaps="false"
-            android:textSize="11sp"
-            android:fontFamily="@font/new_font"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/silver_button_bg" />
-
-        <Button
-            android:id="@+id/btnStarter"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_marginHorizontal="3dp"
-            android:minWidth="0dp"
-            android:paddingStart="2dp"
-            android:paddingEnd="2dp"
-            android:text="STARTER"
-            android:textAllCaps="false"
-            android:textSize="11sp"
-            android:fontFamily="@font/new_font"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/silver_button_bg" />
-
-        <Button
-            android:id="@+id/btnPro"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_marginHorizontal="3dp"
-            android:minWidth="0dp"
-            android:paddingStart="2dp"
-            android:paddingEnd="2dp"
-            android:text="PRO"
-            android:textAllCaps="false"
-            android:textSize="11sp"
-            android:fontFamily="@font/new_font"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/silver_button_bg" />
-
-        <Button
-            android:id="@+id/btnApex"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_marginHorizontal="3dp"
-            android:minWidth="0dp"
-            android:paddingStart="2dp"
-            android:paddingEnd="2dp"
-            android:text="APEX"
-            android:textAllCaps="false"
-            android:textSize="11sp"
-            android:fontFamily="@font/new_font"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/silver_button_bg" />
-
-        <Button
-            android:id="@+id/btnMythic"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:layout_marginStart="3dp"
-            android:minWidth="0dp"
-            android:paddingStart="2dp"
-            android:paddingEnd="2dp"
-            android:text="MYTHIC"
-            android:textAllCaps="false"
-            android:textSize="11sp"
-            android:fontFamily="@font/new_font"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/silver_button_bg" />
-    </LinearLayout>
-
-    <!-- VERTICAL SHOP COLLECTION -->
-    <ScrollView
-        android:id="@+id/shopScroll"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="4dp"
-        android:fillViewport="false"
-        android:clipToPadding="false"
-        android:scrollbars="vertical"
-        android:overScrollMode="never">
-
-        <LinearLayout
-            android:id="@+id/shopContent"
+            android:id="@+id/shopHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:minHeight="48dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnShopBack"
+                android:layout_width="80dp"
+                android:layout_height="40dp"
+                android:background="@drawable/violet_button_bg"
+                android:contentDescription="Return to home screen"
+                android:fontFamily="@font/new_font"
+                android:minWidth="0dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:text="HOME"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tvShopTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="@font/new_font"
+                android:maxLines="1"
+                android:text="SKATE MARKET"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <!-- CURRENCY -->
+            <LinearLayout
+                android:id="@+id/currencyBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/coin_container"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingStart="7dp"
+                    android:paddingEnd="7dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginEnd="5dp"
+                        android:contentDescription="Rush Rubies"
+                        android:src="@drawable/rush_ruby" />
+
+                    <TextView
+                        android:id="@+id/tvShopRubies"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:maxLines="1"
+                        android:text="0"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:background="@drawable/coin_container"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingStart="7dp"
+                    android:paddingEnd="7dp">
+
+                    <ImageView
+                        android:layout_width="19dp"
+                        android:layout_height="19dp"
+                        android:layout_marginEnd="5dp"
+                        android:contentDescription="Coins"
+                        android:src="@drawable/rush_coin" />
+
+                    <TextView
+                        android:id="@+id/tvShopCoins"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:maxLines="1"
+                        android:text="0"
+                        android:textColor="#FFD34B"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- CATEGORY FILTERS -->
+        <LinearLayout
+            android:id="@+id/shopCategoryTabs"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:weightSum="5">
+
+            <Button
+                android:id="@+id/btnAll"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="3dp"
+                android:layout_weight="1"
+                android:background="@drawable/silver_button_bg"
+                android:fontFamily="@font/new_font"
+                android:minWidth="0dp"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:text="ALL"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnStarter"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="3dp"
+                android:layout_weight="1"
+                android:background="@drawable/silver_button_bg"
+                android:fontFamily="@font/new_font"
+                android:minWidth="0dp"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:text="STARTER"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnPro"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="3dp"
+                android:layout_weight="1"
+                android:background="@drawable/silver_button_bg"
+                android:fontFamily="@font/new_font"
+                android:minWidth="0dp"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:text="PRO"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnApex"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="3dp"
+                android:layout_weight="1"
+                android:background="@drawable/silver_button_bg"
+                android:fontFamily="@font/new_font"
+                android:minWidth="0dp"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:text="APEX"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnMythic"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="3dp"
+                android:layout_weight="1"
+                android:background="@drawable/silver_button_bg"
+                android:fontFamily="@font/new_font"
+                android:minWidth="0dp"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:text="MYTHIC"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- VERTICAL SHOP COLLECTION -->
+        <ScrollView
+            android:id="@+id/shopScroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="4dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:fillViewport="false"
+            android:overScrollMode="never"
+            android:scrollbars="vertical">
+
+            <LinearLayout
+                android:id="@+id/shopContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="2dp"
+                android:paddingBottom="16dp" />
+
+        </ScrollView>
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/skateinfo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/glass_overlay">
+
+        <Button
+            android:id="@+id/btnInfoClose"
+            android:layout_width="44dp"
+            android:layout_height="36dp"
+            android:layout_gravity="end"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:text="X"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:layout_margin="20dp"
+            app:layout_constraintEnd_toEndOf="@+id/linearLayout6"
+            app:layout_constraintTop_toTopOf="@+id/linearLayout6" />
+
+        <LinearLayout
+            android:id="@+id/linearLayout6"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="160dp"
+            android:layout_marginVertical="40dp"
+            android:background="@drawable/skate_info_bg"
+            android:gravity="center"
             android:orientation="vertical"
-            android:paddingTop="2dp"
-            android:paddingBottom="16dp" />
+            android:padding="20dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-    </ScrollView>
+            <TextView
+                android:id="@+id/InfoName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/new_font"
+                android:text="SKATE NAME"
+                android:textColor="#203C57"
+                android:textSize="25dp"
+                android:textStyle="bold" />
 
-</LinearLayout>
+            <TextView
+                android:id="@+id/InfoDesc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/new_font"
+                android:text="Arcade Style Skate"
+                android:textColor="#527289"
+                android:textSize="18dp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:layout_margin="12dp"
+
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="5"
+                    android:background="@drawable/stats_item_card_bg"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/new_font"
+                        android:text="Skate Stats"
+                        android:textColor="#A9EDEDED"
+                        android:textSize="16dp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/new_font"
+                        android:text="Speed"
+                        android:textColor="#345195"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <ProgressBar
+                        android:id="@+id/infoSpeedProgress"
+                        style="@android:style/Widget.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="4dp"
+                        android:max="100"
+                        android:progress="75"
+                        android:progressBackgroundTint="#D3DCE8"
+                        android:progressTint="#FFB800" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:fontFamily="@font/new_font"
+                        android:text="Jump"
+                        android:textColor="#345195"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <ProgressBar
+                        android:id="@+id/infoJumpProgress"
+                        style="@android:style/Widget.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="4dp"
+                        android:max="100"
+                        android:progress="60"
+                        android:progressBackgroundTint="#D3DCE8"
+                        android:progressTint="#FFB800" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:fontFamily="@font/new_font"
+                        android:text="Control"
+                        android:textColor="#345195"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <ProgressBar
+                        android:id="@+id/infoControlProgress"
+                        style="@android:style/Widget.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="4dp"
+                        android:max="100"
+                        android:progress="85"
+                        android:progressBackgroundTint="#D3DCE8"
+                        android:progressTint="#FFB800" />
+                </LinearLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="3"
+                    android:gravity="center">
+
+                    <ImageView
+                        android:id="@+id/skateglow"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="18dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <ImageView
+                        android:id="@+id/skateImage"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="18dp"
+                        android:rotation="30"
+                        android:src="@drawable/skate5"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="8dp"
+                    android:src="@drawable/rush_coin" />
+
+                <TextView
+                    android:id="@+id/InfoPrice"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:fontFamily="@font/count_font"
+                    android:text="1,500"
+                    android:textColor="#FFB825"
+                    android:textSize="25dp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/infoActionButton"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/golden_button_bg"
+                    android:fontFamily="@font/new_font"
+                    android:text="BUY"
+                    android:textSize="18dp" />
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

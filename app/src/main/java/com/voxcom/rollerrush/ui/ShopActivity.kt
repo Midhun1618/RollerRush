@@ -1,12 +1,17 @@
 package com.voxcom.rollerrush.ui
 
 import android.content.Intent
+import android.animation.ObjectAnimator
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -18,7 +23,6 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import com.voxcom.rollerrush.R
@@ -565,177 +569,89 @@ class ShopActivity : AppCompatActivity() {
     private fun showProductDialog(item: ShopItem) {
         val stats = SkateStats.forSkate(item.id)
 
-        val panel = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(20), dp(16), dp(20), dp(14))
-            background = roundedBackground(
-                Color.rgb(23, 34, 55),
-                dp(18),
-                rarityColor(item.rarity)
-            )
-        }
+        val infoOverlay = findViewById<ViewGroup>(R.id.skateinfo)
+        val infoName = findViewById<TextView>(R.id.InfoName)
+        val infoDesc = findViewById<TextView>(R.id.InfoDesc)
+        val infoImage = findViewById<ImageView>(R.id.skateImage)
+        val infoPrice = findViewById<TextView>(R.id.InfoPrice)
 
-        val image = ImageView(this).apply {
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            contentDescription = item.name
-            setImageResource(skateDrawableResource(item))
-        }
+        val speedProgress = findViewById<ProgressBar>(R.id.infoSpeedProgress)
+        val jumpProgress = findViewById<ProgressBar>(R.id.infoJumpProgress)
+        val controlProgress = findViewById<ProgressBar>(R.id.infoControlProgress)
 
-        panel.addView(
-            image,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(150)
-            )
-        )
-
-        val title = TextView(this).apply {
-            text = item.name.uppercase(Locale.getDefault())
-            setTextColor(Color.WHITE)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER
-            setPadding(0, dp(7), 0, dp(3))
-        }
-
-        panel.addView(title)
-
-        val rarity = TextView(this).apply {
-            text = "${rarityLabel(item.rarity)} CLASS  •  OVR ${stats.overallRating}/10"
-            setTextColor(rarityColor(item.rarity))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER
-        }
-
-        panel.addView(rarity)
-
-        val description = TextView(this).apply {
-            text = item.description.ifBlank {
-                "Customize your Roller Rush setup."
-            }
-            setTextColor(Color.rgb(220, 228, 242))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
-            gravity = Gravity.CENTER
-            setPadding(0, dp(8), 0, dp(7))
-        }
-
-        panel.addView(description)
-
-        // Detailed stat bars appear only inside this dialog.
-        addStatRow(
-            panel,
-            "SPEED",
-            stats.speedRating,
-            Color.rgb(73, 205, 255),
-            false
-        )
-
-        addStatRow(
-            panel,
-            "JUMP",
-            stats.jumpRating,
-            Color.rgb(255, 205, 75),
-            false
-        )
-
-        addStatRow(
-            panel,
-            "CONTROL",
-            stats.controlRating,
-            Color.rgb(99, 225, 166),
-            false
-        )
-
-        val priceText = TextView(this).apply {
-            text = when {
-                playerData.equippedSkateId == item.id -> "CURRENTLY EQUIPPED"
-                inventory.owns(item.id) -> "ALREADY IN YOUR COLLECTION"
-                playerData.level < item.unlockLevel -> "UNLOCKS AT LEVEL ${item.unlockLevel}"
-                item.price == 0 -> "FREE"
-                else -> String.format(Locale.US, "%,d COINS", item.price)
-            }
-
-            setTextColor(Color.rgb(255, 211, 75))
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER
-            setPadding(0, dp(10), 0, dp(10))
-        }
-
-        panel.addView(priceText)
-
-        val dialog = AlertDialog.Builder(this)
-            .setView(panel)
-            .create()
-
-        val buttons = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-        }
-
-        val closeButton = Button(this).apply {
-            text = "CLOSE"
-            isAllCaps = false
-            setTextColor(Color.WHITE)
-            backgroundTintList =
-                ColorStateList.valueOf(Color.rgb(73, 86, 108))
-        }
+        val actionButton = findViewById<Button>(R.id.infoActionButton)
+        val closeButton = findViewById<Button>(R.id.btnInfoClose)
 
         val owned = inventory.owns(item.id)
         val equipped = playerData.equippedSkateId == item.id
+        val levelLocked = !owned && playerData.level < item.unlockLevel
 
-        val actionButton = Button(this).apply {
-            text = when {
-                equipped -> "EQUIPPED"
-                owned -> "EQUIP"
-                playerData.level < item.unlockLevel -> "LOCKED"
-                item.price == 0 -> "CLAIM"
-                else -> "BUY"
-            }
+        // Skate information
+        infoName.text = item.name.uppercase(Locale.getDefault())
+        infoDesc.text = item.description
+        infoImage.setImageResource(skateDrawableResource(item))
 
-            isAllCaps = false
-            setTextColor(Color.rgb(20, 28, 40))
-            backgroundTintList =
-                ColorStateList.valueOf(Color.rgb(255, 208, 68))
-            isEnabled = !equipped && (owned || playerData.level >= item.unlockLevel)
+        // Skate stats
+        speedProgress.progress = stats.speedRating.coerceIn(0, 10) * 10
+        jumpProgress.progress = stats.jumpRating.coerceIn(0, 10) * 10
+        controlProgress.progress = stats.controlRating.coerceIn(0, 10) * 10
+
+        // Price / status
+        infoPrice.text = when {
+            equipped -> "EQUIPPED"
+            owned -> "OWNED"
+            levelLocked -> "LEVEL ${item.unlockLevel}"
+            item.price == 0 -> "FREE"
+            else -> String.format(Locale.US, "%,d", item.price)
         }
 
-        buttons.addView(
-            closeButton,
-            LinearLayout.LayoutParams(0, dp(46), 1f).apply {
-                marginEnd = dp(8)
-            }
-        )
+        // Action button state
+        actionButton.text = when {
+            equipped -> "EQUIPPED"
+            owned -> "EQUIP"
+            levelLocked -> "LOCKED"
+            item.price == 0 -> "CLAIM"
+            else -> "BUY"
+        }
 
-        buttons.addView(
-            actionButton,
-            LinearLayout.LayoutParams(0, dp(46), 1f)
-        )
+        actionButton.isEnabled = !equipped && !levelLocked
 
-        panel.addView(
-            buttons,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        )
+        // Show custom overlay
+        infoOverlay.visibility = View.VISIBLE
 
         closeButton.setOnClickListener {
-            dialog.dismiss()
+            hideSkateInfo()
+        }
+
+        // Close by tapping the outside overlay
+        infoOverlay.setOnClickListener {
+            hideSkateInfo()
+        }
+
+        // Prevent taps inside the skate panel from closing the overlay
+        val skatePanel = infoOverlay.getChildAt(1)
+
+        skatePanel.setOnClickListener {
+            // Intentionally empty
         }
 
         actionButton.setOnClickListener {
-            if (!inventory.owns(item.id) && playerData.level < item.unlockLevel) {
-                RollerRushNotification.show(
-                    this,
-                    "Reach Level ${item.unlockLevel} to unlock this skate.",
-                    RollerRushNotification.Type.WARNING
-                )
-                return@setOnClickListener
-            } else {
+
+            if (!inventory.owns(item.id)) {
+
+                if (playerData.level < item.unlockLevel) {
+                    RollerRushNotification.show(
+                        this,
+                        "Reach Level ${item.unlockLevel} to unlock this skate.",
+                        RollerRushNotification.Type.WARNING
+                    )
+                    return@setOnClickListener
+                }
+
                 if (item.price > 0 && !playerData.spendCoins(item.price)) {
+                    shakeBuyButton(actionButton)
+                    vibrateForInsufficientCoins()
+
                     RollerRushNotification.show(
                         this,
                         "Not enough coins! Keep skating to earn more.",
@@ -747,30 +663,75 @@ class ShopActivity : AppCompatActivity() {
                 }
 
                 inventory.unlock(item.id)
-                playerData.equippedSkateId = item.id
                 sounds.playSkatePurchased()
             }
 
+            // Equip the selected skate
+            playerData.equippedSkateId = item.id
+
             updateCurrency()
             refreshAllCards()
-            dialog.dismiss()
+
+            hideSkateInfo()
         }
+    }
 
-        dialog.show()
+    private fun shakeBuyButton(button: View) {
+        ObjectAnimator.ofFloat(
+            button,
+            View.TRANSLATION_X,
+            0f,
+            dp(8).toFloat(),
+            -dp(8).toFloat(),
+            dp(6).toFloat(),
+            -dp(6).toFloat(),
+            dp(3).toFloat(),
+            -dp(3).toFloat(),
+            0f
+        ).apply {
+            duration = 320
+            start()
+        }
+    }
 
-        val width = min(
-            resources.configuration.screenWidthDp - 32,
-            520
-        ).coerceAtLeast(280)
+    @Suppress("DEPRECATION")
+    private fun vibrateForInsufficientCoins() {
+        val durationMs = 90L
 
-        dialog.window?.setBackgroundDrawableResource(
-            android.R.color.transparent
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibrator = getSystemService(VibratorManager::class.java)?.defaultVibrator
+            vibrator?.vibrate(
+                VibrationEffect.createOneShot(
+                    durationMs,
+                    VibrationEffect.DEFAULT_AMPLITUDE
+                )
+            )
+        } else {
+            val vibrator = getSystemService(Vibrator::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator?.vibrate(
+                    VibrationEffect.createOneShot(
+                        durationMs,
+                        VibrationEffect.DEFAULT_AMPLITUDE
+                    )
+                )
+            } else {
+                vibrator?.vibrate(durationMs)
+            }
+        }
+    }
 
-        dialog.window?.setLayout(
-            dp(width),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+    private fun hideSkateInfo() {
+        findViewById<View>(R.id.skateinfo).visibility = View.GONE
+    }
+    override fun onBackPressed() {
+        val skateInfo = findViewById<View>(R.id.skateinfo)
+
+        if (skateInfo.visibility == View.VISIBLE) {
+            hideSkateInfo()
+        } else {
+            super.onBackPressed()
+        }
     }
 
     private fun skateDrawableResource(item: ShopItem): Int {
