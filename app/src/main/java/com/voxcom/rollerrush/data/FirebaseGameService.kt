@@ -340,89 +340,122 @@ class FirebaseGameService(
             return
         }
 
-        val oldName = displayName
-
-        if (oldName.equals(newName, ignoreCase = true)) {
-            onComplete(true, null)
-            return
-        }
-
         val newKey = newName.lowercase(Locale.ROOT)
 
-        database.child("usernames")
-            .child(newKey)
-            .runTransaction(object : Transaction.Handler {
+        // Read the actual stored username instead of relying
+        // only on the locally cached displayName.
+        database.child("users")
+            .child(uid)
+            .child("displayName")
+            .get()
+            .addOnSuccessListener { profileSnapshot ->
 
-                override fun doTransaction(
-                    currentData: MutableData
-                ): Transaction.Result {
+                val oldName =
+                    profileSnapshot.getValue(String::class.java)
+                        ?: displayName
 
-                    val owner = currentData.getValue(String::class.java)
+                val oldKey = oldName
+                    ?.lowercase(Locale.ROOT)
 
-                    if (owner == null || owner == uid) {
-                        currentData.value = uid
-                        return Transaction.success(currentData)
-                    }
-
-                    return Transaction.abort()
+                if (oldName.equals(newName, ignoreCase = true)) {
+                    onComplete(true, null)
+                    return@addOnSuccessListener
                 }
 
-                override fun onComplete(
-                    error: DatabaseError?,
-                    committed: Boolean,
-                    currentData: DataSnapshot?
-                ) {
-                    if (error != null) {
-                        onComplete(false, error.message)
-                        return
-                    }
+                // Reserve the new username first.
+                database.child("usernames")
+                    .child(newKey)
+                    .runTransaction(object : Transaction.Handler {
 
-                    if (!committed) {
-                        onComplete(false, "That username is already taken.")
-                        return
-                    }
+                        override fun doTransaction(
+                            currentData: MutableData
+                        ): Transaction.Result {
 
-                    val updates = mapOf<String, Any>(
-                        "displayName" to newName,
-                        "username" to newName
-                    )
+                            val owner =
+                                currentData.getValue(String::class.java)
 
-                    database.child("users")
-                        .child(uid)
-                        .updateChildren(updates)
-                        .addOnSuccessListener {
-
-                            displayName = newName
-
-                            // Update the public leaderboard name too.
-                            database.child("leaderboard")
-                                .child(uid)
-                                .child("displayName")
-                                .setValue(newName)
-
-                            if (!oldName.isNullOrBlank()) {
-                                val oldKey =
-                                    oldName.lowercase(Locale.ROOT)
-
-                                if (oldKey != newKey) {
-                                    releaseUsername(oldName, uid)
-                                }
+                            if (owner == null || owner == uid) {
+                                currentData.value = uid
+                                return Transaction.success(currentData)
                             }
 
-                            onComplete(true, null)
+                            return Transaction.abort()
                         }
-                        .addOnFailureListener { updateError ->
 
-                            releaseUsername(newName, uid)
+                        override fun onComplete(
+                            error: DatabaseError?,
+                            committed: Boolean,
+                            currentData: DataSnapshot?
+                        ) {
 
-                            onComplete(
-                                false,
-                                updateError.localizedMessage
-                                    ?: "Could not update username."
+                            if (error != null) {
+                                onComplete(false, error.message)
+                                return
+                            }
+
+                            if (!committed) {
+                                onComplete(
+                                    false,
+                                    "That username is already taken."
+                                )
+                                return
+                            }
+
+                            // Atomic multi-location update.
+                            // Profile update and old username
+                            // reservation removal happen together.
+                            val updates = mutableMapOf<String, Any?>(
+                                "users/$uid/displayName" to newName,
+                                "users/$uid/username" to newName,
+                                "usernames/$newKey" to uid
                             )
+
+                            // Delete the old reservation only if
+                            // the old and new keys are different.
+                            if (
+                                oldKey != null &&
+                                oldKey != newKey
+                            ) {
+                                updates["usernames/$oldKey"] = null
+                            }
+
+                            database.updateChildren(updates)
+                                .addOnSuccessListener {
+
+                                    displayName = newName
+
+                                    // Update the public leaderboard name.
+                                    database.child("leaderboard")
+                                        .child(uid)
+                                        .child("displayName")
+                                        .setValue(newName)
+
+                                    onComplete(true, null)
+                                }
+                                .addOnFailureListener { updateError ->
+
+                                    // Roll back the new reservation
+                                    // if the profile update failed.
+                                    if (oldKey != newKey) {
+                                        releaseUsername(newName, uid)
+                                    }
+
+                                    onComplete(
+                                        false,
+                                        updateError.localizedMessage
+                                            ?: "Could not update username."
+                                    )
+                                }
                         }
-                }
-            }, false)
+                    }, false)
+            }
+            .addOnFailureListener { error ->
+                onComplete(
+                    false,
+                    error.localizedMessage
+                        ?: "Could not load the current username."
+                )
+            }
     }
 
     private fun releaseUsername(username: String, uid: String) {

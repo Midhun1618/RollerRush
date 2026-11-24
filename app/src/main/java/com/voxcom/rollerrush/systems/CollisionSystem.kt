@@ -1,4 +1,3 @@
-
 package com.voxcom.rollerrush.systems
 
 import android.graphics.RectF
@@ -12,14 +11,24 @@ object CollisionSystem {
         player: Player,
         obstacles: List<Obstacle>
     ): Boolean {
+
         for (i in obstacles.indices) {
             val obstacle = obstacles[i]
 
-            if (!obstacle.active) continue
+            // Visible obstacles can have disabled collision.
+            if (!obstacle.active || !obstacle.collisionEnabled) {
+                continue
+            }
 
             if (
-                RectF.intersects(player.bodyHitbox, obstacle.hitbox) ||
-                RectF.intersects(player.feetHitbox, obstacle.hitbox)
+                RectF.intersects(
+                    player.bodyHitbox,
+                    obstacle.hitbox
+                ) ||
+                RectF.intersects(
+                    player.feetHitbox,
+                    obstacle.hitbox
+                )
             ) {
                 return true
             }
@@ -32,12 +41,19 @@ object CollisionSystem {
         player: Player,
         platforms: List<ContainerPlatform>
     ): Boolean {
+
         for (platform in platforms) {
             if (!platform.active) continue
 
             if (
-                RectF.intersects(player.bodyHitbox, platform.sideHitbox) ||
-                RectF.intersects(player.feetHitbox, platform.sideHitbox)
+                RectF.intersects(
+                    player.bodyHitbox,
+                    platform.sideHitbox
+                ) ||
+                RectF.intersects(
+                    player.feetHitbox,
+                    platform.sideHitbox
+                )
             ) {
                 return true
             }
@@ -52,8 +68,19 @@ object CollisionSystem {
         cy: Float,
         r: Float
     ): Boolean {
-        return circleHitsRect(cx, cy, r, player.bodyHitbox) ||
-                circleHitsRect(cx, cy, r, player.feetHitbox)
+
+        return circleHitsRect(
+            cx,
+            cy,
+            r,
+            player.bodyHitbox
+        ) ||
+                circleHitsRect(
+                    cx,
+                    cy,
+                    r,
+                    player.feetHitbox
+                )
     }
 
     fun circleHitsRect(
@@ -62,6 +89,7 @@ object CollisionSystem {
         r: Float,
         rect: RectF
     ): Boolean {
+
         val nx = cx.coerceIn(rect.left, rect.right)
         val ny = cy.coerceIn(rect.top, rect.bottom)
 

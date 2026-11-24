@@ -413,9 +413,22 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         }
 
         val obs = world.obstacles
+
         for (i in 0 until obs.size) {
             val o = obs[i]
-            if (o.active) o.draw(canvas, assets, bmpPaint)
+
+            if (!o.active) continue
+
+            // Draw the barricade later when the player is sliding
+            // so it appears in the foreground.
+            if (
+                o.type == com.voxcom.rollerrush.entities.ObstacleType.BARRICADE &&
+                world.player.sliding
+            ) {
+                continue
+            }
+
+            o.draw(canvas, assets, bmpPaint)
         }
 
         val pu = world.powerUps
@@ -440,6 +453,21 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         drawLandingDust(canvas)
 
         drawForeground(canvas, scroll, left, right)
+
+// Foreground barricade layer during the slide.
+        if (world.player.sliding) {
+            for (i in 0 until world.obstacles.size) {
+                val obstacle = world.obstacles[i]
+
+                if (
+                    obstacle.active &&
+                    obstacle.type == com.voxcom.rollerrush.entities.ObstacleType.BARRICADE
+                ) {
+                    obstacle.draw(canvas, assets, bmpPaint)
+                }
+            }
+        }
+
         if (prefs.debugHitboxes) drawDebug(canvas, world)
         // Draw the mystery bubble in world space, using the same camera
         // transformation as the road, booster, coins and other entities.

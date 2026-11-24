@@ -107,9 +107,9 @@ class SettingsActivity : BaseActivity() {
         }
 
         connectionStatus.text = if (service.isLoggedIn) {
-            "Firebase account ready"
+            "Account ready"
         } else {
-            "Connecting to Firebase..."
+            "Connecting to server"
         }
 
         linkGoogleButton.text = if (service.isGoogleLinked) {
@@ -133,7 +133,7 @@ class SettingsActivity : BaseActivity() {
                     } else {
                         playerName.text = "Player profile unavailable"
                         connectionStatus.text =
-                            error ?: "Could not connect to Firebase"
+                            error ?: "Could not connect to Server"
                     }
                 }
             }
@@ -210,7 +210,7 @@ class SettingsActivity : BaseActivity() {
             .setMessage(
                 "This will clear your local game progress, " +
                         "coins, unlocked items and saved settings on this device.\n\n" +
-                        "Your Firebase account will not be deleted."
+                        "Your RollerRush account will not be deleted."
             )
             .setNegativeButton("CANCEL", null)
             .setPositiveButton("RESET") { _, _ ->

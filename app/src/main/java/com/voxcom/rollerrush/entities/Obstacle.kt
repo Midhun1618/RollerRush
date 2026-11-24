@@ -26,6 +26,9 @@ class Obstacle : GameEntity() {
 
     private var t = 0f
 
+    // Separate collision state from visibility/activity.
+    var collisionEnabled = true
+
     // Used by the rolling tyre and shopping cart artwork.
     var rotationDegrees = 0f
         private set
@@ -73,6 +76,7 @@ class Obstacle : GameEntity() {
         t = 0f
         rotationDegrees = 0f
         active = true
+        collisionEnabled = true
 
         refreshBoxes()
     }
@@ -91,16 +95,14 @@ class Obstacle : GameEntity() {
             }
 
             ObstacleType.SHOPPING_CART -> {
-                // A cart rolls slightly faster than the world and wobbles
-                // gently on its wheels. Keep the wobble subtle so the art
-                // remains readable and the collision box stays predictable.
                 x -= (worldSpeed + Constants.CART_EXTRA_SPEED) * dt
                 t += dt
 
                 y = Constants.GROUND_Y - height +
                         sin(t * 8f) * Constants.CART_BOB_AMOUNT
 
-                rotationDegrees = sin(t * 5.5f) * Constants.CART_TILT_AMOUNT
+                rotationDegrees =
+                    sin(t * 5.5f) * Constants.CART_TILT_AMOUNT
             }
 
             else -> {
@@ -117,8 +119,6 @@ class Obstacle : GameEntity() {
 
         when (type) {
             ObstacleType.BARRICADE -> {
-                // The uploaded barricade is an arch: only its striped top
-                // beam blocks the player. The open centre remains passable.
                 hitbox.set(
                     x + width * 0.12f,
                     y + height * 0.025f,
@@ -128,7 +128,6 @@ class Obstacle : GameEntity() {
             }
 
             ObstacleType.SHOPPING_CART -> {
-                // Ignore transparent padding around the cart artwork.
                 hitbox.set(
                     x + width * 0.08f,
                     y + height * 0.12f,
@@ -155,17 +154,20 @@ class Obstacle : GameEntity() {
             ObstacleType.MOVING,
             ObstacleType.SHOPPING_CART -> {
                 canvas.save()
+
                 canvas.rotate(
                     rotationDegrees,
                     dst.centerX(),
                     dst.centerY()
                 )
+
                 canvas.drawBitmap(
                     assets.obstacleBitmap(type),
                     null,
                     dst,
                     paint
                 )
+
                 canvas.restore()
             }
 

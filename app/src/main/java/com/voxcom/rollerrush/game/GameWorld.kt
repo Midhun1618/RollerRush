@@ -240,6 +240,7 @@ class GameWorld(
 
         for (i in 0 until obstacles.size) {
             obstacles[i].active = false
+            obstacles[i].collisionEnabled = true
         }
 
         for (i in 0 until coins.size) {
@@ -924,23 +925,29 @@ class GameWorld(
             coinSystem.runCoins
         )
 
-// --------------------------------------------------------
-// OBSTACLE COLLISION
-// --------------------------------------------------------
+        // --------------------------------------------------------
+        // OBSTACLE COLLISION
+        // --------------------------------------------------------
 
         if (
             CollisionSystem.playerHitsObstacle(player, obstacles) ||
             (
                     !containerStunt.active &&
-                            CollisionSystem.playerHitsContainerSide(player, containerPlatforms)
+                            CollisionSystem.playerHitsContainerSide(
+                                player,
+                                containerPlatforms
+                            )
                     )
         ) {
+
             onObstacleHit()
 
-            // Disable every obstacle hitbox immediately.
-            // The crash animation can now continue without collisions.
+            // Disable obstacle collisions without removing
+            // their visual appearance from the crash scene.
             for (obstacle in obstacles) {
-                obstacle.active = false
+                if (obstacle.active) {
+                    obstacle.collisionEnabled = false
+                }
             }
 
             // Cancel booster effects.
@@ -948,13 +955,14 @@ class GameWorld(
             speedBoostReady = false
             camera.setSpeedBoost(false)
 
-            // Cancel any active container stunt and clear its platforms.
+            // Cancel active container stunt and clear platforms.
             containerStunt.reset()
+
             for (platform in containerPlatforms) {
                 platform.active = false
             }
 
-            // Trigger crash animation and cinematic camera effects.
+            // Trigger crash animation and cinematic effects.
             player.crash()
             camera.triggerCrash()
 
