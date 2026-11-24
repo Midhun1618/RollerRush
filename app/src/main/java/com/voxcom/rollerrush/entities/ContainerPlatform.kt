@@ -1,11 +1,11 @@
-
 package com.voxcom.rollerrush.entities
 
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import android.graphics.Bitmap
 import com.voxcom.rollerrush.utils.Constants
+import kotlin.random.Random
 
 class ContainerPlatform {
 
@@ -13,6 +13,9 @@ class ContainerPlatform {
     var x = 0f
     var width = 0f
     var sectionCount = 1
+
+    // Each section gets its own independently selected artwork.
+    private val sectionTextureIndices = mutableListOf<Int>()
 
     val right: Float
         get() = x + width
@@ -22,33 +25,26 @@ class ContainerPlatform {
 
     val sideHitbox = RectF()
 
-    private val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(48, 91, 112)
-    }
+    private val bitmapPaint = Paint(
+        Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG
+    )
 
-    private val topPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(91, 139, 153)
-    }
-
-    private val darkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(30, 59, 75)
-    }
-
-    private val ribPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(111, 151, 161)
-        strokeWidth = 3f
-        style = Paint.Style.STROKE
-    }
-
-    private val seamPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(25, 54, 70)
-        strokeWidth = 4f
+    fun textureForSection(index: Int): Int {
+        return sectionTextureIndices[index]
     }
 
     fun init(spawnX: Float, sections: Int) {
         x = spawnX
         sectionCount = sections.coerceIn(1, 3)
         width = sectionCount * Constants.CONTAINER_SEGMENT_WIDTH
+
+        // Randomize the artwork independently for each segment.
+        sectionTextureIndices.clear()
+
+        repeat(sectionCount) {
+            sectionTextureIndices.add(Random.nextInt(6))
+        }
+
         active = true
         refreshHitbox()
     }
@@ -78,99 +74,31 @@ class ContainerPlatform {
         )
     }
 
-    fun draw(canvas: Canvas) {
+    fun draw(canvas: Canvas, bitmaps: Array<Bitmap>) {
         if (!active) return
 
-        val body = RectF(
-            x,
-            topY,
-            right,
-            Constants.GROUND_Y
-        )
+        val segmentWidth = Constants.CONTAINER_SEGMENT_WIDTH
 
-        // Main container body.
-        canvas.drawRoundRect(body, 5f, 5f, bodyPaint)
+        for (section in 0 until sectionCount) {
+            val sectionX = x + section * segmentWidth
 
-        // Top surface / landing edge.
-        canvas.drawRect(
-            x,
-            topY,
-            right,
-            topY + 7f,
-            topPaint
-        )
-
-        // Bottom shadow.
-        canvas.drawRect(
-            x,
-            Constants.GROUND_Y - 7f,
-            right,
-            Constants.GROUND_Y,
-            darkPaint
-        )
-
-        // Vertical corrugated metal ribs.
-        var ribX = x + 14f
-        while (ribX < right - 8f) {
-            canvas.drawLine(
-                ribX,
-                topY + 12f,
-                ribX,
-                Constants.GROUND_Y - 12f,
-                ribPaint
-            )
-            ribX += 24f
-        }
-
-        // Section separators.
-        for (i in 1 until sectionCount) {
-            val seamX = x + i * Constants.CONTAINER_SEGMENT_WIDTH
-            canvas.drawLine(
-                seamX,
-                topY + 2f,
-                seamX,
-                Constants.GROUND_Y - 2f,
-                seamPaint
-            )
-        }
-
-        // Reinforced end edges.
-        canvas.drawRect(
-            x,
-            topY + 7f,
-            x + 7f,
-            Constants.GROUND_Y - 5f,
-            darkPaint
-        )
-
-        canvas.drawRect(
-            right - 7f,
-            topY + 7f,
-            right,
-            Constants.GROUND_Y - 5f,
-            darkPaint
-        )
-
-        // Door details on each section.
-        for (i in 0 until sectionCount) {
-            val sectionX = x + i * Constants.CONTAINER_SEGMENT_WIDTH
-            val doorX = sectionX + Constants.CONTAINER_SEGMENT_WIDTH - 52f
-
-            canvas.drawLine(
-                doorX,
-                topY + 15f,
-                doorX,
-                Constants.GROUND_Y - 12f,
-                seamPaint
+            val destination = RectF(
+                sectionX,
+                topY,
+                sectionX + segmentWidth,
+                Constants.GROUND_Y
             )
 
-            canvas.drawLine(
-                doorX + 8f,
-                topY + 15f,
-                doorX + 8f,
-                Constants.GROUND_Y - 12f,
-                seamPaint
-            )
+            val bitmap = bitmaps[textureForSection(section)]
+
+            if (!bitmap.isRecycled) {
+                canvas.drawBitmap(
+                    bitmap,
+                    null,
+                    destination,
+                    bitmapPaint
+                )
+            }
         }
     }
 }

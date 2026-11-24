@@ -103,7 +103,7 @@ object Constants {
 
     const val CONTAINER_UNLOCK_METERS = 350
 
-    const val CONTAINER_SEGMENT_WIDTH = 400f
+    const val CONTAINER_SEGMENT_WIDTH = 380f
     const val CONTAINER_HEIGHT = 108f
 
     const val CONTAINER_FIRST_DELAY = 6f

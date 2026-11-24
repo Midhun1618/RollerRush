@@ -397,7 +397,7 @@ class GameRenderer(private val assets: AssetManager, private val prefs: GamePref
         drawPigeons(canvas, world)
         for (platform in world.containerPlatforms) {
             if (platform.active) {
-                platform.draw(canvas)
+                platform.draw(canvas, assets.containerBitmaps)
             }
         }
 

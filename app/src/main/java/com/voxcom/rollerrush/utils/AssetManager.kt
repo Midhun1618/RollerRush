@@ -76,6 +76,13 @@ class AssetManager(private val context: Context) {
 
     private var speedBoostEffectLoaded = false
 
+    lateinit var containerBitmaps: Array<Bitmap>
+        private set
+
+    fun containerBitmap(index: Int): Bitmap {
+        return containerBitmaps[index.coerceIn(0, 5)]
+    }
+
     fun speedBoostEffectFrame(index: Int): Bitmap {
         return speedBoostEffectFrames[
             index.coerceAtLeast(0) % speedBoostEffectFrames.size
@@ -94,6 +101,16 @@ class AssetManager(private val context: Context) {
     fun ensureLoaded() {
         if (loaded) return
         val s = Constants.BITMAP_SCALE
+
+        containerBitmaps = Array(6) { index ->
+            make(
+                "containers/container${index + 1}.webp",
+                1627,
+                384
+            ) { _, _, _ ->
+                // Transparent fallback if the container image is missing.
+            }
+        }
 
         obstacleBitmaps = arrayOf(
             obstacle("obstacles/short_cone.webp", 22f, 26f) { c, w, h -> drawCrate(c, w, h) },
@@ -544,6 +561,13 @@ class AssetManager(private val context: Context) {
                 if (!it.isRecycled) it.recycle()
             }
         }
+        if (::containerBitmaps.isInitialized) {
+            containerBitmaps.forEach {
+                if (!it.isRecycled) {
+                    it.recycle()
+                }
+            }
+        }
 
         loaded = false
 
@@ -562,6 +586,8 @@ class AssetManager(private val context: Context) {
         ) {
             mysteryBubbleBitmap.recycle()
         }
+
+
     }
 
     private fun drawSpeedBoostFallback(

@@ -955,12 +955,9 @@ class GameWorld(
             speedBoostReady = false
             camera.setSpeedBoost(false)
 
-            // Cancel active container stunt and clear platforms.
+            // Cancel active container stunt without removing
+            // containers from the crash scene.
             containerStunt.reset()
-
-            for (platform in containerPlatforms) {
-                platform.active = false
-            }
 
             // Trigger crash animation and cinematic effects.
             player.crash()

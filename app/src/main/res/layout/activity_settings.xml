@@ -213,7 +213,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="7dp"
-                android:text="This does not delete your Firebase account."
+                android:text="This does not delete your account."
                 android:textColor="#C5D8E5"
                 android:textSize="11sp" />
 
