@@ -12,8 +12,8 @@ android {
         applicationId = "com.voxcom.rollerrush"
         minSdk = 24
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.1.5"
+        versionCode = 8
+        versionName = "0.1.7"
     }
 
     buildTypes {
@@ -44,4 +44,5 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:35.2.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-database")
+    implementation("com.google.android.gms:play-services-ads:25.0.0")
 }

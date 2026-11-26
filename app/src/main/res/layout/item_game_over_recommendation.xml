@@ -20,27 +20,27 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center_horizontal"
-        android:visibility="gone">
+        android:visibility="gon">
 
         <FrameLayout
             android:id="@+id/recommendationArtworkFrame"
             android:layout_width="match_parent"
-            android:layout_height="166dp"
+            android:layout_height="100dp"
             android:clipChildren="false"
             android:clipToPadding="false"
             app:layout_constraintTop_toBottomOf="@+id/recommendationUnlockLevel">
 
             <View
                 android:id="@+id/recommendationGlow"
-                android:layout_width="142dp"
-                android:layout_height="142dp"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
                 android:layout_gravity="center"
                 android:background="#263A8DFF" />
 
             <ImageView
                 android:id="@+id/recommendationSkateImage"
-                android:layout_width="220dp"
-                android:layout_height="132dp"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
                 android:layout_gravity="center"
                 android:contentDescription="Recommended skate"
                 android:scaleType="fitCenter" />

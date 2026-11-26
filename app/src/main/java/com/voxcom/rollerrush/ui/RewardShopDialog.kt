@@ -1,3 +1,4 @@
+
 package com.voxcom.rollerrush.ui
 
 import android.app.Activity
@@ -9,6 +10,12 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdError
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.rewarded.RewardedAd
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.voxcom.rollerrush.R
 import com.voxcom.rollerrush.data.PlayerData
 import java.util.concurrent.TimeUnit
@@ -30,6 +37,10 @@ class RewardShopDialog(
     private var coinButton: Button? = null
     private var rubyButton: Button? = null
     private var ticker: Runnable? = null
+
+    // Google test rewarded ad unit.
+    // Replace with production ID only after testing.
+    private val rewardedAdUnitId = "ca-app-pub-5608962073439724/8749680876"
 
     fun show() {
         if (activity.isFinishing || activity.isDestroyed) return
@@ -116,16 +127,15 @@ class RewardShopDialog(
         }
 
         message.text = if (isRuby) {
-            "Simulate watching a video to collect 1 Rush Ruby."
+            "Watch a video to collect 1 Rush Ruby."
         } else {
-            "Simulate watching a video to collect 500 Coins."
+            "Watch a video to collect 500 Coins."
         }
 
-        watch.text = "SIMULATE AD COMPLETION"
+        watch.text = "WATCH AD"
 
         watch.background = activity.getDrawable(
-            if (isRuby) R.drawable.reward_shop_card2
-            else R.drawable.reward_shop_card2
+            R.drawable.reward_shop_card2
         )
 
         val confirmDialog = Dialog(activity).apply {
@@ -143,22 +153,18 @@ class RewardShopDialog(
 
         watch.setOnClickListener {
 
-            // MOCK REWARD.
-            // Later this will be replaced with AdMob's
-            // onUserEarnedReward callback.
-
-            if (isRuby) {
-                playerData.addRushRubies(1)
-                setCooldown(RUBY_KEY)
-            } else {
-                playerData.addCoins(500)
-                setCooldown(COIN_KEY)
+            if (activity.isFinishing || activity.isDestroyed) {
+                return@setOnClickListener
             }
 
-            onBalancesChanged()
+            watch.isEnabled = false
+            watch.text = "LOADING AD..."
 
-            confirmDialog.dismiss()
-            refreshButtons()
+            loadRewardedAd(
+                isRuby = isRuby,
+                confirmDialog = confirmDialog,
+                watchButton = watch
+            )
         }
 
         confirmDialog.show()
@@ -166,10 +172,126 @@ class RewardShopDialog(
         setDialogWidth(confirmDialog, 0.60f)
     }
 
+    private fun loadRewardedAd(
+        isRuby: Boolean,
+        confirmDialog: Dialog,
+        watchButton: Button
+    ) {
+
+        val adRequest = AdRequest.Builder().build()
+
+        RewardedAd.load(
+            activity,
+            rewardedAdUnitId,
+            adRequest,
+            object : RewardedAdLoadCallback() {
+
+                override fun onAdLoaded(ad: RewardedAd) {
+
+                    if (activity.isFinishing ||
+                        activity.isDestroyed ||
+                        !confirmDialog.isShowing
+                    ) {
+                        return
+                    }
+
+                    watchButton.isEnabled = true
+                    watchButton.text = "WATCH AD"
+
+                    var rewardEarned = false
+
+                    ad.fullScreenContentCallback =
+                        object : FullScreenContentCallback() {
+
+                            override fun onAdDismissedFullScreenContent() {
+
+                                confirmDialog.dismiss()
+
+                                if (rewardEarned) {
+
+                                    shopDialog?.dismiss()
+
+                                    handler.postDelayed({
+
+                                        if (!activity.isFinishing &&
+                                            !activity.isDestroyed
+                                        ) {
+                                            RollerRushNotification.show(
+                                                activity,
+                                                if (isRuby)
+                                                    "+1 Rush Ruby earned!"
+                                                else
+                                                    "+500 Rush Coins earned!",
+                                                RollerRushNotification.Type.SUCCESS
+                                            )
+                                        }
+
+                                    }, 500L)
+                                }
+                            }
+
+                            override fun onAdFailedToShowFullScreenContent(
+                                adError: AdError
+                            ) {
+
+                                confirmDialog.dismiss()
+
+                                if (!activity.isFinishing &&
+                                    !activity.isDestroyed
+                                ) {
+                                    RollerRushNotification.show(
+                                        activity,
+                                        "Unable to show ad. Try again.",
+                                        RollerRushNotification.Type.WARNING
+                                    )
+                                }
+                            }
+                        }
+
+                    ad.show(activity) {
+
+                        // Google confirms that the user earned the reward.
+                        rewardEarned = true
+
+                        if (isRuby) {
+                            playerData.addRushRubies(1)
+                            setCooldown(RUBY_KEY)
+                        } else {
+                            playerData.addCoins(500)
+                            setCooldown(COIN_KEY)
+                        }
+
+                        onBalancesChanged()
+                    }
+                }
+
+                override fun onAdFailedToLoad(
+                    adError: LoadAdError
+                ) {
+
+                    if (!activity.isFinishing &&
+                        !activity.isDestroyed
+                    ) {
+
+                        watchButton.isEnabled = true
+                        watchButton.text = "TRY AGAIN"
+
+                        RollerRushNotification.show(
+                            activity,
+                            "Ad unavailable. Please try again.",
+                            RollerRushNotification.Type.WARNING
+                        )
+                    }
+                }
+            }
+        )
+    }
+
     private fun setDialogWidth(
         dialog: Dialog?,
         widthFraction: Float
     ) {
+
         dialog?.window?.setBackgroundDrawableResource(
             android.R.color.transparent
         )
@@ -182,10 +304,12 @@ class RewardShopDialog(
     }
 
     private fun refreshButtons() {
+
         val coinRemaining = remaining(COIN_KEY)
         val rubyRemaining = remaining(RUBY_KEY)
 
         coinButton?.apply {
+
             text = if (coinRemaining > 0) {
                 "WAIT ${formatTime(coinRemaining)}"
             } else {
@@ -197,6 +321,7 @@ class RewardShopDialog(
         }
 
         rubyButton?.apply {
+
             text = if (rubyRemaining > 0) {
                 "WAIT ${formatTime(rubyRemaining)}"
             } else {
@@ -209,10 +334,13 @@ class RewardShopDialog(
     }
 
     private fun startTicker() {
+
         ticker?.let(handler::removeCallbacks)
 
         ticker = object : Runnable {
+
             override fun run() {
+
                 if (shopDialog?.isShowing != true) return
 
                 refreshButtons()
@@ -224,6 +352,7 @@ class RewardShopDialog(
     }
 
     private fun remaining(key: String): Long {
+
         val endTime = prefs.getLong(key, 0L)
 
         return (endTime - System.currentTimeMillis())
@@ -231,6 +360,7 @@ class RewardShopDialog(
     }
 
     private fun setCooldown(key: String) {
+
         prefs.edit()
             .putLong(
                 key,
@@ -240,6 +370,7 @@ class RewardShopDialog(
     }
 
     private fun formatTime(ms: Long): String {
+
         val seconds = TimeUnit.MILLISECONDS.toSeconds(ms)
 
         return String.format(
@@ -250,6 +381,7 @@ class RewardShopDialog(
     }
 
     companion object {
+
         private const val COIN_KEY =
             "coin_reward_cooldown_end"
 

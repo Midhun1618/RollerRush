@@ -4,6 +4,7 @@
     android:layout_height="wrap_content"
     android:background="@drawable/reward_shop_panel"
     android:orientation="vertical"
+    android:layout_margin="24dp"
     android:padding="18dp">
 
     <!-- Header -->
@@ -22,6 +23,7 @@
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             android:textSize="24sp"
+            android:layout_marginStart="12dp"
             android:textStyle="bold"/>
 
         <TextView
@@ -42,6 +44,7 @@
         android:layout_marginBottom="12dp"
         android:text="Watch a short video to earn rewards!"
         android:textColor="#DCEBFF"
+        android:layout_marginStart="12dp"
         android:textSize="13sp"/>
     <LinearLayout
         android:layout_width="match_parent"
@@ -55,9 +58,9 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:background="@drawable/reward_shop_card1"
         android:gravity="center_horizontal"
-        android:layout_marginHorizontal="8dp"
+        android:layout_marginEnd="28dp"
+        android:layout_marginBottom="8dp"
         android:orientation="vertical"
         android:padding="12dp">
 
@@ -71,7 +74,8 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -108,10 +112,10 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/reward_shop_card2"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:layout_marginHorizontal="8dp"
+        android:layout_marginStart="28dp"
+        android:layout_marginBottom="8dp"
         android:padding="12dp">
 
         <ImageView
@@ -124,14 +128,15 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/new_font"
                 android:text="1 RUSH RUBY"
-                android:textColor="#E5A4FF"
+                android:textColor="#FF637D"
                 android:textSize="20sp"
                 android:textStyle="bold"/>
 

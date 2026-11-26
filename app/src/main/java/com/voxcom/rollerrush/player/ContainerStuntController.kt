@@ -122,16 +122,19 @@ class ContainerStuntController(
         cameraTarget.neutral()
     }
 
-    fun tryStart(platform: ContainerPlatform): Boolean {
 
-        if (active || !player.grounded || player.sliding || !platform.active) {
-            return false
-        }
+    fun tryStart(
+        platform: ContainerPlatform,
+        springboardAuthorized: Boolean
+    ): Boolean {
 
-        val distance = platform.x - player.x
-
-        if (distance !in Constants.CONTAINER_STUNT_MIN_DISTANCE..
-            Constants.CONTAINER_STUNT_MAX_DISTANCE) {
+        if (
+            !springboardAuthorized ||
+            active ||
+            !player.grounded ||
+            player.sliding ||
+            !platform.active
+        ) {
             return false
         }
 
@@ -139,7 +142,6 @@ class ContainerStuntController(
         phase = Phase.LEAP
         timer = 0f
 
-        // The animator's last pose is the starting point of the leap.
         startHipX = player.torso.x
         startHipY = player.torso.y
         hipX = startHipX
@@ -149,6 +151,7 @@ class ContainerStuntController(
 
         return true
     }
+
 
     // ------------------------------------------------------------------
     // STATE MACHINE (timing, grounded state, camera goals)

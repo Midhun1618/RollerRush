@@ -36,6 +36,7 @@ import com.voxcom.rollerrush.data.ShopItem
 import com.voxcom.rollerrush.data.ShopItemType
 import com.voxcom.rollerrush.data.SkateRarity
 import com.voxcom.rollerrush.data.SkateStats
+import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.min
 
@@ -143,8 +144,11 @@ class ShopActivity : AppCompatActivity() {
     }
 
     private fun updateCurrency() {
-        coinsLabel.text = String.format(Locale.US, "%,d", playerData.coins)
-        rubiesLabel.text = playerData.rushRubies.toString()
+        coinsLabel.text = NumberFormat.getNumberInstance(Locale.US)
+            .format(playerData.coins)
+
+        rubiesLabel.text = NumberFormat.getNumberInstance(Locale.US)
+            .format(playerData.rushRubies)
     }
 
     private fun buildSkateCollections() {

@@ -4,6 +4,7 @@
     android:layout_height="wrap_content"
     android:background="@drawable/reward_shop_panel"
     android:gravity="center"
+    android:layout_margin="40dp"
     android:orientation="vertical"
     android:padding="22dp">
 

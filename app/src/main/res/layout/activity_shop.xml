@@ -300,14 +300,14 @@
                 android:fontFamily="@font/new_font"
                 android:text="Arcade Style Skate"
                 android:textColor="#527289"
-                android:textSize="18dp"
+                android:textSize="14dp"
                 android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="180dp"
                 android:layout_margin="12dp"
-
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <LinearLayout
@@ -323,7 +323,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/new_font"
                         android:text="Skate Stats"
-                        android:textColor="#A9EDEDED"
+                        android:textColor="#FFB922"
                         android:textSize="16dp"
                         android:textStyle="bold" />
 
@@ -333,8 +333,8 @@
                         android:layout_marginTop="8dp"
                         android:fontFamily="@font/new_font"
                         android:text="Speed"
-                        android:textColor="#345195"
-                        android:textSize="20sp"
+                        android:textColor="#E0E9FD"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
 
                     <ProgressBar
@@ -354,8 +354,8 @@
                         android:layout_marginTop="12dp"
                         android:fontFamily="@font/new_font"
                         android:text="Jump"
-                        android:textColor="#345195"
-                        android:textSize="20sp"
+                        android:textColor="#E0E9FD"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
 
                     <ProgressBar
@@ -375,8 +375,8 @@
                         android:layout_marginTop="12dp"
                         android:fontFamily="@font/new_font"
                         android:text="Control"
-                        android:textColor="#345195"
-                        android:textSize="20sp"
+                        android:textColor="#E0E9FD"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
 
                     <ProgressBar
@@ -393,7 +393,7 @@
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_weight="3"
                     android:gravity="center">
 
@@ -443,7 +443,7 @@
                     android:fontFamily="@font/count_font"
                     android:text="1,500"
                     android:textColor="#FFB825"
-                    android:textSize="25dp"
+                    android:textSize="24dp"
                     android:textStyle="bold" />
 
                 <Button

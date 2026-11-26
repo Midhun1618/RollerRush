@@ -332,15 +332,10 @@ class GameWorld(
     // INPUT
     // ------------------------------------------------------------
 
+
     @Synchronized
     fun requestJump() {
         if (state != GameState.PLAYING) return
-
-        val target = containerSystem.findStuntTarget(player.x)
-
-        if (target != null && containerStunt.tryStart(target)) {
-            return
-        }
 
         controller.requestJump()
     }
@@ -589,6 +584,43 @@ class GameWorld(
         }
 
         // --------------------------------------------------------
+// SPRINGBOARD CONTACT -> CONTAINER STUNT
+// --------------------------------------------------------
+
+        if (
+            player.grounded &&
+            !player.sliding &&
+            !containerStunt.active
+        ) {
+
+            for (platform in containerPlatforms) {
+
+                if (
+                    CollisionSystem.playerTouchesSpringboard(
+                        player,
+                        platform
+                    )
+                ) {
+
+                    if (platform.compressSpringboard()) {
+
+                        if (
+                            containerStunt.tryStart(
+                                platform,
+                                springboardAuthorized = true
+                            )
+                        ) {
+
+                            camera.triggerJumpAnticipation()
+                        }
+
+                        break
+                    }
+                }
+            }
+        }
+
+        // --------------------------------------------------------
         // HIT SLOW MOTION
         // --------------------------------------------------------
 
@@ -657,6 +689,35 @@ class GameWorld(
         )
 
         containerSystem.update(simDt, this)
+        // --------------------------------------------------------
+// SPRINGBOARD CONTACT
+// --------------------------------------------------------
+
+        if (player.grounded && !player.sliding && !containerStunt.active) {
+
+            for (platform in containerPlatforms) {
+
+                if (
+                    CollisionSystem.playerTouchesSpringboard(
+                        player,
+                        platform
+                    )
+                ) {
+
+                    if (platform.compressSpringboard()) {
+
+                        // Launch vertically from the springboard.
+                    
+
+                        player.grounded = false
+
+                        camera.triggerJump()
+
+                        break
+                    }
+                }
+            }
+        }
 
         // --------------------------------------------------------
         // PLAYER

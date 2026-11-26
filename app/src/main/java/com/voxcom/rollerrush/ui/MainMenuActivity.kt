@@ -236,10 +236,13 @@ class MainMenuActivity : BaseActivity() {
         refreshLeaderboard()
         app.firebaseGameService.syncPendingRuns()
 
-        coinsLabel.text = "${app.playerData.coins}"
+        coinsLabel.text = NumberFormat.getNumberInstance(Locale.US)
+            .format(app.playerData.coins)
+
+        rushRubiesLabel.text = NumberFormat.getNumberInstance(Locale.US)
+            .format(app.playerData.rushRubies)
         highScoreLabel.text = "${app.playerData.highScore}"
         levelLabel.text = "LEVEL ${app.playerData.level}"
-        rushRubiesLabel.text = "${app.playerData.rushRubies}"
 
         if (::missionBadge.isInitialized) {
             val pending = MissionSystem(

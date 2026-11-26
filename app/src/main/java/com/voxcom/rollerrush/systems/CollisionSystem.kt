@@ -4,6 +4,7 @@ import android.graphics.RectF
 import com.voxcom.rollerrush.entities.ContainerPlatform
 import com.voxcom.rollerrush.entities.Obstacle
 import com.voxcom.rollerrush.player.Player
+import com.voxcom.rollerrush.utils.Constants
 
 object CollisionSystem {
 
@@ -98,4 +99,26 @@ object CollisionSystem {
 
         return dx * dx + dy * dy <= r * r
     }
+
+
+    fun playerTouchesSpringboard(
+        player: Player,
+        platform: ContainerPlatform
+    ): Boolean {
+
+        if (!platform.active || !player.grounded || player.sliding) {
+            return false
+        }
+
+        // Player must be at ground level.
+        if (player.bottomY < Constants.GROUND_Y - 5f) {
+            return false
+        }
+
+        return RectF.intersects(
+            player.feetHitbox,
+            platform.springboardHitbox
+        )
+    }
+
 }

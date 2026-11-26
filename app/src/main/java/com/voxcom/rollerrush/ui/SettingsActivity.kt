@@ -1,6 +1,8 @@
 package com.voxcom.rollerrush.ui
 
 import android.app.AlertDialog
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
@@ -23,6 +25,7 @@ class SettingsActivity : BaseActivity() {
     private lateinit var hitboxesSwitch: SwitchCompat
     private lateinit var resetProgressButton: Button
     private lateinit var backButton: Button
+    private lateinit var deleteAccountButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +48,7 @@ class SettingsActivity : BaseActivity() {
         hitboxesSwitch = findViewById(R.id.hitboxesSwitch)
         resetProgressButton = findViewById(R.id.resetProgressButton)
         backButton = findViewById(R.id.backButton)
+        deleteAccountButton = findViewById(R.id.deleteAccountButton)
     }
 
     private fun setupSettings() {
@@ -63,6 +67,27 @@ class SettingsActivity : BaseActivity() {
     }
 
     private fun setupClickListeners() {
+
+        deleteAccountButton.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Request Account Deletion")
+                .setMessage(
+                    "You will be taken to the Roller Rush account " +
+                            "deletion page, where you can submit a request " +
+                            "to delete your account and associated online data."
+                )
+                .setNegativeButton("CANCEL", null)
+                .setPositiveButton("CONTINUE") { _, _ ->
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse(
+                            "https://rollerrush-online.onrender.com/account-deletion.html"
+                        )
+                    )
+                    startActivity(intent)
+                }
+                .show()
+        }
 
         backButton.setOnClickListener {
             finish()
