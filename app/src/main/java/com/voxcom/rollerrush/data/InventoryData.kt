@@ -131,7 +131,7 @@ object ShopCatalog {
             unlockLevel = 7
         ),
         ShopItem(
-            "skate_street_tox", "Street Tox", 38000, ShopItemType.SKATE,
+            "skate_street_tox", "Street Tox", 380, ShopItemType.SKATE,
             "skate_street_tox.webp",
             particleName = "particle_street_tox.png",
             description = "An aggressive urban skate style.",
@@ -139,7 +139,7 @@ object ShopCatalog {
             unlockLevel = 8
         ),
         ShopItem(
-            "skate_inferno", "Inferno", 40000, ShopItemType.SKATE,
+            "skate_inferno", "Inferno", 400, ShopItemType.SKATE,
             "skate4.png",
             particleName = "particle_inferno.png",
             description = "Built for aggressive runs.",
@@ -155,7 +155,7 @@ object ShopCatalog {
             unlockLevel = 8
         ),
         ShopItem(
-            "skate_titanium_x", "Titanium X", 50000, ShopItemType.SKATE,
+            "skate_titanium_x", "Titanium X", 500, ShopItemType.SKATE,
             "skate_titanium.webp",
             particleName = "particle_titanium_x.png",
             description = "A high-tech metallic finish.",
@@ -173,7 +173,7 @@ object ShopCatalog {
 
         // MYTHIC SERIES
         ShopItem(
-            "skate_skull_ride", "Skull Ride", 60000, ShopItemType.SKATE,
+            "skate_skull_ride", "Skull Ride", 60, ShopItemType.SKATE,
             "skate_skull_ride.webp",
             particleName = "particle_skull_ride.png",
             description = "A dark design built to stand out.",
@@ -181,7 +181,7 @@ object ShopCatalog {
             unlockLevel = 9
         ),
         ShopItem(
-            "skate_cosmic_drift", "Cosmic Drift", 65000, ShopItemType.SKATE,
+            "skate_cosmic_drift", "Cosmic Drift", 650, ShopItemType.SKATE,
             "skate_cosmic_drift.webp",
             particleName = "particle_cosmic_drift.png",
             description = "A galaxy-inspired legendary design.",
@@ -189,7 +189,7 @@ object ShopCatalog {
             unlockLevel = 10
         ),
         ShopItem(
-            "skate_solar_flare", "Solar Flare", 70000, ShopItemType.SKATE,
+            "skate_solar_flare", "Solar Flare", 70, ShopItemType.SKATE,
             "skate_solar_flare.webp",
             particleName = "particle_solar_flare.png",
             description = "A radiant celestial design.",
@@ -205,7 +205,7 @@ object ShopCatalog {
             unlockLevel = 10
         ),
         ShopItem(
-            "skate_infinity", "Infinity", 90000, ShopItemType.SKATE,
+            "skate_infinity", "Infinity", 90, ShopItemType.SKATE,
             "skate_infinity.webp",
             particleName = "particle_infinity.png",
             description = "A holographic rainbow finish.",

@@ -13,14 +13,13 @@
     android:clipChildren="false"
     android:clipToPadding="false">
 
-    <!-- SKATE RECOMMENDATION -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/skateRecommendationGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center_horizontal"
-        android:visibility="gon">
+        android:visibility="gone">
 
         <FrameLayout
             android:id="@+id/recommendationArtworkFrame"

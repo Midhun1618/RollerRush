@@ -689,35 +689,7 @@ class GameWorld(
         )
 
         containerSystem.update(simDt, this)
-        // --------------------------------------------------------
-// SPRINGBOARD CONTACT
-// --------------------------------------------------------
 
-        if (player.grounded && !player.sliding && !containerStunt.active) {
-
-            for (platform in containerPlatforms) {
-
-                if (
-                    CollisionSystem.playerTouchesSpringboard(
-                        player,
-                        platform
-                    )
-                ) {
-
-                    if (platform.compressSpringboard()) {
-
-                        // Launch vertically from the springboard.
-                    
-
-                        player.grounded = false
-
-                        camera.triggerJump()
-
-                        break
-                    }
-                }
-            }
-        }
 
         // --------------------------------------------------------
         // PLAYER
@@ -992,13 +964,10 @@ class GameWorld(
 
         if (
             CollisionSystem.playerHitsObstacle(player, obstacles) ||
-            (
-                    !containerStunt.active &&
-                            CollisionSystem.playerHitsContainerSide(
-                                player,
-                                containerPlatforms
-                            )
-                    )
+            CollisionSystem.playerHitsContainerSide(
+                player,
+                containerPlatforms
+            )
         ) {
 
             onObstacleHit()

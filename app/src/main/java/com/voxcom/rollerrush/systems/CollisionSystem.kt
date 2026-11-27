@@ -13,23 +13,12 @@ object CollisionSystem {
         obstacles: List<Obstacle>
     ): Boolean {
 
-        for (i in obstacles.indices) {
-            val obstacle = obstacles[i]
-
-            // Visible obstacles can have disabled collision.
-            if (!obstacle.active || !obstacle.collisionEnabled) {
-                continue
-            }
+        for (obstacle in obstacles) {
+            if (!obstacle.active || !obstacle.collisionEnabled) continue
 
             if (
-                RectF.intersects(
-                    player.bodyHitbox,
-                    obstacle.hitbox
-                ) ||
-                RectF.intersects(
-                    player.feetHitbox,
-                    obstacle.hitbox
-                )
+                RectF.intersects(player.bodyHitbox, obstacle.hitbox) ||
+                RectF.intersects(player.feetHitbox, obstacle.hitbox)
             ) {
                 return true
             }
@@ -47,14 +36,8 @@ object CollisionSystem {
             if (!platform.active) continue
 
             if (
-                RectF.intersects(
-                    player.bodyHitbox,
-                    platform.sideHitbox
-                ) ||
-                RectF.intersects(
-                    player.feetHitbox,
-                    platform.sideHitbox
-                )
+                RectF.intersects(player.bodyHitbox, platform.sideHitbox) ||
+                RectF.intersects(player.feetHitbox, platform.sideHitbox)
             ) {
                 return true
             }
@@ -70,18 +53,8 @@ object CollisionSystem {
         r: Float
     ): Boolean {
 
-        return circleHitsRect(
-            cx,
-            cy,
-            r,
-            player.bodyHitbox
-        ) ||
-                circleHitsRect(
-                    cx,
-                    cy,
-                    r,
-                    player.feetHitbox
-                )
+        return circleHitsRect(cx, cy, r, player.bodyHitbox) ||
+                circleHitsRect(cx, cy, r, player.feetHitbox)
     }
 
     fun circleHitsRect(
@@ -100,7 +73,11 @@ object CollisionSystem {
         return dx * dx + dy * dy <= r * r
     }
 
-
+    /**
+     * Springboard trigger:
+     * Only the central portion of the board is valid.
+     * Player must be grounded, not sliding, and at ground level.
+     */
     fun playerTouchesSpringboard(
         player: Player,
         platform: ContainerPlatform
@@ -110,15 +87,23 @@ object CollisionSystem {
             return false
         }
 
-        // Player must be at ground level.
         if (player.bottomY < Constants.GROUND_Y - 5f) {
             return false
         }
 
+        val board = platform.springboardHitbox
+
+        // Restrict the trigger zone to the central 50% of the board.
+        val centerZone = RectF(
+            board.left + board.width() * 0.25f,
+            board.top,
+            board.right - board.width() * 0.25f,
+            board.bottom
+        )
+
         return RectF.intersects(
             player.feetHitbox,
-            platform.springboardHitbox
+            centerZone
         )
     }
-
 }

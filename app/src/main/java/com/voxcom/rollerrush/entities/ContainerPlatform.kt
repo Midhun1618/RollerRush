@@ -32,7 +32,7 @@ class ContainerPlatform {
 
     private val springboardWidth = 64f
     private val springboardHeight = 14f
-    private val springboardGap = 12f
+    private val springboardGap = 100f
 
     // Positioned in front of the container (left side).
     val springboardX: Float
