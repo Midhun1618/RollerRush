@@ -1,4 +1,3 @@
-
 package com.voxcom.rollerrush.player
 
 import com.voxcom.rollerrush.data.SkateStats
@@ -32,20 +31,13 @@ class PlayerController(private val player: Player, var stats: SkateStats) {
         jumpAnticipationStarted = false
     }
 
-    fun update(
-        dt: Float,
-        platform: ContainerPlatform? = null
-    ) {
+    fun update(dt: Float, platform: ContainerPlatform? = null) {
         if (player.crashed) {
             updateCrash(dt)
             return
         }
 
-        if (
-            slideRequested.getAndSet(false) &&
-            player.grounded &&
-            !player.sliding
-        ) {
+        if (slideRequested.getAndSet(false) && player.grounded && !player.sliding) {
             player.startSlide(Constants.SLIDE_DURATION)
         }
 
@@ -67,17 +59,13 @@ class PlayerController(private val player: Player, var stats: SkateStats) {
         }
 
         if (jumpAnticipationTimer >= 0f) {
-
             if (!player.grounded || player.sliding) {
                 jumpAnticipationTimer = -1f
             } else {
                 jumpAnticipationTimer -= dt
 
                 if (jumpAnticipationTimer <= 0f) {
-                    player.vy = -sqrt(
-                        2f * Constants.GRAVITY * stats.jumpHeight
-                    )
-
+                    player.vy = -sqrt(2f * Constants.GRAVITY * stats.jumpHeight)
                     player.grounded = false
                     jumpAnticipationTimer = -1f
                 }
@@ -88,27 +76,45 @@ class PlayerController(private val player: Player, var stats: SkateStats) {
         player.updateSlide(dt)
     }
 
-    private fun integrate(
-        dt: Float,
-        platform: ContainerPlatform?
-    ) {
+    /**
+     * Roof collision is a landing-only surface:
+     * the player must approach it from above while descending.
+     * Horizontal overlap alone must never snap a ground-level player onto the roof.
+     */
+    private fun integrate(dt: Float, platform: ContainerPlatform?) {
+        val previousBottomY = player.bottomY
+        val previousVy = player.vy
+
         player.vy += Constants.GRAVITY * dt
         player.bottomY += player.vy * dt
 
-        val platformY = platform
-            ?.takeIf {
-                it.active && it.overlapsPlayer(player.x, 18f)
-            }
-            ?.topY
+        val validPlatform = platform?.takeIf { it.active }
 
-        val landingY = platformY ?: Constants.GROUND_Y
+        val roofY = validPlatform?.topY
+        val crossedRoofFromAbove =
+            roofY != null &&
+                    previousVy >= 0f &&
+                    previousBottomY <= roofY &&
+                    player.bottomY >= roofY &&
+                    validPlatform.overlapsPlayer(player.x, 18f)
 
-        if (player.vy >= 0f && player.bottomY >= landingY) {
+        if (crossedRoofFromAbove) {
             if (!player.grounded) {
                 player.markLanded()
             }
+            player.bottomY = roofY!!
+            player.vy = 0f
+            player.grounded = true
+            return
+        }
 
-            player.bottomY = landingY
+        // The street remains the fallback surface. The container roof is not
+        // considered if the player is below it, beside it, or moving upward.
+        if (player.vy >= 0f && player.bottomY >= Constants.GROUND_Y) {
+            if (!player.grounded) {
+                player.markLanded()
+            }
+            player.bottomY = Constants.GROUND_Y
             player.vy = 0f
             player.grounded = true
         } else {

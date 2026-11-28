@@ -36,8 +36,6 @@ class MainMenuActivity : BaseActivity() {
     private lateinit var playerNameLabel: TextView
     private var profileLoadRequested = false
 
-    private var titleFrameIndex = 0
-    private var titleAnimator: ValueAnimator? = null
     private var playPulseAnimator: AnimatorSet? = null
 
     private lateinit var leaderboardPanel: LinearLayout
@@ -51,14 +49,7 @@ class MainMenuActivity : BaseActivity() {
     private var leaderboardExpanded = false
     private var leaderboardAnimation: AnimatorSet? = null
 
-    private val titleFrames by lazy {
-        intArrayOf(
-            R.drawable.rush_title1,
-            R.drawable.rush_title2,
-            R.drawable.rush_title3,
-            R.drawable.rush_title4
-        )
-    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -115,7 +106,6 @@ class MainMenuActivity : BaseActivity() {
         }
 
         startPlayButtonPulse()
-        startTitleAnimation()
     }
 
     private fun startPlayButtonPulse() {
@@ -157,54 +147,6 @@ class MainMenuActivity : BaseActivity() {
         }
     }
 
-    private fun startTitleAnimation() {
-        titleAnimator?.cancel()
-
-        titleFrameIndex = 0
-        rushTitle.setImageResource(titleFrames[titleFrameIndex])
-
-        titleAnimator = ValueAnimator.ofInt(
-            0, titleFrames.size - 1
-        ).apply {
-            duration = 420L
-            repeatCount = ValueAnimator.INFINITE
-            repeatMode = ValueAnimator.RESTART
-            interpolator = android.view.animation.LinearInterpolator()
-
-            addUpdateListener { animator ->
-                val frame = animator.animatedValue as Int
-
-                if (frame != titleFrameIndex) {
-                    titleFrameIndex = frame
-                    rushTitle.setImageResource(titleFrames[frame])
-                }
-            }
-
-            start()
-        }
-
-        rushTitle.animate()
-            .scaleX(1.04f)
-            .scaleY(1.04f)
-            .setDuration(650L)
-            .setInterpolator(AccelerateDecelerateInterpolator())
-            .withEndAction {
-                if (!isFinishing && !isDestroyed) {
-                    rushTitle.animate()
-                        .scaleX(1f)
-                        .scaleY(1f)
-                        .setDuration(650L)
-                        .setInterpolator(AccelerateDecelerateInterpolator())
-                        .withEndAction {
-                            if (!isFinishing && !isDestroyed) {
-                                startTitlePulseAgain()
-                            }
-                        }
-                        .start()
-                }
-            }
-            .start()
-    }
 
     private fun startTitlePulseAgain() {
         if (isFinishing || isDestroyed) return
@@ -266,9 +208,6 @@ class MainMenuActivity : BaseActivity() {
     override fun onDestroy() {
         playPulseAnimator?.cancel()
         playPulseAnimator = null
-
-        titleAnimator?.cancel()
-        titleAnimator = null
 
         rushTitle.animate().cancel()
         playButton.animate().cancel()
